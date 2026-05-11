@@ -1,0 +1,398 @@
+DROP TABLE ROLE;
+DROP TABLE BRANCH;
+DROP TABLE BRAND;
+DROP TABLE CATEGORY;
+DROP TABLE STORE;
+DROP TABLE EMPLOYEE;
+DROP TABLE PRODUCT;
+DROP TABLE SUPPLIER_INTEGRATION;
+DROP TABLE STORE_INVENTORY;
+DROP TABLE ORDER_REQUEST;
+DROP TABLE ORDER_APPROVAL;
+DROP TABLE STORE_RECEIPT;
+
+/* =========================================================
+   1. ROLE - 권한
+========================================================= */
+CREATE TABLE ROLE
+(
+    ROLE_ID          NUMBER               NOT NULL,
+    ROLE_NAME        VARCHAR2(50)         NOT NULL,
+    ROLE_DESCRIPTION VARCHAR2(500),
+    CREATED_AT       DATE DEFAULT SYSDATE NOT NULL,
+    UPDATED_AT       DATE,
+
+    CONSTRAINT PK_ROLE PRIMARY KEY (ROLE_ID),
+    CONSTRAINT UK_ROLE_NAME UNIQUE (ROLE_NAME)
+);
+
+
+/* =========================================================
+   2. BRANCH - 지점
+========================================================= */
+CREATE TABLE BRANCH
+(
+    BRANCH_ID        NUMBER                        NOT NULL,
+    BRANCH_NAME      VARCHAR2(100)                 NOT NULL,
+    ADDRESS          VARCHAR2(300),
+    PHONE_NUMBER     VARCHAR2(30),
+    OPERATION_STATUS VARCHAR2(20) DEFAULT 'ACTIVE' NOT NULL,
+    CREATED_AT       DATE         DEFAULT SYSDATE  NOT NULL,
+    UPDATED_AT       DATE,
+
+    CONSTRAINT PK_BRANCH PRIMARY KEY (BRANCH_ID),
+    CONSTRAINT CK_BRANCH_STATUS
+        CHECK (OPERATION_STATUS IN ('ACTIVE', 'INACTIVE', 'CLOSED'))
+);
+
+
+/* =========================================================
+   3. BRAND - 브랜드
+========================================================= */
+CREATE TABLE BRAND
+(
+    BRAND_ID         NUMBER                        NOT NULL,
+    BRAND_NAME       VARCHAR2(100)                 NOT NULL,
+    MANAGER_NAME     VARCHAR2(50),
+    PHONE_NUMBER     VARCHAR2(30),
+    OPERATION_STATUS VARCHAR2(20) DEFAULT 'ACTIVE' NOT NULL,
+    CREATED_AT       DATE         DEFAULT SYSDATE  NOT NULL,
+    UPDATED_AT       DATE,
+
+    CONSTRAINT PK_BRAND PRIMARY KEY (BRAND_ID),
+    CONSTRAINT UK_BRAND_NAME UNIQUE (BRAND_NAME),
+    CONSTRAINT CK_BRAND_STATUS
+        CHECK (OPERATION_STATUS IN ('ACTIVE', 'INACTIVE'))
+);
+
+
+/* =========================================================
+   4. CATEGORY - 카테고리
+========================================================= */
+CREATE TABLE CATEGORY
+(
+    CATEGORY_ID        NUMBER                      NOT NULL,
+    PARENT_CATEGORY_ID NUMBER,
+    CATEGORY_NAME      VARCHAR2(100)               NOT NULL,
+    CATEGORY_LEVEL     NUMBER      DEFAULT 1       NOT NULL,
+    IS_ACTIVE          VARCHAR2(1) DEFAULT 'Y'     NOT NULL,
+    CREATED_AT         DATE        DEFAULT SYSDATE NOT NULL,
+    UPDATED_AT         DATE,
+
+    CONSTRAINT PK_CATEGORY PRIMARY KEY (CATEGORY_ID),
+
+    CONSTRAINT FK_CATEGORY_PARENT
+        FOREIGN KEY (PARENT_CATEGORY_ID)
+            REFERENCES CATEGORY (CATEGORY_ID),
+
+    CONSTRAINT CK_CATEGORY_ACTIVE
+        CHECK (IS_ACTIVE IN ('Y', 'N')),
+
+    CONSTRAINT CK_CATEGORY_LEVEL
+        CHECK (CATEGORY_LEVEL >= 1)
+);
+
+
+/* =========================================================
+   5. STORE - 입점매장
+========================================================= */
+CREATE TABLE STORE
+(
+    STORE_ID         NUMBER                        NOT NULL,
+    BRANCH_ID        NUMBER                        NOT NULL,
+    BRAND_ID         NUMBER                        NOT NULL,
+    STORE_NAME       VARCHAR2(100)                 NOT NULL,
+    FLOOR_INFO       VARCHAR2(30),
+    STORE_LOCATION   VARCHAR2(100),
+    OPERATION_STATUS VARCHAR2(20) DEFAULT 'ACTIVE' NOT NULL,
+    CREATED_AT       DATE         DEFAULT SYSDATE  NOT NULL,
+    UPDATED_AT       DATE,
+
+    CONSTRAINT PK_STORE PRIMARY KEY (STORE_ID),
+
+    CONSTRAINT FK_STORE_BRANCH
+        FOREIGN KEY (BRANCH_ID)
+            REFERENCES BRANCH (BRANCH_ID),
+
+    CONSTRAINT FK_STORE_BRAND
+        FOREIGN KEY (BRAND_ID)
+            REFERENCES BRAND (BRAND_ID),
+
+    CONSTRAINT CK_STORE_STATUS
+        CHECK (OPERATION_STATUS IN ('ACTIVE', 'INACTIVE', 'CLOSED'))
+);
+
+
+/* =========================================================
+   6. EMPLOYEE - 직원
+========================================================= */
+CREATE TABLE EMPLOYEE
+(
+    EMPLOYEE_ID   NUMBER                      NOT NULL,
+    ROLE_ID       NUMBER                      NOT NULL,
+    STORE_ID      NUMBER,
+    LOGIN_ID      VARCHAR2(50)                NOT NULL,
+    PASSWORD      VARCHAR2(255)               NOT NULL,
+    EMPLOYEE_NAME VARCHAR2(50)                NOT NULL,
+    PHONE_NUMBER  VARCHAR2(30),
+    IS_ACTIVE     VARCHAR2(1) DEFAULT 'Y'     NOT NULL,
+    CREATED_AT    DATE        DEFAULT SYSDATE NOT NULL,
+    UPDATED_AT    DATE,
+
+    CONSTRAINT PK_EMPLOYEE PRIMARY KEY (EMPLOYEE_ID),
+
+    CONSTRAINT UK_EMPLOYEE_LOGIN_ID
+        UNIQUE (LOGIN_ID),
+
+    CONSTRAINT FK_EMPLOYEE_ROLE
+        FOREIGN KEY (ROLE_ID)
+            REFERENCES ROLE (ROLE_ID),
+
+    CONSTRAINT FK_EMPLOYEE_STORE
+        FOREIGN KEY (STORE_ID)
+            REFERENCES STORE (STORE_ID),
+
+    CONSTRAINT CK_EMPLOYEE_ACTIVE
+        CHECK (IS_ACTIVE IN ('Y', 'N'))
+);
+
+
+/* =========================================================
+   7. PRODUCT - 상품
+========================================================= */
+CREATE TABLE PRODUCT
+(
+    PRODUCT_ID     NUMBER                         NOT NULL,
+    BRAND_ID       NUMBER                         NOT NULL,
+    CATEGORY_ID    NUMBER                         NOT NULL,
+    PRODUCT_NAME   VARCHAR2(200)                  NOT NULL,
+    PRICE          NUMBER                         NOT NULL,
+    SEASON_TYPE    VARCHAR2(30),
+    PRODUCT_STATUS VARCHAR2(20) DEFAULT 'ON_SALE' NOT NULL,
+    CREATED_AT     DATE         DEFAULT SYSDATE   NOT NULL,
+    UPDATED_AT     DATE,
+
+    CONSTRAINT PK_PRODUCT PRIMARY KEY (PRODUCT_ID),
+
+    CONSTRAINT FK_PRODUCT_BRAND
+        FOREIGN KEY (BRAND_ID)
+            REFERENCES BRAND (BRAND_ID),
+
+    CONSTRAINT FK_PRODUCT_CATEGORY
+        FOREIGN KEY (CATEGORY_ID)
+            REFERENCES CATEGORY (CATEGORY_ID),
+
+    CONSTRAINT CK_PRODUCT_PRICE
+        CHECK (PRICE >= 0),
+
+    CONSTRAINT CK_PRODUCT_STATUS
+        CHECK (PRODUCT_STATUS IN ('ON_SALE', 'STOPPED', 'DISCONTINUED'))
+);
+
+
+/* =========================================================
+   8. SUPPLIER_INTEGRATION - 발주처연동
+========================================================= */
+CREATE TABLE SUPPLIER_INTEGRATION
+(
+    SUPPLIER_INTEGRATION_ID NUMBER                        NOT NULL,
+    BRAND_ID                NUMBER                        NOT NULL,
+    EXTERNAL_SUPPLIER_ID    VARCHAR2(100)                 NOT NULL,
+    SUPPLIER_NAME           VARCHAR2(100)                 NOT NULL,
+    API_ENDPOINT            VARCHAR2(500),
+    INTEGRATION_STATUS      VARCHAR2(20) DEFAULT 'ACTIVE' NOT NULL,
+    CREATED_AT              DATE         DEFAULT SYSDATE  NOT NULL,
+    UPDATED_AT              DATE,
+
+    CONSTRAINT PK_SUPPLIER_INTEGRATION
+        PRIMARY KEY (SUPPLIER_INTEGRATION_ID),
+
+    CONSTRAINT UK_SUPPLIER_INTEGRATION_BRAND
+        UNIQUE (BRAND_ID),
+
+    CONSTRAINT UK_SUPPLIER_EXTERNAL_ID
+        UNIQUE (EXTERNAL_SUPPLIER_ID),
+
+    CONSTRAINT FK_SUPPLIER_INTEGRATION_BRAND
+        FOREIGN KEY (BRAND_ID)
+            REFERENCES BRAND (BRAND_ID),
+
+    CONSTRAINT CK_SUPPLIER_INTEGRATION_STATUS
+        CHECK (INTEGRATION_STATUS IN ('ACTIVE', 'INACTIVE', 'ERROR'))
+);
+
+
+/* =========================================================
+   9. STORE_INVENTORY - 입점매장재고
+========================================================= */
+CREATE TABLE STORE_INVENTORY
+(
+    STORE_ID         NUMBER                 NOT NULL,
+    PRODUCT_ID       NUMBER                 NOT NULL,
+    CURRENT_QUANTITY NUMBER DEFAULT 0       NOT NULL,
+    SAFETY_QUANTITY  NUMBER DEFAULT 0       NOT NULL,
+    CREATED_AT       DATE   DEFAULT SYSDATE NOT NULL,
+    UPDATED_AT       DATE,
+
+    CONSTRAINT PK_STORE_INVENTORY
+        PRIMARY KEY (STORE_ID, PRODUCT_ID),
+
+    CONSTRAINT FK_STORE_INVENTORY_STORE
+        FOREIGN KEY (STORE_ID)
+            REFERENCES STORE (STORE_ID),
+
+    CONSTRAINT FK_STORE_INVENTORY_PRODUCT
+        FOREIGN KEY (PRODUCT_ID)
+            REFERENCES PRODUCT (PRODUCT_ID),
+
+    CONSTRAINT CK_STORE_INVENTORY_CURRENT_QTY
+        CHECK (CURRENT_QUANTITY >= 0),
+
+    CONSTRAINT CK_STORE_INVENTORY_SAFETY_QTY
+        CHECK (SAFETY_QUANTITY >= 0)
+);
+
+
+/* =========================================================
+   10. ORDER_REQUEST - 발주요청
+========================================================= */
+CREATE TABLE ORDER_REQUEST
+(
+    ORDER_REQUEST_ID        NUMBER                           NOT NULL,
+    STORE_ID                NUMBER                           NOT NULL,
+    SUPPLIER_INTEGRATION_ID NUMBER                           NOT NULL,
+    PRODUCT_ID              NUMBER                           NOT NULL,
+    REQUEST_EMPLOYEE_ID     NUMBER                           NOT NULL,
+    APPROVAL_EMPLOYEE_ID    NUMBER,
+    APPROVAL_ROLE_ID        NUMBER,
+    EXTERNAL_ORDER_ID       VARCHAR2(100),
+    ORDER_QUANTITY          NUMBER                           NOT NULL,
+    APPROVED_QUANTITY       NUMBER,
+    REQUEST_REASON          VARCHAR2(500),
+    REJECT_REASON           VARCHAR2(500),
+    ORDER_STATUS            VARCHAR2(30) DEFAULT 'REQUESTED' NOT NULL,
+    REQUESTED_AT            DATE         DEFAULT SYSDATE     NOT NULL,
+    APPROVED_AT             DATE,
+    REJECTED_AT             DATE,
+    SENT_TO_SUPPLIER_AT     DATE,
+
+    CONSTRAINT PK_ORDER_REQUEST
+        PRIMARY KEY (ORDER_REQUEST_ID),
+
+    CONSTRAINT FK_ORDER_REQUEST_STORE
+        FOREIGN KEY (STORE_ID)
+            REFERENCES STORE (STORE_ID),
+
+    CONSTRAINT FK_ORDER_REQUEST_SUPPLIER
+        FOREIGN KEY (SUPPLIER_INTEGRATION_ID)
+            REFERENCES SUPPLIER_INTEGRATION (SUPPLIER_INTEGRATION_ID),
+
+    CONSTRAINT FK_ORDER_REQUEST_PRODUCT
+        FOREIGN KEY (PRODUCT_ID)
+            REFERENCES PRODUCT (PRODUCT_ID),
+
+    CONSTRAINT FK_ORDER_REQUEST_REQUEST_EMP
+        FOREIGN KEY (REQUEST_EMPLOYEE_ID)
+            REFERENCES EMPLOYEE (EMPLOYEE_ID),
+
+    CONSTRAINT FK_ORDER_REQUEST_APPROVAL_EMP
+        FOREIGN KEY (APPROVAL_EMPLOYEE_ID)
+            REFERENCES EMPLOYEE (EMPLOYEE_ID),
+
+    CONSTRAINT FK_ORDER_REQUEST_APPROVAL_ROLE
+        FOREIGN KEY (APPROVAL_ROLE_ID)
+            REFERENCES ROLE (ROLE_ID),
+
+    CONSTRAINT UK_ORDER_REQUEST_EXTERNAL_ORDER
+        UNIQUE (EXTERNAL_ORDER_ID),
+
+    CONSTRAINT CK_ORDER_REQUEST_ORDER_QTY
+        CHECK (ORDER_QUANTITY > 0),
+
+    CONSTRAINT CK_ORDER_REQUEST_APPROVED_QTY
+        CHECK (APPROVED_QUANTITY IS NULL OR APPROVED_QUANTITY >= 0),
+
+    CONSTRAINT CK_ORDER_REQUEST_STATUS
+        CHECK (
+            ORDER_STATUS IN (
+                             'REQUESTED',
+                             'APPROVED',
+                             'REJECTED',
+                             'SENT',
+                             'RECEIVED',
+                             'CANCELED'
+                )
+            )
+);
+
+
+/* =========================================================
+   11. ORDER_APPROVAL - 발주요청승인
+========================================================= */
+CREATE TABLE ORDER_APPROVAL
+(
+    ORDER_APPROVAL_ID    NUMBER               NOT NULL,
+    APPROVAL_EMPLOYEE_ID NUMBER               NOT NULL,
+    ORDER_REQUEST_ID     NUMBER               NOT NULL,
+    APPROVED_QUANTITY    NUMBER,
+    APPROVAL_STATUS      VARCHAR2(30)         NOT NULL,
+    APPROVAL_COMMENT     VARCHAR2(500),
+    CREATED_AT           DATE DEFAULT SYSDATE NOT NULL,
+    UPDATED_AT           DATE,
+
+    CONSTRAINT PK_ORDER_APPROVAL
+        PRIMARY KEY (ORDER_APPROVAL_ID),
+
+    CONSTRAINT FK_ORDER_APPROVAL_EMPLOYEE
+        FOREIGN KEY (APPROVAL_EMPLOYEE_ID)
+            REFERENCES EMPLOYEE (EMPLOYEE_ID),
+
+    CONSTRAINT FK_ORDER_APPROVAL_REQUEST
+        FOREIGN KEY (ORDER_REQUEST_ID)
+            REFERENCES ORDER_REQUEST (ORDER_REQUEST_ID),
+
+    CONSTRAINT CK_ORDER_APPROVAL_QTY
+        CHECK (APPROVED_QUANTITY IS NULL OR APPROVED_QUANTITY >= 0),
+
+    CONSTRAINT CK_ORDER_APPROVAL_STATUS
+        CHECK (APPROVAL_STATUS IN ('APPROVED', 'REJECTED'))
+);
+
+
+/* =========================================================
+   12. STORE_RECEIPT - 매장입고확인
+========================================================= */
+CREATE TABLE STORE_RECEIPT
+(
+    STORE_RECEIPT_ID    NUMBER                          NOT NULL,
+    ORDER_REQUEST_ID    NUMBER                          NOT NULL,
+    CONFIRM_EMPLOYEE_ID NUMBER                          NOT NULL,
+    RECEIVED_QUANTITY   NUMBER                          NOT NULL,
+    DIFFERENCE_QUANTITY NUMBER       DEFAULT 0          NOT NULL,
+    DIFFERENCE_REASON   VARCHAR2(500),
+    RECEIPT_STATUS      VARCHAR2(30) DEFAULT 'RECEIVED' NOT NULL,
+    CREATED_AT          DATE         DEFAULT SYSDATE    NOT NULL,
+    UPDATED_AT          DATE,
+
+    CONSTRAINT PK_STORE_RECEIPT
+        PRIMARY KEY (STORE_RECEIPT_ID),
+
+    CONSTRAINT FK_STORE_RECEIPT_ORDER_REQUEST
+        FOREIGN KEY (ORDER_REQUEST_ID)
+            REFERENCES ORDER_REQUEST (ORDER_REQUEST_ID),
+
+    CONSTRAINT FK_STORE_RECEIPT_EMPLOYEE
+        FOREIGN KEY (CONFIRM_EMPLOYEE_ID)
+            REFERENCES EMPLOYEE (EMPLOYEE_ID),
+
+    CONSTRAINT UK_STORE_RECEIPT_ORDER_REQUEST
+        UNIQUE (ORDER_REQUEST_ID),
+
+    CONSTRAINT CK_STORE_RECEIPT_RECEIVED_QTY
+        CHECK (RECEIVED_QUANTITY >= 0),
+
+    CONSTRAINT CK_STORE_RECEIPT_STATUS
+        CHECK (RECEIPT_STATUS IN ('RECEIVED', 'PARTIAL_RECEIVED', 'CANCELED'))
+);
+
+COMMIT;

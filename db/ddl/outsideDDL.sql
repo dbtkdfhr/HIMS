@@ -1,0 +1,171 @@
+DROP TABLE SUPPLIER;
+DROP TABLE SUPPLIER_PRODUCT;
+DROP TABLE SUPPLIER_INVENTORY;
+DROP TABLE EXTERNAL_ORDER_RECEIPT;
+DROP TABLE EXTERNAL_SHIPMENT;
+
+/* =========================================================
+   1. SUPPLIER - 발주처
+========================================================= */
+CREATE TABLE SUPPLIER
+(
+    SUPPLIER_ID      NUMBER                        NOT NULL,
+    SUPPLIER_NAME    VARCHAR2(100)                 NOT NULL,
+    SUPPLIER_TYPE    VARCHAR2(50)                  NOT NULL,
+    ADDRESS          VARCHAR2(300),
+    PHONE_NUMBER     VARCHAR2(30),
+    OPERATION_STATUS VARCHAR2(20) DEFAULT 'ACTIVE' NOT NULL,
+    CREATED_AT       DATE         DEFAULT SYSDATE  NOT NULL,
+    UPDATED_AT       DATE,
+
+    CONSTRAINT PK_SUPPLIER
+        PRIMARY KEY (SUPPLIER_ID),
+
+    CONSTRAINT CK_SUPPLIER_STATUS
+        CHECK (OPERATION_STATUS IN ('ACTIVE', 'INACTIVE', 'CLOSED'))
+);
+
+
+/* =========================================================
+   2. SUPPLIER_PRODUCT - 발주처상품
+========================================================= */
+CREATE TABLE SUPPLIER_PRODUCT
+(
+    SUPPLIER_PRODUCT_ID NUMBER                        NOT NULL,
+    SUPPLIER_ID         NUMBER                        NOT NULL,
+    EXTERNAL_PRODUCT_ID VARCHAR2(100)                 NOT NULL,
+    PRODUCT_NAME        VARCHAR2(200)                 NOT NULL,
+    SUPPLY_PRICE        NUMBER                        NOT NULL,
+    PRODUCT_STATUS      VARCHAR2(20) DEFAULT 'ACTIVE' NOT NULL,
+    CREATED_AT          DATE         DEFAULT SYSDATE  NOT NULL,
+    UPDATED_AT          DATE,
+
+    CONSTRAINT PK_SUPPLIER_PRODUCT
+        PRIMARY KEY (SUPPLIER_PRODUCT_ID),
+
+    CONSTRAINT FK_SUPPLIER_PRODUCT_SUPPLIER
+        FOREIGN KEY (SUPPLIER_ID)
+            REFERENCES SUPPLIER (SUPPLIER_ID),
+
+    CONSTRAINT UK_SUPPLIER_PRODUCT_EXTERNAL
+        UNIQUE (SUPPLIER_ID, EXTERNAL_PRODUCT_ID),
+
+    CONSTRAINT CK_SUPPLIER_PRODUCT_PRICE
+        CHECK (SUPPLY_PRICE >= 0),
+
+    CONSTRAINT CK_SUPPLIER_PRODUCT_STATUS
+        CHECK (PRODUCT_STATUS IN ('ACTIVE', 'INACTIVE', 'DISCONTINUED'))
+);
+
+
+/* =========================================================
+   3. SUPPLIER_INVENTORY - 발주처재고
+========================================================= */
+CREATE TABLE SUPPLIER_INVENTORY
+(
+    SUPPLIER_ID         NUMBER                 NOT NULL,
+    SUPPLIER_PRODUCT_ID NUMBER                 NOT NULL,
+    CURRENT_QUANTITY    NUMBER DEFAULT 0       NOT NULL,
+    CREATED_AT          DATE   DEFAULT SYSDATE NOT NULL,
+    UPDATED_AT          DATE,
+
+    CONSTRAINT PK_SUPPLIER_INVENTORY
+        PRIMARY KEY (SUPPLIER_ID, SUPPLIER_PRODUCT_ID),
+
+    CONSTRAINT FK_SUPPLIER_INVENTORY_SUPPLIER
+        FOREIGN KEY (SUPPLIER_ID)
+            REFERENCES SUPPLIER (SUPPLIER_ID),
+
+    CONSTRAINT FK_SUPPLIER_INVENTORY_PRODUCT
+        FOREIGN KEY (SUPPLIER_PRODUCT_ID)
+            REFERENCES SUPPLIER_PRODUCT (SUPPLIER_PRODUCT_ID),
+
+    CONSTRAINT CK_SUPPLIER_INVENTORY_QTY
+        CHECK (CURRENT_QUANTITY >= 0)
+);
+
+
+/* =========================================================
+   4. EXTERNAL_ORDER_RECEIPT - 외부발주접수
+========================================================= */
+CREATE TABLE EXTERNAL_ORDER_RECEIPT
+(
+    EXTERNAL_ORDER_RECEIPT_ID NUMBER                          NOT NULL,
+    SUPPLIER_ID               NUMBER                          NOT NULL,
+    SUPPLIER_PRODUCT_ID       NUMBER                          NOT NULL,
+    INTERNAL_ORDER_REQUEST_ID VARCHAR2(100)                   NOT NULL,
+    REQUEST_STORE_NAME        VARCHAR2(100)                   NOT NULL,
+    REQUEST_QUANTITY          NUMBER                          NOT NULL,
+    APPROVED_QUANTITY         NUMBER,
+    RECEIPT_STATUS            VARCHAR2(30) DEFAULT 'RECEIVED' NOT NULL,
+    CREATED_AT                DATE         DEFAULT SYSDATE    NOT NULL,
+    UPDATED_AT                DATE,
+
+    CONSTRAINT PK_EXTERNAL_ORDER_RECEIPT
+        PRIMARY KEY (EXTERNAL_ORDER_RECEIPT_ID),
+
+    CONSTRAINT FK_EXTERNAL_ORDER_RECEIPT_SUPPLIER
+        FOREIGN KEY (SUPPLIER_ID)
+            REFERENCES SUPPLIER (SUPPLIER_ID),
+
+    CONSTRAINT FK_EXTERNAL_ORDER_RECEIPT_PRODUCT
+        FOREIGN KEY (SUPPLIER_PRODUCT_ID)
+            REFERENCES SUPPLIER_PRODUCT (SUPPLIER_PRODUCT_ID),
+
+    CONSTRAINT UK_EXTERNAL_ORDER_RECEIPT_INTERNAL
+        UNIQUE (INTERNAL_ORDER_REQUEST_ID),
+
+    CONSTRAINT CK_EXTERNAL_ORDER_RECEIPT_REQ_QTY
+        CHECK (REQUEST_QUANTITY > 0),
+
+    CONSTRAINT CK_EXTERNAL_ORDER_RECEIPT_APP_QTY
+        CHECK (APPROVED_QUANTITY IS NULL OR APPROVED_QUANTITY >= 0),
+
+    CONSTRAINT CK_EXTERNAL_ORDER_RECEIPT_STATUS
+        CHECK (
+            RECEIPT_STATUS IN (
+                               'RECEIVED',
+                               'APPROVED',
+                               'REJECTED',
+                               'PROCESSING',
+                               'SHIPPED',
+                               'CANCELED'
+                )
+            )
+);
+
+
+/* =========================================================
+   5. EXTERNAL_SHIPMENT - 외부출고처리
+========================================================= */
+CREATE TABLE EXTERNAL_SHIPMENT
+(
+    EXTERNAL_SHIPMENT_ID      NUMBER                         NOT NULL,
+    EXTERNAL_ORDER_RECEIPT_ID NUMBER                         NOT NULL,
+    SHIPMENT_QUANTITY         NUMBER                         NOT NULL,
+    SHIPMENT_STATUS           VARCHAR2(30) DEFAULT 'SHIPPED' NOT NULL,
+    CREATED_AT                DATE         DEFAULT SYSDATE   NOT NULL,
+    UPDATED_AT                DATE,
+
+    CONSTRAINT PK_EXTERNAL_SHIPMENT
+        PRIMARY KEY (EXTERNAL_SHIPMENT_ID),
+
+    CONSTRAINT FK_EXTERNAL_SHIPMENT_RECEIPT
+        FOREIGN KEY (EXTERNAL_ORDER_RECEIPT_ID)
+            REFERENCES EXTERNAL_ORDER_RECEIPT (EXTERNAL_ORDER_RECEIPT_ID),
+
+    CONSTRAINT CK_EXTERNAL_SHIPMENT_QTY
+        CHECK (SHIPMENT_QUANTITY > 0),
+
+    CONSTRAINT CK_EXTERNAL_SHIPMENT_STATUS
+        CHECK (
+            SHIPMENT_STATUS IN (
+                                'READY',
+                                'SHIPPED',
+                                'CANCELED',
+                                'FAILED'
+                )
+            )
+);
+
+COMMIT;
