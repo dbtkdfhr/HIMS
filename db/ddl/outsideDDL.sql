@@ -169,3 +169,82 @@ CREATE TABLE EXTERNAL_SHIPMENT
 );
 
 COMMIT;
+
+/* =========================================================
+   TABLE COMMENTS
+========================================================= */
+
+COMMENT ON TABLE SUPPLIER IS '외부 발주처 정보를 관리하는 테이블';
+COMMENT ON TABLE SUPPLIER_PRODUCT IS '외부 발주처에서 취급하는 상품 정보를 관리하는 테이블';
+COMMENT ON TABLE SUPPLIER_INVENTORY IS '외부 발주처별 상품 재고 수량을 관리하는 테이블';
+COMMENT ON TABLE EXTERNAL_ORDER_RECEIPT IS '내부 시스템에서 전송한 발주 요청을 외부 발주처가 접수한 내역을 관리하는 테이블';
+COMMENT ON TABLE EXTERNAL_SHIPMENT IS '외부 발주처에서 처리한 상품 출고 내역을 관리하는 테이블';
+
+
+/* =========================================================
+   SUPPLIER - 발주처
+========================================================= */
+
+COMMENT ON COLUMN SUPPLIER.SUPPLIER_ID IS '발주처 고유 번호';
+COMMENT ON COLUMN SUPPLIER.SUPPLIER_NAME IS '발주처명';
+COMMENT ON COLUMN SUPPLIER.SUPPLIER_TYPE IS '발주처 유형';
+COMMENT ON COLUMN SUPPLIER.ADDRESS IS '발주처 주소';
+COMMENT ON COLUMN SUPPLIER.PHONE_NUMBER IS '발주처 연락처';
+COMMENT ON COLUMN SUPPLIER.OPERATION_STATUS IS '발주처 운영 상태: ACTIVE, INACTIVE, CLOSED';
+COMMENT ON COLUMN SUPPLIER.CREATED_AT IS '발주처 정보 등록 일시';
+COMMENT ON COLUMN SUPPLIER.UPDATED_AT IS '발주처 정보 최종 수정 일시';
+
+
+/* =========================================================
+   SUPPLIER_PRODUCT - 발주처상품
+========================================================= */
+
+COMMENT ON COLUMN SUPPLIER_PRODUCT.SUPPLIER_PRODUCT_ID IS '발주처 상품 고유 번호';
+COMMENT ON COLUMN SUPPLIER_PRODUCT.SUPPLIER_ID IS '상품을 취급하는 발주처 고유 번호';
+COMMENT ON COLUMN SUPPLIER_PRODUCT.EXTERNAL_PRODUCT_ID IS '외부 발주처 시스템의 상품 식별값';
+COMMENT ON COLUMN SUPPLIER_PRODUCT.PRODUCT_NAME IS '발주처 상품명';
+COMMENT ON COLUMN SUPPLIER_PRODUCT.SUPPLY_PRICE IS '상품 공급가';
+COMMENT ON COLUMN SUPPLIER_PRODUCT.PRODUCT_STATUS IS '발주처 상품 상태: ACTIVE, INACTIVE, DISCONTINUED';
+COMMENT ON COLUMN SUPPLIER_PRODUCT.CREATED_AT IS '발주처 상품 등록 일시';
+COMMENT ON COLUMN SUPPLIER_PRODUCT.UPDATED_AT IS '발주처 상품 정보 최종 수정 일시';
+
+
+/* =========================================================
+   SUPPLIER_INVENTORY - 발주처재고
+========================================================= */
+
+COMMENT ON COLUMN SUPPLIER_INVENTORY.SUPPLIER_ID IS '재고를 보유한 발주처 고유 번호';
+COMMENT ON COLUMN SUPPLIER_INVENTORY.SUPPLIER_PRODUCT_ID IS '재고 대상 발주처 상품 고유 번호';
+COMMENT ON COLUMN SUPPLIER_INVENTORY.CURRENT_QUANTITY IS '발주처의 현재 재고 수량';
+COMMENT ON COLUMN SUPPLIER_INVENTORY.CREATED_AT IS '발주처 재고 정보 등록 일시';
+COMMENT ON COLUMN SUPPLIER_INVENTORY.UPDATED_AT IS '발주처 재고 정보 최종 수정 일시';
+
+
+/* =========================================================
+   EXTERNAL_ORDER_RECEIPT - 외부발주접수
+========================================================= */
+
+COMMENT ON COLUMN EXTERNAL_ORDER_RECEIPT.EXTERNAL_ORDER_RECEIPT_ID IS '외부 발주 접수 고유 번호';
+COMMENT ON COLUMN EXTERNAL_ORDER_RECEIPT.SUPPLIER_ID IS '발주를 접수한 발주처 고유 번호';
+COMMENT ON COLUMN EXTERNAL_ORDER_RECEIPT.SUPPLIER_PRODUCT_ID IS '발주 접수 상품 고유 번호';
+COMMENT ON COLUMN EXTERNAL_ORDER_RECEIPT.INTERNAL_ORDER_REQUEST_ID IS '내부 시스템의 발주 요청 식별값';
+COMMENT ON COLUMN EXTERNAL_ORDER_RECEIPT.REQUEST_STORE_NAME IS '발주를 요청한 입점매장명';
+COMMENT ON COLUMN EXTERNAL_ORDER_RECEIPT.REQUEST_QUANTITY IS '내부 시스템에서 요청한 발주 수량';
+COMMENT ON COLUMN EXTERNAL_ORDER_RECEIPT.APPROVED_QUANTITY IS '내부 시스템에서 승인된 발주 수량';
+COMMENT ON COLUMN EXTERNAL_ORDER_RECEIPT.RECEIPT_STATUS IS '외부 발주 접수 상태: RECEIVED, APPROVED, REJECTED, PROCESSING, SHIPPED, CANCELED';
+COMMENT ON COLUMN EXTERNAL_ORDER_RECEIPT.CREATED_AT IS '외부 발주 접수 등록 일시';
+COMMENT ON COLUMN EXTERNAL_ORDER_RECEIPT.UPDATED_AT IS '외부 발주 접수 정보 최종 수정 일시';
+
+
+/* =========================================================
+   EXTERNAL_SHIPMENT - 외부출고처리
+========================================================= */
+
+COMMENT ON COLUMN EXTERNAL_SHIPMENT.EXTERNAL_SHIPMENT_ID IS '외부 출고 처리 고유 번호';
+COMMENT ON COLUMN EXTERNAL_SHIPMENT.EXTERNAL_ORDER_RECEIPT_ID IS '출고 처리 대상 외부 발주 접수 고유 번호';
+COMMENT ON COLUMN EXTERNAL_SHIPMENT.SHIPMENT_QUANTITY IS '출고 처리된 수량';
+COMMENT ON COLUMN EXTERNAL_SHIPMENT.SHIPMENT_STATUS IS '출고 처리 상태: READY, SHIPPED, CANCELED, FAILED';
+COMMENT ON COLUMN EXTERNAL_SHIPMENT.CREATED_AT IS '외부 출고 처리 등록 일시';
+COMMENT ON COLUMN EXTERNAL_SHIPMENT.UPDATED_AT IS '외부 출고 처리 정보 최종 수정 일시';
+
+COMMIT;

@@ -396,3 +396,196 @@ CREATE TABLE STORE_RECEIPT
 );
 
 COMMIT;
+
+/* =========================================================
+   TABLE COMMENTS
+========================================================= */
+
+COMMENT ON TABLE ROLE IS '시스템 사용자 권한 정보를 관리하는 테이블';
+COMMENT ON TABLE BRANCH IS '현대백화점 지점 정보를 관리하는 테이블';
+COMMENT ON TABLE BRAND IS '입점 브랜드 정보를 관리하는 테이블';
+COMMENT ON TABLE CATEGORY IS '상품 카테고리 정보를 계층 구조로 관리하는 테이블';
+COMMENT ON TABLE STORE IS '백화점 지점에 입점한 브랜드 매장 정보를 관리하는 테이블';
+COMMENT ON TABLE EMPLOYEE IS '시스템을 사용하는 직원 계정 정보를 관리하는 테이블';
+COMMENT ON TABLE PRODUCT IS '브랜드별 상품 정보를 관리하는 테이블';
+COMMENT ON TABLE SUPPLIER_INTEGRATION IS '브랜드와 외부 발주처 간 연동 정보를 관리하는 테이블';
+COMMENT ON TABLE STORE_INVENTORY IS '입점매장별 상품 재고 수량과 안전재고를 관리하는 테이블';
+COMMENT ON TABLE ORDER_REQUEST IS '입점매장에서 발주처로 요청한 발주 정보를 관리하는 테이블';
+COMMENT ON TABLE ORDER_APPROVAL IS '발주 요청에 대한 승인 또는 반려 이력을 관리하는 테이블';
+COMMENT ON TABLE STORE_RECEIPT IS '발주 상품이 매장에 입고되었는지 확인한 내역을 관리하는 테이블';
+
+
+/* =========================================================
+   ROLE - 권한
+========================================================= */
+
+COMMENT ON COLUMN ROLE.ROLE_ID IS '권한 고유 번호';
+COMMENT ON COLUMN ROLE.ROLE_NAME IS '권한명';
+COMMENT ON COLUMN ROLE.ROLE_DESCRIPTION IS '권한 설명';
+COMMENT ON COLUMN ROLE.CREATED_AT IS '권한 등록 일시';
+COMMENT ON COLUMN ROLE.UPDATED_AT IS '권한 정보 최종 수정 일시';
+
+
+/* =========================================================
+   BRANCH - 지점
+========================================================= */
+
+COMMENT ON COLUMN BRANCH.BRANCH_ID IS '지점 고유 번호';
+COMMENT ON COLUMN BRANCH.BRANCH_NAME IS '지점명';
+COMMENT ON COLUMN BRANCH.ADDRESS IS '지점 주소';
+COMMENT ON COLUMN BRANCH.PHONE_NUMBER IS '지점 연락처';
+COMMENT ON COLUMN BRANCH.OPERATION_STATUS IS '지점 운영 상태: ACTIVE, INACTIVE, CLOSED';
+COMMENT ON COLUMN BRANCH.CREATED_AT IS '지점 등록 일시';
+COMMENT ON COLUMN BRANCH.UPDATED_AT IS '지점 정보 최종 수정 일시';
+
+
+/* =========================================================
+   BRAND - 브랜드
+========================================================= */
+
+COMMENT ON COLUMN BRAND.BRAND_ID IS '브랜드 고유 번호';
+COMMENT ON COLUMN BRAND.BRAND_NAME IS '브랜드명';
+COMMENT ON COLUMN BRAND.MANAGER_NAME IS '브랜드 담당자명';
+COMMENT ON COLUMN BRAND.PHONE_NUMBER IS '브랜드 연락처';
+COMMENT ON COLUMN BRAND.OPERATION_STATUS IS '브랜드 운영 상태: ACTIVE, INACTIVE';
+COMMENT ON COLUMN BRAND.CREATED_AT IS '브랜드 등록 일시';
+COMMENT ON COLUMN BRAND.UPDATED_AT IS '브랜드 정보 최종 수정 일시';
+
+
+/* =========================================================
+   CATEGORY - 카테고리
+========================================================= */
+
+COMMENT ON COLUMN CATEGORY.CATEGORY_ID IS '카테고리 고유 번호';
+COMMENT ON COLUMN CATEGORY.PARENT_CATEGORY_ID IS '상위 카테고리 고유 번호';
+COMMENT ON COLUMN CATEGORY.CATEGORY_NAME IS '카테고리명';
+COMMENT ON COLUMN CATEGORY.CATEGORY_LEVEL IS '카테고리 계층 깊이';
+COMMENT ON COLUMN CATEGORY.IS_ACTIVE IS '카테고리 사용 여부: Y, N';
+COMMENT ON COLUMN CATEGORY.CREATED_AT IS '카테고리 등록 일시';
+COMMENT ON COLUMN CATEGORY.UPDATED_AT IS '카테고리 정보 최종 수정 일시';
+
+
+/* =========================================================
+   STORE - 입점매장
+========================================================= */
+
+COMMENT ON COLUMN STORE.STORE_ID IS '입점매장 고유 번호';
+COMMENT ON COLUMN STORE.BRANCH_ID IS '입점매장이 속한 지점 고유 번호';
+COMMENT ON COLUMN STORE.BRAND_ID IS '입점매장을 운영하는 브랜드 고유 번호';
+COMMENT ON COLUMN STORE.STORE_NAME IS '입점매장명';
+COMMENT ON COLUMN STORE.FLOOR_INFO IS '입점매장 층 정보';
+COMMENT ON COLUMN STORE.STORE_LOCATION IS '입점매장 위치 설명';
+COMMENT ON COLUMN STORE.OPERATION_STATUS IS '입점매장 운영 상태: ACTIVE, INACTIVE, CLOSED';
+COMMENT ON COLUMN STORE.CREATED_AT IS '입점매장 등록 일시';
+COMMENT ON COLUMN STORE.UPDATED_AT IS '입점매장 정보 최종 수정 일시';
+
+
+/* =========================================================
+   EMPLOYEE - 직원
+========================================================= */
+
+COMMENT ON COLUMN EMPLOYEE.EMPLOYEE_ID IS '직원 고유 번호';
+COMMENT ON COLUMN EMPLOYEE.ROLE_ID IS '직원에게 부여된 권한 고유 번호';
+COMMENT ON COLUMN EMPLOYEE.STORE_ID IS '직원이 소속된 입점매장 고유 번호';
+COMMENT ON COLUMN EMPLOYEE.LOGIN_ID IS '시스템 로그인 ID';
+COMMENT ON COLUMN EMPLOYEE.PASSWORD IS '시스템 로그인 비밀번호';
+COMMENT ON COLUMN EMPLOYEE.EMPLOYEE_NAME IS '직원명';
+COMMENT ON COLUMN EMPLOYEE.PHONE_NUMBER IS '직원 연락처';
+COMMENT ON COLUMN EMPLOYEE.IS_ACTIVE IS '직원 계정 사용 여부: Y, N';
+COMMENT ON COLUMN EMPLOYEE.CREATED_AT IS '직원 계정 등록 일시';
+COMMENT ON COLUMN EMPLOYEE.UPDATED_AT IS '직원 계정 최종 수정 일시';
+
+
+/* =========================================================
+   PRODUCT - 상품
+========================================================= */
+
+COMMENT ON COLUMN PRODUCT.PRODUCT_ID IS '상품 고유 번호';
+COMMENT ON COLUMN PRODUCT.BRAND_ID IS '상품을 보유한 브랜드 고유 번호';
+COMMENT ON COLUMN PRODUCT.CATEGORY_ID IS '상품이 속한 카테고리 고유 번호';
+COMMENT ON COLUMN PRODUCT.PRODUCT_NAME IS '상품명';
+COMMENT ON COLUMN PRODUCT.PRICE IS '상품 판매가';
+COMMENT ON COLUMN PRODUCT.SEASON_TYPE IS '시즌 구분';
+COMMENT ON COLUMN PRODUCT.PRODUCT_STATUS IS '상품 상태: ON_SALE, STOPPED, DISCONTINUED';
+COMMENT ON COLUMN PRODUCT.CREATED_AT IS '상품 등록 일시';
+COMMENT ON COLUMN PRODUCT.UPDATED_AT IS '상품 정보 최종 수정 일시';
+
+
+/* =========================================================
+   SUPPLIER_INTEGRATION - 발주처연동
+========================================================= */
+
+COMMENT ON COLUMN SUPPLIER_INTEGRATION.SUPPLIER_INTEGRATION_ID IS '발주처 연동 고유 번호';
+COMMENT ON COLUMN SUPPLIER_INTEGRATION.BRAND_ID IS '발주처와 연결된 브랜드 고유 번호';
+COMMENT ON COLUMN SUPPLIER_INTEGRATION.EXTERNAL_SUPPLIER_ID IS '외부 발주처 시스템의 발주처 식별값';
+COMMENT ON COLUMN SUPPLIER_INTEGRATION.SUPPLIER_NAME IS '발주처명';
+COMMENT ON COLUMN SUPPLIER_INTEGRATION.API_ENDPOINT IS '외부 발주처 API 엔드포인트';
+COMMENT ON COLUMN SUPPLIER_INTEGRATION.INTEGRATION_STATUS IS '발주처 연동 상태: ACTIVE, INACTIVE, ERROR';
+COMMENT ON COLUMN SUPPLIER_INTEGRATION.CREATED_AT IS '발주처 연동 정보 등록 일시';
+COMMENT ON COLUMN SUPPLIER_INTEGRATION.UPDATED_AT IS '발주처 연동 정보 최종 수정 일시';
+
+
+/* =========================================================
+   STORE_INVENTORY - 입점매장재고
+========================================================= */
+
+COMMENT ON COLUMN STORE_INVENTORY.STORE_ID IS '재고를 보유한 입점매장 고유 번호';
+COMMENT ON COLUMN STORE_INVENTORY.PRODUCT_ID IS '재고 대상 상품 고유 번호';
+COMMENT ON COLUMN STORE_INVENTORY.CURRENT_QUANTITY IS '현재 재고 수량';
+COMMENT ON COLUMN STORE_INVENTORY.SAFETY_QUANTITY IS '안전 재고 수량';
+COMMENT ON COLUMN STORE_INVENTORY.CREATED_AT IS '재고 정보 등록 일시';
+COMMENT ON COLUMN STORE_INVENTORY.UPDATED_AT IS '재고 정보 최종 수정 일시';
+
+
+/* =========================================================
+   ORDER_REQUEST - 발주요청
+========================================================= */
+
+COMMENT ON COLUMN ORDER_REQUEST.ORDER_REQUEST_ID IS '발주 요청 고유 번호';
+COMMENT ON COLUMN ORDER_REQUEST.STORE_ID IS '발주를 요청한 입점매장 고유 번호';
+COMMENT ON COLUMN ORDER_REQUEST.SUPPLIER_INTEGRATION_ID IS '발주 대상 발주처 연동 고유 번호';
+COMMENT ON COLUMN ORDER_REQUEST.PRODUCT_ID IS '발주 요청 상품 고유 번호';
+COMMENT ON COLUMN ORDER_REQUEST.REQUEST_EMPLOYEE_ID IS '발주를 요청한 직원 고유 번호';
+COMMENT ON COLUMN ORDER_REQUEST.APPROVAL_EMPLOYEE_ID IS '발주를 승인 또는 반려한 직원 고유 번호';
+COMMENT ON COLUMN ORDER_REQUEST.APPROVAL_ROLE_ID IS '발주 승인 권한 고유 번호';
+COMMENT ON COLUMN ORDER_REQUEST.EXTERNAL_ORDER_ID IS '외부 발주처 시스템에 등록된 발주 접수 식별값';
+COMMENT ON COLUMN ORDER_REQUEST.ORDER_QUANTITY IS '매장에서 요청한 발주 수량';
+COMMENT ON COLUMN ORDER_REQUEST.APPROVED_QUANTITY IS '발주처 담당자가 승인한 수량';
+COMMENT ON COLUMN ORDER_REQUEST.REQUEST_REASON IS '발주 요청 사유';
+COMMENT ON COLUMN ORDER_REQUEST.REJECT_REASON IS '발주 반려 사유';
+COMMENT ON COLUMN ORDER_REQUEST.ORDER_STATUS IS '발주 상태: REQUESTED, APPROVED, REJECTED, SENT, RECEIVED, CANCELED';
+COMMENT ON COLUMN ORDER_REQUEST.REQUESTED_AT IS '발주 요청 일시';
+COMMENT ON COLUMN ORDER_REQUEST.APPROVED_AT IS '발주 승인 일시';
+COMMENT ON COLUMN ORDER_REQUEST.REJECTED_AT IS '발주 반려 일시';
+COMMENT ON COLUMN ORDER_REQUEST.SENT_TO_SUPPLIER_AT IS '외부 발주처 전송 일시';
+
+
+/* =========================================================
+   ORDER_APPROVAL - 발주요청승인
+========================================================= */
+
+COMMENT ON COLUMN ORDER_APPROVAL.ORDER_APPROVAL_ID IS '발주 승인 이력 고유 번호';
+COMMENT ON COLUMN ORDER_APPROVAL.APPROVAL_EMPLOYEE_ID IS '발주 승인 또는 반려를 처리한 직원 고유 번호';
+COMMENT ON COLUMN ORDER_APPROVAL.ORDER_REQUEST_ID IS '승인 또는 반려 대상 발주 요청 고유 번호';
+COMMENT ON COLUMN ORDER_APPROVAL.APPROVED_QUANTITY IS '승인된 발주 수량';
+COMMENT ON COLUMN ORDER_APPROVAL.APPROVAL_STATUS IS '승인 처리 상태: APPROVED, REJECTED';
+COMMENT ON COLUMN ORDER_APPROVAL.APPROVAL_COMMENT IS '승인 또는 반려 처리 의견';
+COMMENT ON COLUMN ORDER_APPROVAL.CREATED_AT IS '발주 승인 이력 등록 일시';
+COMMENT ON COLUMN ORDER_APPROVAL.UPDATED_AT IS '발주 승인 이력 최종 수정 일시';
+
+
+/* =========================================================
+   STORE_RECEIPT - 매장입고확인
+========================================================= */
+
+COMMENT ON COLUMN STORE_RECEIPT.STORE_RECEIPT_ID IS '매장 입고 확인 고유 번호';
+COMMENT ON COLUMN STORE_RECEIPT.ORDER_REQUEST_ID IS '입고 확인 대상 발주 요청 고유 번호';
+COMMENT ON COLUMN STORE_RECEIPT.CONFIRM_EMPLOYEE_ID IS '입고 확인을 처리한 직원 고유 번호';
+COMMENT ON COLUMN STORE_RECEIPT.RECEIVED_QUANTITY IS '실제 입고된 수량';
+COMMENT ON COLUMN STORE_RECEIPT.DIFFERENCE_QUANTITY IS '승인 수량과 실제 입고 수량의 차이';
+COMMENT ON COLUMN STORE_RECEIPT.DIFFERENCE_REASON IS '입고 수량 차이 발생 사유';
+COMMENT ON COLUMN STORE_RECEIPT.RECEIPT_STATUS IS '입고 확인 상태: RECEIVED, PARTIAL_RECEIVED, CANCELED';
+COMMENT ON COLUMN STORE_RECEIPT.CREATED_AT IS '매장 입고 확인 등록 일시';
+COMMENT ON COLUMN STORE_RECEIPT.UPDATED_AT IS '매장 입고 확인 최종 수정 일시';
+
+COMMIT;
