@@ -28,6 +28,11 @@ VALUES ('입점매장담당자',
 
 INSERT INTO ROLE (ROLE_NAME,
                   ROLE_DESCRIPTION)
+VALUES ('시스템담당자',
+        '시스템 전체 직원들 계정 관리, 유지보수 권한');
+
+INSERT INTO ROLE (ROLE_NAME,
+                  ROLE_DESCRIPTION)
 VALUES ('일반직원',
         '권한없음.');
 
