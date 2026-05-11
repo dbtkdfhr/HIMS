@@ -873,4 +873,19 @@ VALUES ((SELECT ROLE_ID FROM ROLE WHERE ROLE_NAME = '입점매장담당자'),
         '010-1000-0008',
         'Y');
 
+INSERT INTO EMPLOYEE (ROLE_ID,
+                      STORE_ID,
+                      LOGIN_ID,
+                      PASSWORD,
+                      EMPLOYEE_NAME,
+                      PHONE_NUMBER,
+                      IS_ACTIVE)
+VALUES ((SELECT ROLE_ID FROM ROLE WHERE ROLE_NAME = '시스템담당자'),
+        (SELECT STORE_ID FROM STORE WHERE STORE_NAME = 'MINE 더현대서울점'),
+        'store_system',
+        'pass1234',
+        '시담당',
+        '010-1000-0009',
+        'Y');
+
 COMMIT;
