@@ -882,7 +882,7 @@ INSERT INTO EMPLOYEE (ROLE_ID,
                       IS_ACTIVE)
 VALUES ((SELECT ROLE_ID FROM ROLE WHERE ROLE_NAME = '시스템담당자'),
         (SELECT STORE_ID FROM STORE WHERE STORE_NAME = 'MINE 더현대서울점'),
-        'store_system',
+        'system_mine',
         'pass1234',
         '시담당',
         '010-1000-0009',
