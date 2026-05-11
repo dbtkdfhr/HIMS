@@ -1,13 +1,11 @@
 ---
-name: "FIX"
+name: FIX
 about: 버그 수정 템플릿
-title: ''
+title: "[Fix]"
 labels: ''
 assignees: ''
 
 ---
-
-<!-- 작성하지 않은 항목은 모두 지워주세요 -->
 
 ## 버그 설명
 

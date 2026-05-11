@@ -1,13 +1,11 @@
 ---
-name: "FEATURE"
+name: FEATURE
 about: 기능 추가, 리펙토링 템플릿
-title: ''
+title: "[Feat] "
 labels: ''
 assignees: ''
 
 ---
-
-<!-- 작성하지 않은 항목은 모두 지워주세요 -->
 
 ## 이슈 설명
 
