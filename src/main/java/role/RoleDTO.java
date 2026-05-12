@@ -1,4 +1,4 @@
-package role.dto;
+package role;
 
 import java.time.LocalDateTime;
 

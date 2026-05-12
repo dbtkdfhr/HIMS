@@ -1,4 +1,4 @@
-package role.type;
+package role;
 
 public enum RoleType {
   BRANCE_MANAGER, //지점 관리자

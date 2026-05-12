@@ -1,8 +1,7 @@
-package employee.dao;
+package employee;
 
 import common.DBConnection;
 import common.DBType;
-import employee.dto.EmployeeDTO;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;

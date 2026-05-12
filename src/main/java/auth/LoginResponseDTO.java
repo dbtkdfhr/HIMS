@@ -1,6 +1,6 @@
-package auth.dto;
+package auth;
 
-import role.type.RoleType;
+import role.RoleType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
