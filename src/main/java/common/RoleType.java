@@ -1,4 +1,4 @@
-package role;
+package common;
 
 import lombok.Getter;
 

@@ -1,7 +1,6 @@
 package auth;
 
-import java.time.LocalDateTime;
-import role.RoleType;
+import common.RoleType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

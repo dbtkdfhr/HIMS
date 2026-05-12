@@ -1,7 +1,7 @@
 package auth;
 
 import employee.EmployeeDAO;
-import role.RoleType;
+import common.RoleType;
 
 public class AuthService {
 
