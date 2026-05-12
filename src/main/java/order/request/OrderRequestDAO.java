@@ -59,7 +59,7 @@ public class OrderRequestDAO {
     dto.setApprovalRoleId(getNullableLong(resultSet, "APPROVAL_ROLE_ID"));
     dto.setExternalOrderId(resultSet.getString("EXTERNAL_ORDER_ID"));
     dto.setOrderQuantity(resultSet.getInt("ORDER_QUANTITY"));
-    dto.setApprovedQuantity(getNullableLong(resultSet, "APPROVED_QUANTITY"));
+    dto.setApprovedQuantity(getNullableInt(resultSet, "APPROVED_QUANTITY"));
     dto.setRequestReason(resultSet.getString("REQUEST_REASON"));
     dto.setRejectReason(resultSet.getString("REJECT_REASON"));
     dto.setOrderStatus(resultSet.getString("ORDER_STATUS"));
@@ -73,6 +73,16 @@ public class OrderRequestDAO {
 
   private Long getNullableLong(ResultSet resultSet, String columnName) throws SQLException {
     long value = resultSet.getLong(columnName);
+
+    if (resultSet.wasNull()) {
+      return null;
+    }
+
+    return value;
+  }
+
+  private Integer getNullableInt(ResultSet resultSet, String columnName) throws SQLException {
+    int value = resultSet.getInt(columnName);
 
     if (resultSet.wasNull()) {
       return null;
