@@ -1,4 +1,4 @@
-package common;
+package common.type;
 
 public enum ReceiptStatus {
   RECEIVED("RECEIVED"), PARTIAL_RECEIVED("PARTIAL_RECEIVED"), CANCELED("CANCELED");

@@ -2,7 +2,7 @@ package store.receipt;
 
 import common.DBConnection;
 import common.DBType;
-import common.ReceiptStatus;
+import common.type.ReceiptStatus;
 import exception.DuplicateException;
 import exception.MismatchQuantityException;
 import exception.NotFoundException;
@@ -36,7 +36,8 @@ public class StoreReceiptService {
         ReceiptStatus.RECEIVED);
   }
 
-  public int partialReceiveReceipt(long orderRequestId, long confirmEmployeeId, int receivedQuantity,
+  public int partialReceiveReceipt(long orderRequestId, long confirmEmployeeId,
+      int receivedQuantity,
       String differenceReason) throws SQLException {
     return processReceipt(orderRequestId, confirmEmployeeId, receivedQuantity, differenceReason,
         ReceiptStatus.PARTIAL_RECEIVED);
