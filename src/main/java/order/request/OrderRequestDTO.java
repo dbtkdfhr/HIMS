@@ -15,7 +15,7 @@ public class OrderRequestDTO {
   private Long approvalRoleId;
   private String externalOrderId;
   private int orderQuantity;
-  private Long approvedQuantity;
+  private Integer approvedQuantity;
   private String requestReason;
   private String rejectReason;
   private String orderStatus; // REQUESTED, APPROVED, REJECTED, SENT, RECEIVED, CANCELED
