@@ -2,6 +2,7 @@ package order.request;
 
 import common.DBConnection;
 import common.DBType;
+import common.OrderStatus;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -101,11 +102,11 @@ public class OrderRequestDAO {
     return value.toLocalDateTime();
   }
 
-  public List<OrderRequestDTO> findAllByStatus(String orderStatus) throws SQLException {
+  public List<OrderRequestDTO> findAllByStatus(OrderStatus orderStatus) throws SQLException {
     List<OrderRequestDTO> orderRequestDTOList = new ArrayList<>();
     String sql = "SELECT * FROM ORDER_REQUEST WHERE order_status = ? ORDER BY requested_at DESC";
     try(Connection conn = DBConnection.getConnection(DBType.ORACLE); PreparedStatement pstmt = conn.prepareStatement(sql)){
-        pstmt.setString(1, orderStatus);
+        pstmt.setString(1, orderStatus.name());
         try(ResultSet rs = pstmt.executeQuery()){
           while (rs.next()) {
             orderRequestDTOList.add(mapToOrderRequestDTO(rs));
@@ -115,30 +116,32 @@ public class OrderRequestDAO {
   }
 
   public int updateStatusAndQuantity(long requestId, int approvedQuantity, long employeeId) throws SQLException {
-    String sql = "UPDATE order_request SET order_status = 'APPROVED', approved_quantity = ?, " +
+    String sql = "UPDATE order_request SET order_status = ?, approved_quantity = ?, " +
         "approval_employee_id = ?, approved_at = SYSDATE WHERE order_request_id = ?";
 
     try (Connection conn = DBConnection.getConnection(DBType.ORACLE);
         PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-      pstmt.setInt(1, approvedQuantity);
-      pstmt.setLong(2, employeeId);
-      pstmt.setLong(3, requestId);
+      pstmt.setString(1, OrderStatus.APPROVED.name());
+      pstmt.setInt(2, approvedQuantity);
+      pstmt.setLong(3, employeeId);
+      pstmt.setLong(4, requestId);
 
       return pstmt.executeUpdate();
     }
   }
 
   public int updateRejectStatus(long requestId, String rejectReason, long employeeId) throws SQLException {
-    String sql = "UPDATE order_request SET order_status = 'REJECTED', reject_reason = ?, " +
+    String sql = "UPDATE order_request SET order_status = ?, reject_reason = ?, " +
         "approval_employee_id = ?, rejected_at = SYSDATE WHERE order_request_id = ?";
 
     try (Connection conn = DBConnection.getConnection(DBType.ORACLE);
         PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-      pstmt.setString(1, rejectReason);
-      pstmt.setLong(2, employeeId);
-      pstmt.setLong(3, requestId);
+      pstmt.setString(1, OrderStatus.REJECTED.name());
+      pstmt.setString(2, rejectReason);
+      pstmt.setLong(3, employeeId);
+      pstmt.setLong(4, requestId);
 
       return pstmt.executeUpdate();
     }
