@@ -12,11 +12,11 @@ public class StoreInventoryDAO {
   public int decreaseQuantity(int storeId, int productId, int quantity)
       throws SQLException {
     String decreaseQuantitySql = "";
-    decreaseQuantitySql += "UPDATE STORE_INVENTORY\n";
-    decreaseQuantitySql += "SET CURRENT_QUANTITY = CURRENT_QUANTITY - ?,\n";
-    decreaseQuantitySql += "UPDATED_AT = SYSDATE\n";
-    decreaseQuantitySql += "WHERE STORE_ID = ?\n";
-    decreaseQuantitySql += "AND PRODUCT_ID = ?\n";
+    decreaseQuantitySql += "UPDATE STORE_INVENTORY ";
+    decreaseQuantitySql += "SET current_quantity = current_quantity - ?, ";
+    decreaseQuantitySql += "updated_at = SYSDATE ";
+    decreaseQuantitySql += "WHERE store_id = ? ";
+    decreaseQuantitySql += "AND product_id = ? ";
 
     Connection conn = null;
     PreparedStatement pstmt = null;
