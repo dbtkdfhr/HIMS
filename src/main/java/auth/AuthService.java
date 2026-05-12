@@ -1,7 +1,7 @@
 package auth;
 
+import common.type.RoleType;
 import employee.EmployeeDAO;
-import common.RoleType;
 
 public class AuthService {
 
@@ -18,7 +18,7 @@ public class AuthService {
       throw new IllegalArgumentException("아이디 혹은 비밀번호가 일치하지 않습니다.");
     }
 
-    if(!"Y".equals(employee.getIsActive())){
+    if (!"Y".equals(employee.getIsActive())) {
       throw new IllegalStateException("시스템 관리자에게 문의하세요.");
     }
 

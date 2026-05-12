@@ -1,6 +1,6 @@
 package auth;
 
-import common.RoleType;
+import common.type.RoleType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

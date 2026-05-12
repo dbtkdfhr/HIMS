@@ -1,12 +1,8 @@
 package order.request;
 
-import static common.GetNullableVariable.getNullableInt;
-import static common.GetNullableVariable.getNullableLocalDateTime;
-import static common.GetNullableVariable.getNullableLong;
-
 import common.DBConnection;
-import common.DBType;
-import common.OrderStatus;
+import common.type.DBType;
+import common.type.OrderStatus;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -155,7 +151,8 @@ public class OrderRequestDAO {
     return value;
   }
 
-  private LocalDateTime getNullableLocalDateTime(ResultSet resultSet, String columnName) throws SQLException {
+  private LocalDateTime getNullableLocalDateTime(ResultSet resultSet, String columnName)
+      throws SQLException {
     Timestamp value = resultSet.getTimestamp(columnName);
 
     if (value == null) {
@@ -168,17 +165,20 @@ public class OrderRequestDAO {
   public List<OrderRequestDTO> findAllByStatus(OrderStatus orderStatus) throws SQLException {
     List<OrderRequestDTO> orderRequestDTOList = new ArrayList<>();
     String sql = "SELECT * FROM ORDER_REQUEST WHERE order_status = ? ORDER BY requested_at DESC";
-    try(Connection conn = DBConnection.getConnection(DBType.ORACLE); PreparedStatement pstmt = conn.prepareStatement(sql)){
-        pstmt.setString(1, orderStatus.name());
-        try(ResultSet rs = pstmt.executeQuery()){
-          while (rs.next()) {
-            orderRequestDTOList.add(mapToOrderRequestDTO(rs));
-          }
+    try (Connection conn = DBConnection.getConnection(
+        DBType.ORACLE); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+      pstmt.setString(1, orderStatus.name());
+      try (ResultSet rs = pstmt.executeQuery()) {
+        while (rs.next()) {
+          orderRequestDTOList.add(mapToOrderRequestDTO(rs));
+        }
       }
-    } return orderRequestDTOList;
+    }
+    return orderRequestDTOList;
   }
 
-  public int updateStatusAndQuantity(long requestId, int approvedQuantity, long employeeId) throws SQLException {
+  public int updateStatusAndQuantity(long requestId, int approvedQuantity, long employeeId)
+      throws SQLException {
     String sql = "UPDATE order_request SET order_status = ?, approved_quantity = ?, " +
         "approval_employee_id = ?, approved_at = SYSDATE WHERE order_request_id = ?";
 
@@ -194,7 +194,8 @@ public class OrderRequestDAO {
     }
   }
 
-  public int updateRejectStatus(long requestId, String rejectReason, long employeeId) throws SQLException {
+  public int updateRejectStatus(long requestId, String rejectReason, long employeeId)
+      throws SQLException {
     String sql = "UPDATE order_request SET order_status = ?, reject_reason = ?, " +
         "approval_employee_id = ?, rejected_at = SYSDATE WHERE order_request_id = ?";
 

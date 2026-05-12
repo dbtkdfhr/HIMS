@@ -1,7 +1,7 @@
 package order.external;
 
 import common.DBConnection;
-import common.DBType;
+import common.type.DBType;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -10,10 +10,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ExternalSupplierInventoryDAO {
-  public void decreaseStock(long productId, int quantity) throws SQLException{
+
+  public void decreaseStock(long productId, int quantity) throws SQLException {
     String sql = "UPDATE supplier_inventory SET current_quantity = current_quantity - ? WHERE supplier_product_id = ? AND current_quantity >= ?";
 
-    try(Connection conn = DBConnection.getConnection(DBType.MARIADB); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+    try (Connection conn = DBConnection.getConnection(
+        DBType.MARIADB); PreparedStatement pstmt = conn.prepareStatement(sql)) {
       pstmt.setInt(1, quantity);
       pstmt.setLong(2, productId);
       pstmt.setLong(3, quantity);
@@ -25,7 +27,7 @@ public class ExternalSupplierInventoryDAO {
     }
   }
 
-  public void insertExternalRecipt(int orderRequestId) throws SQLException{
+  public void insertExternalRecipt(int orderRequestId) throws SQLException {
     String sql = "INSERT INTO external_order_receipt (internal_order_request_id, receipt_status) " +
         "VALUES (?, 'RECEIVED')";
 
@@ -37,7 +39,7 @@ public class ExternalSupplierInventoryDAO {
     }
   }
 
-  public List<ExternalSupplierInventoryDTO> findAllInventory() throws SQLException{
+  public List<ExternalSupplierInventoryDTO> findAllInventory() throws SQLException {
     List<ExternalSupplierInventoryDTO> inventoryList = new ArrayList<>();
     String sql = "SELECT supplier_id, supplier_product_id, current_quantity FROM supplier_inventory";
     try (Connection conn = DBConnection.getConnection(DBType.MARIADB);
@@ -55,11 +57,11 @@ public class ExternalSupplierInventoryDAO {
     return inventoryList;
   }
 
-  public ExternalSupplierInventoryDTO findInventoryById(long productId) throws SQLException{
+  public ExternalSupplierInventoryDTO findInventoryById(long productId) throws SQLException {
     String sql = "SELECT supplier_id, supplier_product_id, current_quantity FROM supplier_inventory WHERE supplier_product_id = ?";
 
     try (Connection conn = DBConnection.getConnection(DBType.MARIADB);
-    PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        PreparedStatement pstmt = conn.prepareStatement(sql)) {
       pstmt.setLong(1, productId);
 
       try (ResultSet rs = pstmt.executeQuery()) {
@@ -71,6 +73,7 @@ public class ExternalSupplierInventoryDAO {
           return dto;
         }
       }
-    }return null;
+    }
+    return null;
   }
 }

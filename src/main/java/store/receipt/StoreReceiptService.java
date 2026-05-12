@@ -1,7 +1,7 @@
 package store.receipt;
 
 import common.DBConnection;
-import common.DBType;
+import common.type.DBType;
 import common.type.ReceiptStatus;
 import exception.DuplicateException;
 import exception.MismatchQuantityException;

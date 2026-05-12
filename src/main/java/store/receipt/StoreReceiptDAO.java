@@ -3,7 +3,7 @@ package store.receipt;
 import static common.GetNullableVariable.getNullableLocalDateTime;
 
 import common.DBConnection;
-import common.DBType;
+import common.type.DBType;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;

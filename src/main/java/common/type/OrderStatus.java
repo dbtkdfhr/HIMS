@@ -1,4 +1,4 @@
-package common;
+package common.type;
 
 public enum OrderStatus {
   REQUESTED,   // 발주 요청 (대기)
