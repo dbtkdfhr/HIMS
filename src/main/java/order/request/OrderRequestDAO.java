@@ -50,6 +50,66 @@ public class OrderRequestDAO {
     return orderRequestDTOList;
   }
 
+  public OrderRequestDTO findByOrderRequestId(Connection connection, long orderRequestId)
+      throws SQLException {
+    String sql = "SELECT * FROM order_request WHERE order_request_id = ?";
+
+    PreparedStatement preparedStatement = null;
+    ResultSet resultSet = null;
+
+    try {
+      preparedStatement = connection.prepareStatement(sql);
+      preparedStatement.setLong(1, orderRequestId);
+      resultSet = preparedStatement.executeQuery();
+
+      if (resultSet.next()) {
+        return mapToOrderRequestDTO(resultSet);
+      }
+
+      return null;
+    } finally {
+      DBConnection.close(resultSet);
+      DBConnection.close(preparedStatement);
+    }
+  }
+
+  public List<OrderRequestDTO> findReceiptTargetOrderRequests(long storeId) throws SQLException {
+    List<OrderRequestDTO> orderRequestDTOList = new ArrayList<>();
+
+    String sql = "";
+    sql += "SELECT orq.* ";
+    sql += "FROM ORDER_REQUEST orq ";
+    sql += "WHERE orq.STORE_ID = ? ";
+    sql += "AND orq.ORDER_STATUS = 'SENT' ";
+    sql += "AND NOT EXISTS (";
+    sql += "SELECT 1 ";
+    sql += "FROM STORE_RECEIPT sr ";
+    sql += "WHERE sr.ORDER_REQUEST_ID = orq.ORDER_REQUEST_ID";
+    sql += ") ";
+    sql += "ORDER BY orq.SENT_TO_SUPPLIER_AT DESC";
+
+    Connection connection = null;
+    PreparedStatement preparedStatement = null;
+    ResultSet resultSet = null;
+
+    try {
+      connection = DBConnection.getConnection(DBType.ORACLE);
+      preparedStatement = connection.prepareStatement(sql);
+      preparedStatement.setLong(1, storeId);
+      resultSet = preparedStatement.executeQuery();
+
+      while (resultSet.next()) {
+        orderRequestDTOList.add(mapToOrderRequestDTO(resultSet));
+      }
+    } finally {
+      DBConnection.close(resultSet);
+      DBConnection.close(preparedStatement);
+      DBConnection.close(connection);
+    }
+
+    return orderRequestDTOList;
+  }
+
   private OrderRequestDTO mapToOrderRequestDTO(ResultSet resultSet) throws SQLException {
     OrderRequestDTO dto = new OrderRequestDTO();
 
