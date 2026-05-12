@@ -3,7 +3,7 @@ package store.receipt;
 import static common.GetNullableVariable.getNullableLocalDateTime;
 
 import common.DBConnection;
-import common.DBType;
+import common.type.DBType;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -28,29 +28,53 @@ public class StoreReceiptDAO {
       rs = pstmt.executeQuery();
 
       while (rs.next()) {
-        StoreReceiptDTO dto = new StoreReceiptDTO();
-        dto.setStoreReceiptId(rs.getLong("STORE_RECEIPT_ID"));
-        dto.setOrderRequestId(rs.getLong("ORDER_REQUEST_ID"));
-        dto.setConfirmEmployeeId(rs.getLong("CONFIRM_EMPLOYEE_ID"));
-        dto.setReceivedQuantity(rs.getInt("RECEIVED_QUANTITY"));
-        dto.setDifferenceQuantity(rs.getInt("DIFFERENCE_QUANTITY"));
-        dto.setDifferenceReason(rs.getString("DIFFERENCE_REASON"));
-        dto.setReceiptStatus(rs.getString("RECEIPT_STATUS"));
-
-        list.add(dto);
+        list.add(mapToStoreReceiptDTO(rs));
       }
     } catch (SQLException e) {
       throw e;
     } finally {
-      DBConnection.close(conn);
-      DBConnection.close(pstmt);
       DBConnection.close(rs);
+      DBConnection.close(pstmt);
+      DBConnection.close(conn);
     }
 
     return list;
   }
 
-  public int insertStoreReceipt(StoreReceiptDTO storeReceiptDTO) throws SQLException {
+  public List<StoreReceiptDTO> findByStoreId(long storeId) throws SQLException {
+    List<StoreReceiptDTO> list = new ArrayList<>();
+
+    Connection conn = null;
+    PreparedStatement pstmt = null;
+    ResultSet rs = null;
+
+    try {
+      conn = DBConnection.getConnection(DBType.ORACLE);
+      String sql = "";
+      sql += "SELECT sr.* ";
+      sql += "FROM STORE_RECEIPT sr ";
+      sql += "JOIN ORDER_REQUEST orq ON sr.ORDER_REQUEST_ID = orq.ORDER_REQUEST_ID ";
+      sql += "WHERE orq.STORE_ID = ? ";
+      sql += "ORDER BY sr.CREATED_AT DESC";
+
+      pstmt = conn.prepareStatement(sql);
+      pstmt.setLong(1, storeId);
+      rs = pstmt.executeQuery();
+
+      while (rs.next()) {
+        list.add(mapToStoreReceiptDTO(rs));
+      }
+    } finally {
+      DBConnection.close(rs);
+      DBConnection.close(pstmt);
+      DBConnection.close(conn);
+    }
+
+    return list;
+  }
+
+  public int insertStoreReceipt(Connection conn, StoreReceiptDTO storeReceiptDTO)
+      throws SQLException {
     String sql = "INSERT INTO STORE_RECEIPT (";
     sql += "ORDER_REQUEST_ID, ";
     sql += "CONFIRM_EMPLOYEE_ID, ";
@@ -60,11 +84,9 @@ public class StoreReceiptDAO {
     sql += "RECEIPT_STATUS";
     sql += ") VALUES (?, ?, ?, ?, ?, ?)";
 
-    Connection conn = null;
     PreparedStatement pstmt = null;
 
     try {
-      conn = DBConnection.getConnection(DBType.ORACLE);
       pstmt = conn.prepareStatement(sql);
       pstmt.setLong(1, storeReceiptDTO.getOrderRequestId());
       pstmt.setLong(2, storeReceiptDTO.getConfirmEmployeeId());
@@ -75,12 +97,29 @@ public class StoreReceiptDAO {
 
       return pstmt.executeUpdate();
     } finally {
-      DBConnection.close(conn);
       DBConnection.close(pstmt);
     }
   }
 
-  private StoreReceiptDTO mapToOrderRequestDTO(ResultSet resultSet) throws SQLException {
+  public boolean existsByOrderRequestId(Connection conn, long orderRequestId) throws SQLException {
+    String sql = "SELECT 1 FROM STORE_RECEIPT WHERE ORDER_REQUEST_ID = ?";
+
+    PreparedStatement pstmt = null;
+    ResultSet rs = null;
+
+    try {
+      pstmt = conn.prepareStatement(sql);
+      pstmt.setLong(1, orderRequestId);
+      rs = pstmt.executeQuery();
+
+      return rs.next();
+    } finally {
+      DBConnection.close(rs);
+      DBConnection.close(pstmt);
+    }
+  }
+
+  private StoreReceiptDTO mapToStoreReceiptDTO(ResultSet resultSet) throws SQLException {
     StoreReceiptDTO dto = new StoreReceiptDTO();
 
     dto.setStoreReceiptId(resultSet.getLong("STORE_RECEIPT_ID"));

@@ -2,7 +2,7 @@ package employee;
 
 import auth.LoginEmployeeDTO;
 import common.DBConnection;
-import common.DBType;
+import common.type.DBType;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;

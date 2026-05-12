@@ -1,7 +1,7 @@
 package inventory.dao;
 
 import common.DBConnection;
-import common.DBType;
+import common.type.DBType;
 import inventory.dto.InventoryDTO;
 import inventory.dto.ProductStatus;
 import java.sql.Connection;
@@ -27,7 +27,6 @@ public class InventoryDAO {
 
     List<Object> params = new ArrayList<>();
     params.add(storeId);
-
 
     // try-with-resources 로 자원 자동 반납
     try (Connection conn = DBConnection.getConnection(DBType.ORACLE);
