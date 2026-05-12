@@ -43,7 +43,7 @@ public class EmployeeDAO {
         EmployeeDTO employeeDTO = new EmployeeDTO();
 
         employeeDTO.setEmployeeId(rs.getLong("EMPLOYEE_ID"));
-        employeeDTO.setRoleId(rs.getLong("ROLE_ID"));
+        employeeDTO.setRoleId(rs.getInt("ROLE_ID"));
         employeeDTO.setStoreId(rs.getLong("STORE_ID"));
         employeeDTO.setLoginId(rs.getString("LOGIN_ID"));
         employeeDTO.setEmployeeName(rs.getString("EMPLOYEE_NAME"));
@@ -86,18 +86,21 @@ public class EmployeeDAO {
 
       String sql =
           "SELECT " +
-              "EMPLOYEE_ID, " +
-              "ROLE_ID, " +
-              "STORE_ID, " +
-              "LOGIN_ID, " +
-              "PASSWORD, " +
-              "EMPLOYEE_NAME, " +
-              "PHONE_NUMBER, " +
-              "IS_ACTIVE, " +
-              "CREATED_AT, " +
-              "UPDATED_AT " +
-              "FROM EMPLOYEE " +
-              "WHERE LOGIN_ID = ?";
+              "e.EMPLOYEE_ID, " +
+              "e.ROLE_ID, " +
+              "e.STORE_ID, " +
+              "e.LOGIN_ID, " +
+              "e.PASSWORD, " +
+              "e.EMPLOYEE_NAME, " +
+              "e.PHONE_NUMBER, " +
+              "e.IS_ACTIVE, " +
+              "e.CREATED_AT, " +
+              "e.UPDATED_AT, " +
+              "r.ROLE_NAME " +
+              "FROM EMPLOYEE e " +
+              "JOIN ROLE r " +
+              "ON e.ROLE_ID = r.ROLE_ID " +
+              "WHERE e.LOGIN_ID = ?";
 
       pstmt = conn.prepareStatement(sql);
       pstmt.setString(1, loginId);
@@ -108,7 +111,8 @@ public class EmployeeDAO {
         EmployeeDTO employeeDTO = new EmployeeDTO();
 
         employeeDTO.setEmployeeId(rs.getLong("EMPLOYEE_ID"));
-        employeeDTO.setRoleId(rs.getLong("ROLE_ID"));
+        employeeDTO.setRoleId(rs.getInt("ROLE_ID"));
+        employeeDTO.setRoleName(rs.getString("ROLE_NAME"));
         employeeDTO.setStoreId(rs.getLong("STORE_ID"));
         employeeDTO.setLoginId(rs.getString("LOGIN_ID"));
         employeeDTO.setPassword(rs.getString("PASSWORD"));
