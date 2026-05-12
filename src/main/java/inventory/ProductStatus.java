@@ -1,4 +1,4 @@
-package inventory.dto;
+package inventory;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
