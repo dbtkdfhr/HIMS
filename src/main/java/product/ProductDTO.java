@@ -1,18 +1,18 @@
 package product;
 
-import java.sql.Date;
+import java.time.LocalDateTime;
 import lombok.Data;
 
 @Data
 public class ProductDTO {
 
-  private int productId;
-  private int brandId;
-  private int categoryId;
+  private long productId;
+  private long brandId;
+  private long categoryId;
   private String productName;
   private int price;
   private String seasonType;
   private String productStatus;
-  private Date createdAt;
-  private Date updatedAt;
+  private LocalDateTime createdAt;
+  private LocalDateTime updatedAt;
 }

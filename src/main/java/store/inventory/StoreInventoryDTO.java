@@ -1,15 +1,15 @@
 package store.inventory;
 
-import java.sql.Date;
+import java.time.LocalDateTime;
 import lombok.Data;
 
 @Data
 public class StoreInventoryDTO {
 
-  private int storeId;
-  private int productId;
+  private long storeId;
+  private long productId;
   private int currentQuantity;
   private int safetyQuantity;
-  private Date createdAt;
-  private Date updatedAt;
+  private LocalDateTime createdAt;
+  private LocalDateTime updatedAt;
 }
