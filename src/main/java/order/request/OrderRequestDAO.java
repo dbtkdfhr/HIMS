@@ -1,19 +1,22 @@
 package order.request;
 
+import static common.GetNullableVariable.getNullableInt;
+import static common.GetNullableVariable.getNullableLocalDateTime;
+import static common.GetNullableVariable.getNullableLong;
+
 import common.DBConnection;
 import common.DBType;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Timestamp;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 public class OrderRequestDAO {
 
-  public List<OrderRequestDTO> findByOrderRequestIdAndOrderStatus(long orderRequestId, String orderStatus)
+  public List<OrderRequestDTO> findByOrderRequestIdAndOrderStatus(long orderRequestId,
+      String orderStatus)
       throws SQLException {
     List<OrderRequestDTO> orderRequestDTOList = new ArrayList<>();
 
@@ -59,7 +62,7 @@ public class OrderRequestDAO {
     dto.setApprovalRoleId(getNullableLong(resultSet, "APPROVAL_ROLE_ID"));
     dto.setExternalOrderId(resultSet.getString("EXTERNAL_ORDER_ID"));
     dto.setOrderQuantity(resultSet.getInt("ORDER_QUANTITY"));
-    dto.setApprovedQuantity(getNullableLong(resultSet, "APPROVED_QUANTITY"));
+    dto.setApprovedQuantity(getNullableInt(resultSet, "APPROVED_QUANTITY"));
     dto.setRequestReason(resultSet.getString("REQUEST_REASON"));
     dto.setRejectReason(resultSet.getString("REJECT_REASON"));
     dto.setOrderStatus(resultSet.getString("ORDER_STATUS"));
@@ -69,25 +72,5 @@ public class OrderRequestDAO {
     dto.setSentToSupplierAt(getNullableLocalDateTime(resultSet, "SENT_TO_SUPPLIER_AT"));
 
     return dto;
-  }
-
-  private Long getNullableLong(ResultSet resultSet, String columnName) throws SQLException {
-    long value = resultSet.getLong(columnName);
-
-    if (resultSet.wasNull()) {
-      return null;
-    }
-
-    return value;
-  }
-
-  private LocalDateTime getNullableLocalDateTime(ResultSet resultSet, String columnName) throws SQLException {
-    Timestamp value = resultSet.getTimestamp(columnName);
-
-    if (value == null) {
-      return null;
-    }
-
-    return value.toLocalDateTime();
   }
 }

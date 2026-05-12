@@ -9,7 +9,7 @@ import java.sql.SQLException;
 
 public class StoreInventoryDAO {
 
-  public int decreaseQuantity(Connection conn, int storeId, int productId, int quantity)
+  public int decreaseQuantity(int storeId, int productId, int quantity)
       throws SQLException {
     String decreaseQuantitySql = "";
     decreaseQuantitySql += "UPDATE STORE_INVENTORY\n";
@@ -18,9 +18,11 @@ public class StoreInventoryDAO {
     decreaseQuantitySql += "WHERE STORE_ID = ?\n";
     decreaseQuantitySql += "AND PRODUCT_ID = ?\n";
 
+    Connection conn = null;
     PreparedStatement pstmt = null;
 
     try {
+      conn = DBConnection.getConnection(DBType.ORACLE);
       pstmt = conn.prepareStatement(decreaseQuantitySql);
       pstmt.setInt(1, quantity);
       pstmt.setInt(2, storeId);
@@ -28,20 +30,8 @@ public class StoreInventoryDAO {
 
       return pstmt.executeUpdate();
     } finally {
-      DBConnection.close(pstmt);
-    }
-  }
-
-  public int decreaseQuantity(int storeId, int productId, int quantity) throws SQLException {
-    Connection conn = null;
-
-    try {
-      conn = DBConnection.getConnection(DBType.ORACLE);
-      return decreaseQuantity(conn, storeId, productId, quantity);
-    } catch (SQLException e) {
-      throw e;
-    } finally {
       DBConnection.close(conn);
+      DBConnection.close(pstmt);
     }
   }
 }
