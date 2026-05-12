@@ -888,4 +888,277 @@ VALUES ((SELECT ROLE_ID FROM ROLE WHERE ROLE_NAME = '시스템담당자'),
         '010-1000-0009',
         'Y');
 
+INSERT INTO SUPPLIER_INTEGRATION (BRAND_ID,
+                                  EXTERNAL_SUPPLIER_ID,
+                                  SUPPLIER_NAME,
+                                  API_ENDPOINT,
+                                  INTEGRATION_STATUS)
+VALUES ((SELECT BRAND_ID FROM BRAND WHERE BRAND_NAME = 'TIME'),
+        'SUP-TIME-001',
+        'TIME 물류센터',
+        'https://supplier.example.com/time/orders',
+        'ACTIVE');
+
+INSERT INTO SUPPLIER_INTEGRATION (BRAND_ID,
+                                  EXTERNAL_SUPPLIER_ID,
+                                  SUPPLIER_NAME,
+                                  API_ENDPOINT,
+                                  INTEGRATION_STATUS)
+VALUES ((SELECT BRAND_ID FROM BRAND WHERE BRAND_NAME = 'SYSTEM'),
+        'SUP-SYSTEM-001',
+        'SYSTEM 물류센터',
+        'https://supplier.example.com/system/orders',
+        'ACTIVE');
+
+INSERT INTO SUPPLIER_INTEGRATION (BRAND_ID,
+                                  EXTERNAL_SUPPLIER_ID,
+                                  SUPPLIER_NAME,
+                                  API_ENDPOINT,
+                                  INTEGRATION_STATUS)
+VALUES ((SELECT BRAND_ID FROM BRAND WHERE BRAND_NAME = 'MINE'),
+        'SUP-MINE-001',
+        'MINE 물류센터',
+        'https://supplier.example.com/mine/orders',
+        'ACTIVE');
+
+INSERT INTO SUPPLIER_INTEGRATION (BRAND_ID,
+                                  EXTERNAL_SUPPLIER_ID,
+                                  SUPPLIER_NAME,
+                                  API_ENDPOINT,
+                                  INTEGRATION_STATUS)
+VALUES ((SELECT BRAND_ID FROM BRAND WHERE BRAND_NAME = 'THE CASHMERE'),
+        'SUP-CASHMERE-001',
+        'THE CASHMERE 물류센터',
+        'https://supplier.example.com/cashmere/orders',
+        'ACTIVE');
+
+INSERT INTO STORE_INVENTORY (STORE_ID,
+                             PRODUCT_ID,
+                             CURRENT_QUANTITY,
+                             SAFETY_QUANTITY)
+VALUES ((SELECT STORE_ID FROM STORE WHERE STORE_NAME = 'TIME 판교점'),
+        (SELECT PRODUCT_ID FROM PRODUCT WHERE PRODUCT_NAME = 'TIME 울 블렌드 재킷'),
+        8,
+        5);
+
+INSERT INTO STORE_INVENTORY (STORE_ID,
+                             PRODUCT_ID,
+                             CURRENT_QUANTITY,
+                             SAFETY_QUANTITY)
+VALUES ((SELECT STORE_ID FROM STORE WHERE STORE_NAME = 'TIME 판교점'),
+        (SELECT PRODUCT_ID FROM PRODUCT WHERE PRODUCT_NAME = 'TIME 썸머 린넨 원피스'),
+        3,
+        5);
+
+INSERT INTO STORE_INVENTORY (STORE_ID,
+                             PRODUCT_ID,
+                             CURRENT_QUANTITY,
+                             SAFETY_QUANTITY)
+VALUES ((SELECT STORE_ID FROM STORE WHERE STORE_NAME = 'SYSTEM 무역센터점'),
+        (SELECT PRODUCT_ID FROM PRODUCT WHERE PRODUCT_NAME = 'SYSTEM 캐시미어 니트'),
+        4,
+        6);
+
+INSERT INTO STORE_INVENTORY (STORE_ID,
+                             PRODUCT_ID,
+                             CURRENT_QUANTITY,
+                             SAFETY_QUANTITY)
+VALUES ((SELECT STORE_ID FROM STORE WHERE STORE_NAME = 'MINE 더현대서울점'),
+        (SELECT PRODUCT_ID FROM PRODUCT WHERE PRODUCT_NAME = 'MINE 트렌치 코트'),
+        2,
+        4);
+
+INSERT INTO STORE_INVENTORY (STORE_ID,
+                             PRODUCT_ID,
+                             CURRENT_QUANTITY,
+                             SAFETY_QUANTITY)
+VALUES ((SELECT STORE_ID FROM STORE WHERE STORE_NAME = 'THE CASHMERE 더현대서울점'),
+        (SELECT PRODUCT_ID FROM PRODUCT WHERE PRODUCT_NAME = 'THE CASHMERE 홀가먼트 니트'),
+        6,
+        3);
+
+INSERT INTO ORDER_REQUEST (STORE_ID,
+                           SUPPLIER_INTEGRATION_ID,
+                           PRODUCT_ID,
+                           REQUEST_EMPLOYEE_ID,
+                           APPROVAL_EMPLOYEE_ID,
+                           APPROVAL_ROLE_ID,
+                           EXTERNAL_ORDER_ID,
+                           ORDER_QUANTITY,
+                           APPROVED_QUANTITY,
+                           REQUEST_REASON,
+                           REJECT_REASON,
+                           ORDER_STATUS,
+                           REQUESTED_AT,
+                           APPROVED_AT,
+                           REJECTED_AT,
+                           SENT_TO_SUPPLIER_AT)
+VALUES ((SELECT STORE_ID FROM STORE WHERE STORE_NAME = 'TIME 판교점'),
+        (SELECT SUPPLIER_INTEGRATION_ID FROM SUPPLIER_INTEGRATION WHERE EXTERNAL_SUPPLIER_ID = 'SUP-TIME-001'),
+        (SELECT PRODUCT_ID FROM PRODUCT WHERE PRODUCT_NAME = 'TIME 썸머 린넨 원피스'),
+        (SELECT EMPLOYEE_ID FROM EMPLOYEE WHERE LOGIN_ID = 'store_time'),
+        NULL,
+        NULL,
+        NULL,
+        10,
+        NULL,
+        '안전재고 미달로 인한 추가 발주 요청',
+        NULL,
+        'REQUESTED',
+        TO_DATE('2026-05-01 10:10:00', 'YYYY-MM-DD HH24:MI:SS'),
+        NULL,
+        NULL,
+        NULL);
+
+INSERT INTO ORDER_REQUEST (STORE_ID,
+                           SUPPLIER_INTEGRATION_ID,
+                           PRODUCT_ID,
+                           REQUEST_EMPLOYEE_ID,
+                           APPROVAL_EMPLOYEE_ID,
+                           APPROVAL_ROLE_ID,
+                           EXTERNAL_ORDER_ID,
+                           ORDER_QUANTITY,
+                           APPROVED_QUANTITY,
+                           REQUEST_REASON,
+                           REJECT_REASON,
+                           ORDER_STATUS,
+                           REQUESTED_AT,
+                           APPROVED_AT,
+                           REJECTED_AT,
+                           SENT_TO_SUPPLIER_AT)
+VALUES ((SELECT STORE_ID FROM STORE WHERE STORE_NAME = 'SYSTEM 무역센터점'),
+        (SELECT SUPPLIER_INTEGRATION_ID FROM SUPPLIER_INTEGRATION WHERE EXTERNAL_SUPPLIER_ID = 'SUP-SYSTEM-001'),
+        (SELECT PRODUCT_ID FROM PRODUCT WHERE PRODUCT_NAME = 'SYSTEM 캐시미어 니트'),
+        (SELECT EMPLOYEE_ID FROM EMPLOYEE WHERE LOGIN_ID = 'store_system'),
+        (SELECT EMPLOYEE_ID FROM EMPLOYEE WHERE LOGIN_ID = 'logi_system'),
+        (SELECT ROLE_ID FROM ROLE WHERE ROLE_NAME = '발주처담당자'),
+        'EXT-SYSTEM-20260501-001',
+        12,
+        12,
+        '주말 행사 대비 재고 보충',
+        NULL,
+        'SENT',
+        TO_DATE('2026-05-01 11:20:00', 'YYYY-MM-DD HH24:MI:SS'),
+        TO_DATE('2026-05-01 13:00:00', 'YYYY-MM-DD HH24:MI:SS'),
+        NULL,
+        TO_DATE('2026-05-01 13:30:00', 'YYYY-MM-DD HH24:MI:SS'));
+
+INSERT INTO ORDER_REQUEST (STORE_ID,
+                           SUPPLIER_INTEGRATION_ID,
+                           PRODUCT_ID,
+                           REQUEST_EMPLOYEE_ID,
+                           APPROVAL_EMPLOYEE_ID,
+                           APPROVAL_ROLE_ID,
+                           EXTERNAL_ORDER_ID,
+                           ORDER_QUANTITY,
+                           APPROVED_QUANTITY,
+                           REQUEST_REASON,
+                           REJECT_REASON,
+                           ORDER_STATUS,
+                           REQUESTED_AT,
+                           APPROVED_AT,
+                           REJECTED_AT,
+                           SENT_TO_SUPPLIER_AT)
+VALUES ((SELECT STORE_ID FROM STORE WHERE STORE_NAME = 'MINE 더현대서울점'),
+        (SELECT SUPPLIER_INTEGRATION_ID FROM SUPPLIER_INTEGRATION WHERE EXTERNAL_SUPPLIER_ID = 'SUP-MINE-001'),
+        (SELECT PRODUCT_ID FROM PRODUCT WHERE PRODUCT_NAME = 'MINE 트렌치 코트'),
+        (SELECT EMPLOYEE_ID FROM EMPLOYEE WHERE LOGIN_ID = 'store_mine'),
+        (SELECT EMPLOYEE_ID FROM EMPLOYEE WHERE LOGIN_ID = 'logi_mine'),
+        (SELECT ROLE_ID FROM ROLE WHERE ROLE_NAME = '발주처담당자'),
+        NULL,
+        8,
+        NULL,
+        '매장 판매 증가로 인한 긴급 발주',
+        '브랜드 물류센터 재고 부족',
+        'REJECTED',
+        TO_DATE('2026-05-02 09:00:00', 'YYYY-MM-DD HH24:MI:SS'),
+        NULL,
+        TO_DATE('2026-05-02 10:30:00', 'YYYY-MM-DD HH24:MI:SS'),
+        NULL);
+
+INSERT INTO ORDER_REQUEST (STORE_ID,
+                           SUPPLIER_INTEGRATION_ID,
+                           PRODUCT_ID,
+                           REQUEST_EMPLOYEE_ID,
+                           APPROVAL_EMPLOYEE_ID,
+                           APPROVAL_ROLE_ID,
+                           EXTERNAL_ORDER_ID,
+                           ORDER_QUANTITY,
+                           APPROVED_QUANTITY,
+                           REQUEST_REASON,
+                           REJECT_REASON,
+                           ORDER_STATUS,
+                           REQUESTED_AT,
+                           APPROVED_AT,
+                           REJECTED_AT,
+                           SENT_TO_SUPPLIER_AT)
+VALUES ((SELECT STORE_ID FROM STORE WHERE STORE_NAME = 'THE CASHMERE 더현대서울점'),
+        (SELECT SUPPLIER_INTEGRATION_ID FROM SUPPLIER_INTEGRATION WHERE EXTERNAL_SUPPLIER_ID = 'SUP-CASHMERE-001'),
+        (SELECT PRODUCT_ID FROM PRODUCT WHERE PRODUCT_NAME = 'THE CASHMERE 홀가먼트 니트'),
+        (SELECT EMPLOYEE_ID FROM EMPLOYEE WHERE LOGIN_ID = 'store_cashmere'),
+        (SELECT EMPLOYEE_ID FROM EMPLOYEE WHERE LOGIN_ID = 'logi_cashmere'),
+        (SELECT ROLE_ID FROM ROLE WHERE ROLE_NAME = '발주처담당자'),
+        'EXT-CASHMERE-20260503-001',
+        6,
+        5,
+        '시즌 상품 재고 보충',
+        NULL,
+        'RECEIVED',
+        TO_DATE('2026-05-03 14:00:00', 'YYYY-MM-DD HH24:MI:SS'),
+        TO_DATE('2026-05-03 15:10:00', 'YYYY-MM-DD HH24:MI:SS'),
+        NULL,
+        TO_DATE('2026-05-03 15:30:00', 'YYYY-MM-DD HH24:MI:SS'));
+
+INSERT INTO ORDER_APPROVAL (APPROVAL_EMPLOYEE_ID,
+                            ORDER_REQUEST_ID,
+                            APPROVED_QUANTITY,
+                            APPROVAL_STATUS,
+                            APPROVAL_COMMENT)
+VALUES ((SELECT EMPLOYEE_ID FROM EMPLOYEE WHERE LOGIN_ID = 'logi_system'),
+        (SELECT ORDER_REQUEST_ID FROM ORDER_REQUEST WHERE EXTERNAL_ORDER_ID = 'EXT-SYSTEM-20260501-001'),
+        12,
+        'APPROVED',
+        '요청 수량 전량 승인');
+
+INSERT INTO ORDER_APPROVAL (APPROVAL_EMPLOYEE_ID,
+                            ORDER_REQUEST_ID,
+                            APPROVED_QUANTITY,
+                            APPROVAL_STATUS,
+                            APPROVAL_COMMENT)
+VALUES ((SELECT EMPLOYEE_ID FROM EMPLOYEE WHERE LOGIN_ID = 'logi_mine'),
+        (SELECT ORDER_REQUEST_ID
+         FROM ORDER_REQUEST
+         WHERE STORE_ID = (SELECT STORE_ID FROM STORE WHERE STORE_NAME = 'MINE 더현대서울점')
+           AND PRODUCT_ID = (SELECT PRODUCT_ID FROM PRODUCT WHERE PRODUCT_NAME = 'MINE 트렌치 코트')
+           AND ORDER_STATUS = 'REJECTED'),
+        NULL,
+        'REJECTED',
+        '물류센터 가용 재고 부족으로 반려');
+
+INSERT INTO ORDER_APPROVAL (APPROVAL_EMPLOYEE_ID,
+                            ORDER_REQUEST_ID,
+                            APPROVED_QUANTITY,
+                            APPROVAL_STATUS,
+                            APPROVAL_COMMENT)
+VALUES ((SELECT EMPLOYEE_ID FROM EMPLOYEE WHERE LOGIN_ID = 'logi_cashmere'),
+        (SELECT ORDER_REQUEST_ID FROM ORDER_REQUEST WHERE EXTERNAL_ORDER_ID = 'EXT-CASHMERE-20260503-001'),
+        5,
+        'APPROVED',
+        '요청 수량 중 5개 승인');
+
+INSERT INTO STORE_RECEIPT (ORDER_REQUEST_ID,
+                           CONFIRM_EMPLOYEE_ID,
+                           RECEIVED_QUANTITY,
+                           DIFFERENCE_QUANTITY,
+                           DIFFERENCE_REASON,
+                           RECEIPT_STATUS,
+                           CREATED_AT)
+VALUES ((SELECT ORDER_REQUEST_ID FROM ORDER_REQUEST WHERE EXTERNAL_ORDER_ID = 'EXT-CASHMERE-20260503-001'),
+        (SELECT EMPLOYEE_ID FROM EMPLOYEE WHERE LOGIN_ID = 'store_cashmere'),
+        5,
+        0,
+        NULL,
+        'RECEIVED',
+        TO_DATE('2026-05-04 10:00:00', 'YYYY-MM-DD HH24:MI:SS'));
+
 COMMIT;
