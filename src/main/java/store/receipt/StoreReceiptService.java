@@ -2,6 +2,7 @@ package store.receipt;
 
 import common.DBConnection;
 import common.type.DBType;
+import common.type.OrderStatus;
 import common.type.ReceiptStatus;
 import exception.DuplicateException;
 import exception.MismatchQuantityException;
@@ -133,7 +134,7 @@ public class StoreReceiptService {
       throw new NotFoundException("존재하지 않는 발주 요청입니다.");
     }
 
-    if (!orderRequestDTO.getOrderStatus().equals("SENT")) {
+    if (!orderRequestDTO.getOrderStatus().equals(OrderStatus.SENT.name())) {
       throw new NotReceptableException("입고 처리 가능한 발주 상태가 아닙니다.");
     }
 
