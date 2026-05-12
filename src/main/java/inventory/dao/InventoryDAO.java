@@ -56,11 +56,11 @@ public class InventoryDAO {
   private InventoryDTO mapRow(ResultSet rs) throws SQLException {
     InventoryDTO dto = new InventoryDTO();
 
-    dto.setStoreId(rs.getInt("STORE_ID"));
+    dto.setStoreId(rs.getLong("STORE_ID"));
     dto.setProductId(rs.getInt("PRODUCT_ID"));
     dto.setCurrentQuantity(rs.getInt("CURRENT_QUANTITY"));
     dto.setSafetyQuantity(rs.getInt("SAFETY_QUANTITY"));
-    dto.setUpdatedAt(rs.getDate("UPDATED_AT"));
+    dto.setUpdatedAt(rs.getDate("UPDATED_AT").toLocalDate());
     dto.setProductName(rs.getString("PRODUCT_NAME"));
     dto.setPrice(rs.getInt("PRICE"));
     dto.setSeasonType(rs.getString("SEASON_TYPE"));
