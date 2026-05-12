@@ -7,7 +7,7 @@ import lombok.Data;
 @Data
 public class RoleDTO {
 
-  private Long roleId;
+  private long roleId;
   private String roleName;
   private String roleDescription;
   private LocalDateTime createdAt;

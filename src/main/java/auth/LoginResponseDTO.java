@@ -14,11 +14,11 @@ import lombok.ToString;
 @ToString
 public class LoginResponseDTO {
 
-  private Long employeeId;
+  private long employeeId;
   private String loginId;
   private String employeeName;
 
-  private Long roleId;
+  private long roleId;
   private String roleName;
   private RoleType roleType;
 }

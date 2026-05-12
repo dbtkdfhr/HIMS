@@ -15,13 +15,13 @@ import lombok.ToString;
 @ToString(exclude = "password")
 public class EmployeeDTO {
 
-  private Long employeeId;
+  private long employeeId;
   private String loginId;
   private String password;
   private String employeeName;
   private String phoneNumber;
 
-  private Long roleId;
+  private long roleId;
   private Long storeId;
 
   private String isActive;
