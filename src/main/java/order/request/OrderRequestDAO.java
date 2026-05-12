@@ -1,5 +1,9 @@
 package order.request;
 
+import static common.GetNullableVariable.getNullableInt;
+import static common.GetNullableVariable.getNullableLocalDateTime;
+import static common.GetNullableVariable.getNullableLong;
+
 import common.DBConnection;
 import common.DBType;
 import common.OrderStatus;
@@ -7,14 +11,13 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Timestamp;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 public class OrderRequestDAO {
 
-  public List<OrderRequestDTO> findByOrderRequestIdAndOrderStatus(long orderRequestId, String orderStatus)
+  public List<OrderRequestDTO> findByOrderRequestIdAndOrderStatus(long orderRequestId,
+      String orderStatus)
       throws SQLException {
     List<OrderRequestDTO> orderRequestDTOList = new ArrayList<>();
 

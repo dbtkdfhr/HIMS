@@ -43,4 +43,6 @@ bin/
 ### Mac OS ###
 .DS_Store
 
+### Project local files ###
 src/main/java/common/DBConnection.java
+src/main/java/test/
