@@ -21,7 +21,7 @@ public class EmployeeDTO {
   private String employeeName;
   private String phoneNumber;
 
-  private long roleId;
+  private int roleId;
   private Long storeId;
 
   private String isActive;
