@@ -1,5 +1,6 @@
 package employee;
 
+import auth.LoginEmployeeDTO;
 import common.DBConnection;
 import common.DBType;
 
@@ -76,7 +77,7 @@ public class EmployeeDAO {
   }
 
   // 로그인 ID 기준 직원 조회
-  public EmployeeDTO getEmployeeByLoginId(String loginId) {
+  public LoginEmployeeDTO getEmployeeByLoginId(String loginId) {
     Connection conn = null;
     PreparedStatement pstmt = null;
     ResultSet rs = null;
@@ -108,7 +109,7 @@ public class EmployeeDAO {
       rs = pstmt.executeQuery();
 
       if (rs.next()) {
-        EmployeeDTO employeeDTO = new EmployeeDTO();
+        LoginEmployeeDTO employeeDTO = new LoginEmployeeDTO();
 
         employeeDTO.setEmployeeId(rs.getLong("EMPLOYEE_ID"));
         employeeDTO.setRoleId(rs.getInt("ROLE_ID"));
@@ -119,17 +120,6 @@ public class EmployeeDAO {
         employeeDTO.setEmployeeName(rs.getString("EMPLOYEE_NAME"));
         employeeDTO.setPhoneNumber(rs.getString("PHONE_NUMBER"));
         employeeDTO.setIsActive(rs.getString("IS_ACTIVE"));
-
-        Timestamp createdAt = rs.getTimestamp("CREATED_AT");
-        Timestamp updatedAt = rs.getTimestamp("UPDATED_AT");
-
-        employeeDTO.setCreatedAt(
-            createdAt != null ? createdAt.toLocalDateTime() : null
-        );
-
-        employeeDTO.setUpdatedAt(
-            updatedAt != null ? updatedAt.toLocalDateTime() : null
-        );
 
         return employeeDTO;
       }
