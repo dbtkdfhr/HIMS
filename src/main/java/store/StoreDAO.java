@@ -8,10 +8,12 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 
 public class StoreDAO {
+  /* SELECT */
   // 지점 id로 하위 매장 리스트 조회
   public List<StoreDTO> getStoresByBranchId(long branchId) throws SQLException {
     String sql = "SELECT " +
@@ -56,4 +58,43 @@ public class StoreDAO {
       }
     }
   }
+
+  /* INSERT */
+  // 입점 매장 등록
+  public int insertStore(StoreDTO store) throws SQLException {
+    String sql = "INSERT INTO store (" +
+        "branch_id, " +
+        "brand_id, " +
+        "store_name, " +
+        "floor_info, " +
+        "store_location, " +
+        "operation_status" +
+        ") VALUES (?, ?, ?, ?, ?, ?)";
+
+    try (
+        Connection conn = DBConnection.getConnection(DBType.ORACLE);
+        PreparedStatement pstmt = conn.prepareStatement(sql)
+    ) {
+      pstmt.setLong(1, store.getBranchId());
+      pstmt.setLong(2, store.getBrandId());
+      pstmt.setString(3, store.getStoreName());
+
+      if (store.getFloorInfo() == null) {
+        pstmt.setNull(4, Types.VARCHAR);
+      } else {
+        pstmt.setString(4, store.getFloorInfo());
+      }
+
+      if (store.getStoreLocation() == null) {
+        pstmt.setNull(5, Types.VARCHAR);
+      } else {
+        pstmt.setString(5, store.getStoreLocation());
+      }
+
+      pstmt.setString(6, store.getOperationStatus());
+
+      return pstmt.executeUpdate();
+    }
+  }
+
 }
