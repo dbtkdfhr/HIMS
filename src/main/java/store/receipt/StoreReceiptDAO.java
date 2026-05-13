@@ -53,9 +53,9 @@ public class StoreReceiptDAO {
       String sql = "";
       sql += "SELECT sr.* ";
       sql += "FROM STORE_RECEIPT sr ";
-      sql += "JOIN ORDER_REQUEST orq ON sr.ORDER_REQUEST_ID = orq.ORDER_REQUEST_ID ";
-      sql += "WHERE orq.STORE_ID = ? ";
-      sql += "ORDER BY sr.CREATED_AT DESC";
+      sql += "JOIN ORDER_REQUEST orq ON sr.order_request_id = orq.order_request_id ";
+      sql += "WHERE orq.store_id = ? ";
+      sql += "ORDER BY sr.created_at DESC";
 
       pstmt = conn.prepareStatement(sql);
       pstmt.setLong(1, storeId);
@@ -74,7 +74,7 @@ public class StoreReceiptDAO {
   }
 
   public StoreReceiptDTO findByOrderRequestId(long orderRequestId) throws SQLException {
-    String sql = "SELECT * FROM STORE_RECEIPT WHERE ORDER_REQUEST_ID = ?";
+    String sql = "SELECT * FROM STORE_RECEIPT WHERE order_request_id = ?";
 
     Connection conn = null;
     PreparedStatement pstmt = null;
@@ -101,12 +101,12 @@ public class StoreReceiptDAO {
   public int insertStoreReceipt(Connection conn, StoreReceiptDTO storeReceiptDTO)
       throws SQLException {
     String sql = "INSERT INTO STORE_RECEIPT (";
-    sql += "ORDER_REQUEST_ID, ";
-    sql += "CONFIRM_EMPLOYEE_ID, ";
-    sql += "RECEIVED_QUANTITY, ";
-    sql += "DIFFERENCE_QUANTITY, ";
-    sql += "DIFFERENCE_REASON, ";
-    sql += "RECEIPT_STATUS";
+    sql += "order_request_id, ";
+    sql += "confirm_employee_id, ";
+    sql += "received_quantity, ";
+    sql += "difference_quantity, ";
+    sql += "difference_reason, ";
+    sql += "receipt_status";
     sql += ") VALUES (?, ?, ?, ?, ?, ?)";
 
     PreparedStatement pstmt = null;
@@ -127,7 +127,7 @@ public class StoreReceiptDAO {
   }
 
   public boolean existsByOrderRequestId(Connection conn, long orderRequestId) throws SQLException {
-    String sql = "SELECT 1 FROM STORE_RECEIPT WHERE ORDER_REQUEST_ID = ?";
+    String sql = "SELECT 1 FROM STORE_RECEIPT WHERE order_request_id = ?";
 
     PreparedStatement pstmt = null;
     ResultSet rs = null;

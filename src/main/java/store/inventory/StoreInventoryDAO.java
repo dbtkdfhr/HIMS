@@ -12,10 +12,10 @@ public class StoreInventoryDAO {
 
   public Integer findCurrentQuantity(long storeId, long productId) throws SQLException {
     String sql = "";
-    sql += "SELECT CURRENT_QUANTITY ";
+    sql += "SELECT current_quantity ";
     sql += "FROM STORE_INVENTORY ";
-    sql += "WHERE STORE_ID = ? ";
-    sql += "AND PRODUCT_ID = ?";
+    sql += "WHERE store_id = ? ";
+    sql += "AND product_id = ?";
 
     Connection conn = null;
     PreparedStatement pstmt = null;

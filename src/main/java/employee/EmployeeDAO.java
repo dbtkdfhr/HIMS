@@ -15,7 +15,7 @@ import java.util.List;
 public class EmployeeDAO {
   /* SELECT */
   public String findEmployeeNameById(long employeeId) throws java.sql.SQLException {
-    String sql = "SELECT EMPLOYEE_NAME FROM EMPLOYEE WHERE EMPLOYEE_ID = ?";
+    String sql = "SELECT employee_name FROM EMPLOYEE WHERE employee_id = ?";
 
     try (Connection conn = DBConnection.getConnection(DBType.ORACLE);
         PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -33,7 +33,7 @@ public class EmployeeDAO {
 
   public List<String> findAllEmployeeSummaries() throws java.sql.SQLException {
     List<String> list = new ArrayList<>();
-    String sql = "SELECT EMPLOYEE_ID, EMPLOYEE_NAME, LOGIN_ID FROM EMPLOYEE ORDER BY EMPLOYEE_ID";
+    String sql = "SELECT employee_id, employee_name, login_id FROM EMPLOYEE ORDER BY employee_id";
 
     try (Connection conn = DBConnection.getConnection(DBType.ORACLE);
         PreparedStatement pstmt = conn.prepareStatement(sql);
