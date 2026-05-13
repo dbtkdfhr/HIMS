@@ -127,7 +127,8 @@ public class EmployeeDAO {
             "is_active, " +
             "created_at, " +
             "updated_at " +
-            "FROM EMPLOYEE";
+            "FROM EMPLOYEE " +
+            "ORDER BY employee_id ";
 
     try (
         Connection conn = DBConnection.getConnection(DBType.ORACLE);
@@ -196,9 +197,6 @@ public class EmployeeDAO {
 
     return null;
   }
-
-  // EMPLOYEE_ID로 권한 조회
-
 
   /* INSERT */
   // 직원 추가
