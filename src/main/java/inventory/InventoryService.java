@@ -1,11 +1,11 @@
 package inventory;
 
 import java.util.List;
+import exception.MismatchQuantityException;
 
 public class InventoryService {
 
   private final InventoryDAO inventoryDAO = new InventoryDAO();
-
 
   // [INV-01] 내 매장 전체 재고 목록 조회
   public List<InventoryDTO> getInventoryList(int storeId) {
@@ -27,8 +27,7 @@ public class InventoryService {
   // 0 미만 입력 방지 유효성 검사 포함
   public boolean updateSafetyQuantity(int storeId, int productId, int newSafetyQty) {
     if (newSafetyQty < 0) {
-      System.out.println("[오류] 안전재고 수량은 0 이상이어야 합니다.");
-      return false;
+      throw new MismatchQuantityException("안전재고 수량은 0 이상이어야 합니다.");
     }
     int result = inventoryDAO.updateSafetyQuantity(storeId, productId, newSafetyQty);
     return result > 0;

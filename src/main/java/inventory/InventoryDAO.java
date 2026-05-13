@@ -1,7 +1,8 @@
 package inventory;
 
 import common.DBConnection;
-import common.DBType;
+import common.GetNullableVariable;
+import common.type.DBType;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -19,30 +20,30 @@ public class InventoryDAO {
     StringBuilder sql = new StringBuilder("SELECT si.store_id, si.product_id, "
         + "si.current_quantity, si.safety_quantity, si.updated_at, si.is_low_stock, "
         + "p.product_name, p.price, p.season_type, p.product_status, b.brand_name, "
-        + "c.category_name " + "FROM STORE_INVENTORY si "
-        + "JOIN PRODUCT p ON si.PRODUCT_ID = p.PRODUCT_ID "
-        + "JOIN BRAND b ON p.BRAND_ID = b.BRAND_ID "
-        + "JOIN CATEGORY c ON p.CATEGORY_ID = c.CATEGORY_ID " + "WHERE si.STORE_ID = ? ");
+        + "c.category_name " + "FROM store_inventory si "
+        + "JOIN product p ON si.product_id = p.product_id "
+        + "JOIN brand b ON p.brand_id = b.brand_id "
+        + "JOIN category c ON p.category_id = c.category_id " + "WHERE si.store_id = ? ");
 
     List<Object> params = new ArrayList<>();
     params.add(storeId);
 
     if (isLowStockOnly) {
-      sql.append("AND si.IS_LOW_STOCK = 'Y' ");
+      sql.append("AND si.is_low_stock = 'Y' ");
     }
     if (brandName != null && !brandName.isEmpty()) {
-      sql.append("AND b.BRAND_NAME = ? ");
+      sql.append("AND b.brand_name = ? ");
       params.add(brandName);
     }
     if (categoryName != null && !categoryName.isEmpty()) {
-      sql.append("AND c.CATEGORY_NAME = ? ");
+      sql.append("AND c.category_name = ? ");
       params.add(categoryName);
     }
     if (keyword != null && !keyword.isEmpty()) {
-      sql.append("AND p.PRODUCT_NAME LIKE ? ");
+      sql.append("AND p.product_name LIKE ? ");
       params.add("%" + keyword + "%");
     }
-    sql.append("ORDER BY IS_LOW_STOCK DESC, p.PRODUCT_NAME ASC");
+    sql.append("ORDER BY si.is_low_stock DESC, p.product_name ASC");
 
     // 2단계: try-with-resources 로 자원 자동 반납
     try (Connection conn = DBConnection.getConnection(DBType.ORACLE);
@@ -59,7 +60,7 @@ public class InventoryDAO {
       }
 
     } catch (SQLException e) {
-      e.printStackTrace();
+      throw new RuntimeException("재고 목록 조회 중 데이터베이스 오류가 발생했습니다.", e);
     }
 
     return list;
@@ -67,8 +68,8 @@ public class InventoryDAO {
 
   // [INV-04] 안전재고 수량 변경
   public int updateSafetyQuantity(int storeId, int productId, int newSafetyQty) {
-    String sql = "UPDATE STORE_INVENTORY " + "SET SAFETY_QUANTITY = ?, UPDATED_AT = SYSDATE "
-        + "WHERE STORE_ID = ? AND PRODUCT_ID = ?";
+    String sql = "UPDATE store_inventory " + "SET safety_quantity = ?, updated_at = SYSDATE "
+        + "WHERE store_id = ? AND product_id = ?";
 
     try (Connection conn = DBConnection.getConnection(DBType.ORACLE);
         PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -80,28 +81,26 @@ public class InventoryDAO {
       return pstmt.executeUpdate(); // 1: 성공, 0: 실패
 
     } catch (SQLException e) {
-      e.printStackTrace();
+      throw new RuntimeException("안전재고 변경 중 데이터베이스 오류가 발생했습니다.", e);
     }
-
-    return 0;
   }
 
   // ResultSet → InventoryDTO 변환 (공통 매핑)
   private InventoryDTO mapRow(ResultSet rs) throws SQLException {
     InventoryDTO dto = new InventoryDTO();
 
-    dto.setStoreId(rs.getLong("STORE_ID"));
-    dto.setProductId(rs.getLong("PRODUCT_ID"));
-    dto.setCurrentQuantity(rs.getInt("CURRENT_QUANTITY"));
-    dto.setSafetyQuantity(rs.getInt("SAFETY_QUANTITY"));
-    dto.setUpdatedAt(rs.getTimestamp("UPDATED_AT").toLocalDateTime());
-    dto.setProductName(rs.getString("PRODUCT_NAME"));
-    dto.setPrice(rs.getInt("PRICE"));
-    dto.setSeasonType(rs.getString("SEASON_TYPE"));
-    dto.setProductStatus(ProductStatus.valueOf(rs.getString("PRODUCT_STATUS")));
-    dto.setBrandName(rs.getString("BRAND_NAME"));
-    dto.setCategoryName(rs.getString("CATEGORY_NAME"));
-    dto.setLowStock("Y".equals(rs.getString("IS_LOW_STOCK")));
+    dto.setStoreId(GetNullableVariable.getNullableLong(rs, "store_id"));
+    dto.setProductId(GetNullableVariable.getNullableLong(rs, "product_id"));
+    dto.setCurrentQuantity(rs.getInt("current_quantity"));
+    dto.setSafetyQuantity(rs.getInt("safety_quantity"));
+    dto.setUpdatedAt(GetNullableVariable.getNullableLocalDateTime(rs, "updated_at"));
+    dto.setProductName(rs.getString("product_name"));
+    dto.setPrice(rs.getInt("price"));
+    dto.setSeasonType(rs.getString("season_type"));
+    dto.setProductStatus(ProductStatus.valueOf(rs.getString("product_status")));
+    dto.setBrandName(rs.getString("brand_name"));
+    dto.setCategoryName(rs.getString("category_name"));
+    dto.setLowStock("Y".equals(rs.getString("is_low_stock")));
 
     return dto;
   }
