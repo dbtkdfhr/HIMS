@@ -1,7 +1,8 @@
 package inventory;
 
+import java.sql.SQLException;
 import java.util.List;
-import exception.MismatchQuantityException;
+import exception.InputException;
 
 public class InventoryService {
 
@@ -61,9 +62,10 @@ public class InventoryService {
 
   // [INV-04] 안전재고 수량 변경
   // 0 미만 입력 방지 유효성 검사 포함
-  public boolean updateSafetyQuantity(int storeId, int productId, int newSafetyQty) {
+  public boolean updateSafetyQuantity(int storeId, int productId, int newSafetyQty)
+      throws SQLException {
     if (newSafetyQty < 0) {
-      throw new MismatchQuantityException("안전재고 수량은 0 이상이어야 합니다.");
+      throw new InputException("안전재고 수량은 0 이상이어야 합니다.");
     }
     int result = inventoryDAO.updateSafetyQuantity(storeId, productId, newSafetyQty);
     return result > 0;
