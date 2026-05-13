@@ -320,7 +320,7 @@ public class EmployeeDAO {
   }
 
   // 비밀번호 수정
-  public int updatePassword(EmployeeDTO employee) throws SQLException{
+  public int updatePassword(EmployeeDTO employee) throws SQLException {
     String sql =
         "UPDATE EMPLOYEE SET " +
             "password = ?, " +
