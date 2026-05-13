@@ -27,7 +27,7 @@ public class ExternalSupplierInventoryDAO {
     }
   }
 
-  public void insertExternalRecipt(int orderRequestId) throws SQLException {
+  public void insertExternalReceipt(int orderRequestId) throws SQLException {
     String sql = "INSERT INTO external_order_receipt (internal_order_request_id, receipt_status) " +
         "VALUES (?, 'RECEIVED')";
 
