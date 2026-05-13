@@ -1,11 +1,44 @@
 package store.inventory;
 
 import common.DBConnection;
+import common.GetNullableVariable;
+import common.type.DBType;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class StoreInventoryDAO {
+
+  public Integer findCurrentQuantity(long storeId, long productId) throws SQLException {
+    String sql = "";
+    sql += "SELECT CURRENT_QUANTITY ";
+    sql += "FROM STORE_INVENTORY ";
+    sql += "WHERE STORE_ID = ? ";
+    sql += "AND PRODUCT_ID = ?";
+
+    Connection conn = null;
+    PreparedStatement pstmt = null;
+
+    try {
+      conn = DBConnection.getConnection(DBType.ORACLE);
+      pstmt = conn.prepareStatement(sql);
+
+      pstmt.setLong(1, storeId);
+      pstmt.setLong(2, productId);
+
+      try (ResultSet rs = pstmt.executeQuery()) {
+        if (!rs.next()) {
+          return null;
+        }
+
+        return GetNullableVariable.getNullableInt(rs, "CURRENT_QUANTITY");
+      }
+    } finally {
+      DBConnection.close(pstmt);
+      DBConnection.close(conn);
+    }
+  }
 
   public int decreaseQuantity(Connection conn, long storeId, long productId, int quantity)
       throws SQLException {

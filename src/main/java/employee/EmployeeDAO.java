@@ -13,8 +13,40 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class EmployeeDAO {
-
   /* SELECT */
+  public String findEmployeeNameById(long employeeId) throws java.sql.SQLException {
+    String sql = "SELECT EMPLOYEE_NAME FROM EMPLOYEE WHERE EMPLOYEE_ID = ?";
+
+    try (Connection conn = DBConnection.getConnection(DBType.ORACLE);
+        PreparedStatement pstmt = conn.prepareStatement(sql)) {
+      pstmt.setLong(1, employeeId);
+
+      try (ResultSet rs = pstmt.executeQuery()) {
+        if (rs.next()) {
+          return rs.getString("EMPLOYEE_NAME");
+        }
+      }
+    }
+
+    return "알 수 없음(" + employeeId + ")";
+  }
+
+  public List<String> findAllEmployeeSummaries() throws java.sql.SQLException {
+    List<String> list = new ArrayList<>();
+    String sql = "SELECT EMPLOYEE_ID, EMPLOYEE_NAME, LOGIN_ID FROM EMPLOYEE ORDER BY EMPLOYEE_ID";
+
+    try (Connection conn = DBConnection.getConnection(DBType.ORACLE);
+        PreparedStatement pstmt = conn.prepareStatement(sql);
+        ResultSet rs = pstmt.executeQuery()) {
+      while (rs.next()) {
+        list.add(rs.getLong("EMPLOYEE_ID") + ". " + rs.getString("EMPLOYEE_NAME")
+            + " (" + rs.getString("LOGIN_ID") + ")");
+      }
+    }
+
+    return list;
+  }
+
   // 전체 조회
   public List<EmployeeDTO> getEmployees() throws SQLException {
     List<EmployeeDTO> employees = new ArrayList<>();

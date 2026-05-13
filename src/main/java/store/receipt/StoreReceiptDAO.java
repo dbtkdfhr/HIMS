@@ -73,6 +73,31 @@ public class StoreReceiptDAO {
     return list;
   }
 
+  public StoreReceiptDTO findByOrderRequestId(long orderRequestId) throws SQLException {
+    String sql = "SELECT * FROM STORE_RECEIPT WHERE ORDER_REQUEST_ID = ?";
+
+    Connection conn = null;
+    PreparedStatement pstmt = null;
+    ResultSet rs = null;
+
+    try {
+      conn = DBConnection.getConnection(DBType.ORACLE);
+      pstmt = conn.prepareStatement(sql);
+      pstmt.setLong(1, orderRequestId);
+      rs = pstmt.executeQuery();
+
+      if (rs.next()) {
+        return mapToStoreReceiptDTO(rs);
+      }
+
+      return null;
+    } finally {
+      DBConnection.close(rs);
+      DBConnection.close(pstmt);
+      DBConnection.close(conn);
+    }
+  }
+
   public int insertStoreReceipt(Connection conn, StoreReceiptDTO storeReceiptDTO)
       throws SQLException {
     String sql = "INSERT INTO STORE_RECEIPT (";

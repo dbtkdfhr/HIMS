@@ -88,6 +88,12 @@ public class OrderRequestDAO {
     }
   }
 
+  public OrderRequestDTO findByOrderRequestId(long orderRequestId) throws SQLException {
+    try (Connection conn = DBConnection.getConnection(DBType.ORACLE)) {
+      return findByOrderRequestId(conn, orderRequestId);
+    }
+  }
+
   public List<OrderRequestDTO> findReceiptTargetOrderRequests(long storeId) throws SQLException {
     List<OrderRequestDTO> orderRequestDTOList = new ArrayList<>();
 
