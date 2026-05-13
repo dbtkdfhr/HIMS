@@ -14,39 +14,43 @@ import java.util.List;
 
 public class EmployeeDAO {
 
+  /* SELECT */
   // 전체 조회
   public List<EmployeeDTO> getEmployees() {
     List<EmployeeDTO> employees = new ArrayList<>();
 
-    Connection conn = null;
-    PreparedStatement pstmt = null;
-    ResultSet rs = null;
+    String sql =
+        "SELECT " +
+            "employee_id, " +
+            "role_id, " +
+            "store_id, " +
+            "login_id, " +
+            "employee_name, " +
+            "phone_number, " +
+            "is_active, " +
+            "created_at, " +
+            "updated_at " +
+            "FROM EMPLOYEE";
 
-    try {
-      conn = DBConnection.getConnection(DBType.ORACLE);
-
-      String sql =
-          "SELECT " +
-              "EMPLOYEE_ID, " +
-              "ROLE_ID, " +
-              "STORE_ID, " +
-              "LOGIN_ID, " +
-              "EMPLOYEE_NAME, " +
-              "PHONE_NUMBER, " +
-              "IS_ACTIVE, " +
-              "CREATED_AT, " +
-              "UPDATED_AT " +
-              "FROM EMPLOYEE";
-
-      pstmt = conn.prepareStatement(sql);
-      rs = pstmt.executeQuery();
+    try (
+        Connection conn = DBConnection.getConnection(DBType.ORACLE);
+        PreparedStatement pstmt = conn.prepareStatement(sql);
+        ResultSet rs = pstmt.executeQuery()
+    ) {
 
       while (rs.next()) {
         EmployeeDTO employeeDTO = new EmployeeDTO();
 
         employeeDTO.setEmployeeId(rs.getLong("EMPLOYEE_ID"));
         employeeDTO.setRoleId(rs.getInt("ROLE_ID"));
-        employeeDTO.setStoreId(rs.getLong("STORE_ID"));
+
+        long storeId = rs.getLong("STORE_ID");
+        if (rs.wasNull()) {
+          employeeDTO.setStoreId(null);
+        } else {
+          employeeDTO.setStoreId(storeId);
+        }
+
         employeeDTO.setLoginId(rs.getString("LOGIN_ID"));
         employeeDTO.setEmployeeName(rs.getString("EMPLOYEE_NAME"));
         employeeDTO.setPhoneNumber(rs.getString("PHONE_NUMBER"));
@@ -66,12 +70,8 @@ public class EmployeeDAO {
         employees.add(employeeDTO);
       }
 
-    } catch (Exception e) {
-      e.printStackTrace();
-    } finally {
-      DBConnection.close(rs);
-      DBConnection.close(pstmt);
-      DBConnection.close(conn);
+    } catch (SQLException e) {
+      throw new RuntimeException("직원 목록 조회 중 오류가 발생했습니다.", e);
     }
 
     return employees;
@@ -79,58 +79,55 @@ public class EmployeeDAO {
 
   // 로그인 ID 기준 직원 조회
   public LoginEmployeeDTO getEmployeeByLoginId(String loginId) {
-    Connection conn = null;
-    PreparedStatement pstmt = null;
-    ResultSet rs = null;
+    String sql =
+        "SELECT " +
+            "e.employee_id, " +
+            "e.role_id, " +
+            "e.store_id, " +
+            "e.login_id, " +
+            "e.password, " +
+            "e.employee_name, " +
+            "e.phone_number, " +
+            "e.is_active, " +
+            "r.role_name " +
+            "FROM EMPLOYEE e " +
+            "JOIN ROLE r " +
+            "ON e.role_id = r.role_id " +
+            "WHERE e.login_id = ?";
 
-    try {
-      conn = DBConnection.getConnection(DBType.ORACLE);
-
-      String sql =
-          "SELECT " +
-              "e.EMPLOYEE_ID, " +
-              "e.ROLE_ID, " +
-              "e.STORE_ID, " +
-              "e.LOGIN_ID, " +
-              "e.PASSWORD, " +
-              "e.EMPLOYEE_NAME, " +
-              "e.PHONE_NUMBER, " +
-              "e.IS_ACTIVE, " +
-              "e.CREATED_AT, " +
-              "e.UPDATED_AT, " +
-              "r.ROLE_NAME " +
-              "FROM EMPLOYEE e " +
-              "JOIN ROLE r " +
-              "ON e.ROLE_ID = r.ROLE_ID " +
-              "WHERE e.LOGIN_ID = ?";
-
-      pstmt = conn.prepareStatement(sql);
+    try (
+        Connection conn = DBConnection.getConnection(DBType.ORACLE);
+        PreparedStatement pstmt = conn.prepareStatement(sql)
+    ) {
       pstmt.setString(1, loginId);
 
-      rs = pstmt.executeQuery();
+      try (ResultSet rs = pstmt.executeQuery()) {
+        if (rs.next()) {
+          LoginEmployeeDTO employeeDTO = new LoginEmployeeDTO();
 
-      if (rs.next()) {
-        LoginEmployeeDTO employeeDTO = new LoginEmployeeDTO();
+          employeeDTO.setEmployeeId(rs.getLong("EMPLOYEE_ID"));
+          employeeDTO.setRoleId(rs.getInt("ROLE_ID"));
+          employeeDTO.setRoleName(rs.getString("ROLE_NAME"));
 
-        employeeDTO.setEmployeeId(rs.getLong("EMPLOYEE_ID"));
-        employeeDTO.setRoleId(rs.getInt("ROLE_ID"));
-        employeeDTO.setRoleName(rs.getString("ROLE_NAME"));
-        employeeDTO.setStoreId(rs.getLong("STORE_ID"));
-        employeeDTO.setLoginId(rs.getString("LOGIN_ID"));
-        employeeDTO.setPassword(rs.getString("PASSWORD"));
-        employeeDTO.setEmployeeName(rs.getString("EMPLOYEE_NAME"));
-        employeeDTO.setPhoneNumber(rs.getString("PHONE_NUMBER"));
-        employeeDTO.setIsActive(rs.getString("IS_ACTIVE"));
+          long storeId = rs.getLong("STORE_ID");
+          if (rs.wasNull()) {
+            employeeDTO.setStoreId(null);
+          } else {
+            employeeDTO.setStoreId(storeId);
+          }
 
-        return employeeDTO;
+          employeeDTO.setLoginId(rs.getString("LOGIN_ID"));
+          employeeDTO.setPassword(rs.getString("PASSWORD"));
+          employeeDTO.setEmployeeName(rs.getString("EMPLOYEE_NAME"));
+          employeeDTO.setPhoneNumber(rs.getString("PHONE_NUMBER"));
+          employeeDTO.setIsActive(rs.getString("IS_ACTIVE"));
+
+          return employeeDTO;
+        }
       }
 
-    } catch (Exception e) {
-      e.printStackTrace();
-    } finally {
-      DBConnection.close(rs);
-      DBConnection.close(pstmt);
-      DBConnection.close(conn);
+    } catch (SQLException e) {
+      throw new RuntimeException("로그인 ID 기준 직원 조회 중 오류가 발생했습니다.", e);
     }
 
     return null;
