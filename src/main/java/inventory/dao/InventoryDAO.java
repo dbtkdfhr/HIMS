@@ -6,6 +6,7 @@ import inventory.dto.InventoryDTO;
 import inventory.dto.ProductStatus;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.Date;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -42,7 +43,6 @@ public class InventoryDAO {
         }
       }
 
-      System.out.println(list.size());
     } catch (SQLException e) {
       e.printStackTrace();
       System.out.println("오류발생" + e.getMessage());
@@ -59,7 +59,10 @@ public class InventoryDAO {
     dto.setProductId(rs.getInt("PRODUCT_ID"));
     dto.setCurrentQuantity(rs.getInt("CURRENT_QUANTITY"));
     dto.setSafetyQuantity(rs.getInt("SAFETY_QUANTITY"));
-    dto.setUpdatedAt(rs.getDate("UPDATED_AT").toLocalDate());
+    Date updatedAt = rs.getDate("UPDATED_AT");
+    if (updatedAt != null) {
+      dto.setUpdatedAt(updatedAt.toLocalDate());
+    }
     dto.setProductName(rs.getString("PRODUCT_NAME"));
     dto.setPrice(rs.getInt("PRICE"));
     dto.setSeasonType(rs.getString("SEASON_TYPE"));
