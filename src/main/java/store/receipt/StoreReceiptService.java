@@ -4,6 +4,7 @@ import common.DBConnection;
 import common.type.DBType;
 import common.type.OrderStatus;
 import common.type.ReceiptStatus;
+import employee.EmployeeDAO;
 import exception.DuplicateException;
 import exception.MismatchQuantityException;
 import exception.NotFoundException;
@@ -12,7 +13,6 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import employee.EmployeeDAO;
 import order.request.OrderRequestDAO;
 import order.request.OrderRequestDTO;
 import product.ProductDAO;
@@ -130,11 +130,11 @@ public class StoreReceiptService {
     return result;
   }
 
-  public String getOrderRequestSummary(long orderRequestId) throws SQLException {
+  public String getOrderRequestSummary(long orderRequestId) throws SQLException, NotFoundException {
     OrderRequestDTO orderRequestDTO = orderRequestDAO.findByOrderRequestId(orderRequestId);
 
     if (orderRequestDTO == null) {
-      return "발주 요청을 찾을 수 없습니다.";
+      throw new NotFoundException("존재하지 않는 발주 요청입니다.");
     }
 
     return formatOrderRequest(orderRequestDTO);
