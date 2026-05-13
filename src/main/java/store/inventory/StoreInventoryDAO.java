@@ -11,8 +11,7 @@ public class StoreInventoryDAO {
       throws SQLException {
     String decreaseQuantitySql = "";
     decreaseQuantitySql += "UPDATE STORE_INVENTORY ";
-    decreaseQuantitySql += "SET current_quantity = current_quantity - ?, ";
-    decreaseQuantitySql += "updated_at = SYSDATE ";
+    decreaseQuantitySql += "SET current_quantity = current_quantity - ? ";
     decreaseQuantitySql += "WHERE store_id = ? ";
     decreaseQuantitySql += "AND product_id = ? ";
     decreaseQuantitySql += "AND current_quantity >= ? ";
@@ -38,8 +37,7 @@ public class StoreInventoryDAO {
       throws SQLException {
     String increaseQuantitySql = "";
     increaseQuantitySql += "UPDATE STORE_INVENTORY ";
-    increaseQuantitySql += "SET current_quantity = current_quantity + ?, ";
-    increaseQuantitySql += "updated_at = SYSDATE ";
+    increaseQuantitySql += "SET current_quantity = current_quantity + ? ";
     increaseQuantitySql += "WHERE store_id = ? ";
     increaseQuantitySql += "AND product_id = ? ";
     increaseQuantitySql += "AND ? > 0";
