@@ -1,4 +1,4 @@
-package inventory;
+package common.type;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
