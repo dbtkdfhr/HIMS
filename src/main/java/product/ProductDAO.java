@@ -59,4 +59,89 @@ public class ProductDAO {
 
     return "알 수 없음(" + productId + ")";
   }
+
+  /* UPDATE */
+  public int updateProductPrice(ProductDTO product) throws SQLException {
+    String sql = "UPDATE product SET " +
+        "price = ?, " +
+        "updated_at = SYSDATE " +
+        "WHERE product_id = ?";
+
+    try (
+        Connection conn = DBConnection.getConnection(DBType.ORACLE);
+        PreparedStatement pstmt = conn.prepareStatement(sql)
+    ) {
+      pstmt.setInt(1, product.getPrice());
+      pstmt.setLong(2, product.getProductId());
+
+      return pstmt.executeUpdate();
+    }
+  }
+
+  public int updateProductStatus(ProductDTO product) throws SQLException {
+    String sql = "UPDATE product SET " +
+        "product_status = ?, " +
+        "updated_at = SYSDATE " +
+        "WHERE product_id = ?";
+
+    try (
+        Connection conn = DBConnection.getConnection(DBType.ORACLE);
+        PreparedStatement pstmt = conn.prepareStatement(sql)
+    ) {
+      pstmt.setString(1, product.getProductStatus());
+      pstmt.setLong(2, product.getProductId());
+
+      return pstmt.executeUpdate();
+    }
+  }
+
+  public int updateProductSeasonType(ProductDTO product) throws SQLException {
+    String sql = "UPDATE product SET " +
+        "season_type = ?, " +
+        "updated_at = SYSDATE " +
+        "WHERE product_id = ?";
+
+    try (
+        Connection conn = DBConnection.getConnection(DBType.ORACLE);
+        PreparedStatement pstmt = conn.prepareStatement(sql)
+    ) {
+      if (product.getSeasonType() == null) {
+        pstmt.setNull(1, Types.VARCHAR);
+      } else {
+        pstmt.setString(1, product.getSeasonType());
+      }
+
+      pstmt.setLong(2, product.getProductId());
+
+      return pstmt.executeUpdate();
+    }
+  }
+
+  // 상품 basicInfo(가격, 상태, 시즌) 수정
+  public int updateProductBasicInfo(ProductDTO product) throws SQLException {
+    String sql = "UPDATE product SET " +
+        "price = ?, " +
+        "product_status = ?, " +
+        "season_type = ?, " +
+        "updated_at = SYSDATE " +
+        "WHERE product_id = ?";
+
+    try (
+        Connection conn = DBConnection.getConnection(DBType.ORACLE);
+        PreparedStatement pstmt = conn.prepareStatement(sql)
+    ) {
+      pstmt.setInt(1, product.getPrice());
+      pstmt.setString(2, product.getProductStatus());
+
+      if (product.getSeasonType() == null) {
+        pstmt.setNull(3, Types.VARCHAR);
+      } else {
+        pstmt.setString(3, product.getSeasonType());
+      }
+
+      pstmt.setLong(4, product.getProductId());
+
+      return pstmt.executeUpdate();
+    }
+  }
 }

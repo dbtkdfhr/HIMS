@@ -128,4 +128,69 @@ public class StoreDAO {
 
     return list;
   }
+
+  /* UPDATE */
+  // 입점매장 위치 수정
+  public int updateStoreLocation(StoreDTO store) throws SQLException {
+    String sql = "UPDATE store SET " +
+        "store_location = ?, " +
+        "updated_at = SYSDATE " +
+        "WHERE store_id = ?";
+
+    try (
+        Connection conn = DBConnection.getConnection(DBType.ORACLE);
+        PreparedStatement pstmt = conn.prepareStatement(sql)
+    ) {
+      if (store.getStoreLocation() == null) {
+        pstmt.setNull(1, Types.VARCHAR);
+      } else {
+        pstmt.setString(1, store.getStoreLocation());
+      }
+
+      pstmt.setLong(2, store.getStoreId());
+
+      return pstmt.executeUpdate();
+    }
+  }
+
+  // 입점매장 층 수정
+  public int updateStoreFloorInfo(StoreDTO store) throws SQLException {
+    String sql = "UPDATE store SET " +
+        "floor_info = ?, " +
+        "updated_at = SYSDATE " +
+        "WHERE store_id = ?";
+
+    try (
+        Connection conn = DBConnection.getConnection(DBType.ORACLE);
+        PreparedStatement pstmt = conn.prepareStatement(sql)
+    ) {
+      if (store.getFloorInfo() == null) {
+        pstmt.setNull(1, Types.VARCHAR);
+      } else {
+        pstmt.setString(1, store.getFloorInfo());
+      }
+
+      pstmt.setLong(2, store.getStoreId());
+
+      return pstmt.executeUpdate();
+    }
+  }
+
+  // 입점매장 운영상태 수정
+  public int updateStoreOperationStatus(StoreDTO store) throws SQLException {
+    String sql = "UPDATE store SET " +
+        "operation_status = ?, " +
+        "updated_at = SYSDATE " +
+        "WHERE store_id = ?";
+
+    try (
+        Connection conn = DBConnection.getConnection(DBType.ORACLE);
+        PreparedStatement pstmt = conn.prepareStatement(sql)
+    ) {
+      pstmt.setString(1, store.getOperationStatus());
+      pstmt.setLong(2, store.getStoreId());
+
+      return pstmt.executeUpdate();
+    }
+  }
 }

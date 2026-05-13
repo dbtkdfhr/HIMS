@@ -52,4 +52,23 @@ public class CategoryDAO {
       }
     }
   }
+
+  /* UPDATE */
+  // category_id기준으로 is_active값 변경
+  public int updateCategoryActive(CategoryDTO category) throws SQLException {
+    String sql = "UPDATE category SET " +
+        "is_active = ?, " +
+        "updated_at = SYSDATE " +
+        "WHERE category_id = ?";
+
+    try (
+        Connection conn = DBConnection.getConnection(DBType.ORACLE);
+        PreparedStatement pstmt = conn.prepareStatement(sql)
+    ) {
+      pstmt.setString(1, category.getIsActive());
+      pstmt.setLong(2, category.getCategoryId());
+
+      return pstmt.executeUpdate();
+    }
+  }
 }
