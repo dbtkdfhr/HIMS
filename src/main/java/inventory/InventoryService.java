@@ -68,4 +68,29 @@ public class InventoryService {
     int result = inventoryDAO.updateSafetyQuantity(storeId, productId, newSafetyQty);
     return result > 0;
   }
+
+  // 현재재고 수량 변경
+  public boolean updateCurrentQuantity(int storeId, int productId, int newCurrentQty) {
+    validateInventoryKey(storeId, productId);
+    validateNonNegativeQuantity(newCurrentQty, "현재재고 수량");
+
+    int result = inventoryDAO.updateCurrentQuantity(storeId, productId, newCurrentQty);
+    return result > 0;
+  }
+
+  private void validateInventoryKey(int storeId, int productId) {
+    if (storeId <= 0) {
+      throw new IllegalArgumentException("매장 ID는 필수입니다.");
+    }
+
+    if (productId <= 0) {
+      throw new IllegalArgumentException("상품 ID는 필수입니다.");
+    }
+  }
+
+  private void validateNonNegativeQuantity(int quantity, String fieldName) {
+    if (quantity < 0) {
+      throw new MismatchQuantityException(fieldName + "은 0 이상이어야 합니다.");
+    }
+  }
 }

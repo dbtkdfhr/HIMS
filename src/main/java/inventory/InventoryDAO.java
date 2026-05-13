@@ -157,6 +157,24 @@ public class InventoryDAO {
     }
   }
 
+  public int updateCurrentQuantity(int storeId, int productId, int newCurrentQty) {
+    String sql = "UPDATE store_inventory " + "SET current_quantity = ?, updated_at = SYSDATE "
+        + "WHERE store_id = ? AND product_id = ?";
+
+    try (Connection conn = DBConnection.getConnection(DBType.ORACLE);
+        PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+      pstmt.setInt(1, newCurrentQty);
+      pstmt.setInt(2, storeId);
+      pstmt.setInt(3, productId);
+
+      return pstmt.executeUpdate();
+
+    } catch (SQLException e) {
+      throw new RuntimeException("현재재고 변경 중 데이터베이스 오류가 발생했습니다.", e);
+    }
+  }
+
   // ResultSet → InventoryDTO 변환 (공통 매핑)
   private InventoryDTO mapRow(ResultSet rs) throws SQLException {
     InventoryDTO dto = new InventoryDTO();
