@@ -69,9 +69,6 @@ public class EmployeeDAO {
 
         employees.add(employeeDTO);
       }
-
-    } catch (SQLException e) {
-      throw e;
     }
 
     return employees;
@@ -126,8 +123,6 @@ public class EmployeeDAO {
         }
       }
 
-    } catch (SQLException e) {
-      throw e;
     }
 
     return null;
@@ -176,8 +171,6 @@ public class EmployeeDAO {
 
       return pstmt.executeUpdate();
 
-    } catch (SQLException e) {
-      throw e;
     }
   }
 
@@ -214,8 +207,6 @@ public class EmployeeDAO {
 
       return pstmt.executeUpdate();
 
-    } catch (SQLException e) {
-      throw e;
     }
   }
 
@@ -237,8 +228,6 @@ public class EmployeeDAO {
 
       return pstmt.executeUpdate();
 
-    } catch (SQLException e) {
-      throw e;
     }
   }
 
@@ -260,8 +249,6 @@ public class EmployeeDAO {
 
       return pstmt.executeUpdate();
 
-    } catch (SQLException e) {
-      throw e;
     }
   }
 
@@ -291,8 +278,6 @@ public class EmployeeDAO {
 
       return pstmt.executeUpdate();
 
-    } catch (SQLException e) {
-      throw e;
     }
   }
 
@@ -314,8 +299,6 @@ public class EmployeeDAO {
 
       return pstmt.executeUpdate();
 
-    } catch (SQLException e) {
-      throw e;
     }
   }
 
@@ -337,8 +320,6 @@ public class EmployeeDAO {
 
       return pstmt.executeUpdate();
 
-    } catch (SQLException e) {
-      throw e;
     }
   }
 
@@ -359,8 +340,6 @@ public class EmployeeDAO {
 
       return pstmt.executeUpdate();
 
-    } catch (SQLException e) {
-      throw e;
     }
   }
 
@@ -381,8 +360,6 @@ public class EmployeeDAO {
 
       return pstmt.executeUpdate();
 
-    } catch (SQLException e) {
-      throw e;
     }
   }
 }
