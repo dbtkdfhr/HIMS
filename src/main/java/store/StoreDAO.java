@@ -12,7 +12,7 @@ import java.util.List;
 public class StoreDAO {
 
   public String findStoreNameById(long storeId) throws SQLException {
-    String sql = "SELECT STORE_NAME FROM STORE WHERE STORE_ID = ?";
+    String sql = "SELECT store_name FROM STORE WHERE store_id = ?";
 
     try (Connection conn = DBConnection.getConnection(DBType.ORACLE);
         PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -30,7 +30,7 @@ public class StoreDAO {
 
   public List<String> findAllStoreSummaries() throws SQLException {
     List<String> list = new ArrayList<>();
-    String sql = "SELECT STORE_ID, STORE_NAME FROM STORE ORDER BY STORE_ID";
+    String sql = "SELECT store_id, store_name FROM STORE ORDER BY store_id";
 
     try (Connection conn = DBConnection.getConnection(DBType.ORACLE);
         PreparedStatement pstmt = conn.prepareStatement(sql);

@@ -10,7 +10,7 @@ import java.sql.SQLException;
 public class ProductDAO {
 
   public String findProductNameById(long productId) throws SQLException {
-    String sql = "SELECT PRODUCT_NAME FROM PRODUCT WHERE PRODUCT_ID = ?";
+    String sql = "SELECT product_name FROM PRODUCT WHERE product_id = ?";
 
     try (Connection conn = DBConnection.getConnection(DBType.ORACLE);
         PreparedStatement pstmt = conn.prepareStatement(sql)) {
