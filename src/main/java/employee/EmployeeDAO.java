@@ -16,7 +16,7 @@ public class EmployeeDAO {
 
   /* SELECT */
   // 전체 조회
-  public List<EmployeeDTO> getEmployees() {
+  public List<EmployeeDTO> getEmployees() throws SQLException {
     List<EmployeeDTO> employees = new ArrayList<>();
 
     String sql =
@@ -71,14 +71,14 @@ public class EmployeeDAO {
       }
 
     } catch (SQLException e) {
-      throw new RuntimeException("직원 목록 조회 중 오류가 발생했습니다.", e);
+      throw e;
     }
 
     return employees;
   }
 
   // 로그인 ID 기준 직원 조회
-  public LoginEmployeeDTO getEmployeeByLoginId(String loginId) {
+  public LoginEmployeeDTO getEmployeeByLoginId(String loginId) throws SQLException {
     String sql =
         "SELECT " +
             "e.employee_id, " +
@@ -127,7 +127,7 @@ public class EmployeeDAO {
       }
 
     } catch (SQLException e) {
-      throw new RuntimeException("로그인 ID 기준 직원 조회 중 오류가 발생했습니다.", e);
+      throw e;
     }
 
     return null;
@@ -138,7 +138,7 @@ public class EmployeeDAO {
 
   /* INSERT */
   // 직원 추가
-  public int insertEmployee(EmployeeDTO employee) {
+  public int insertEmployee(EmployeeDTO employee) throws SQLException {
     String sql =
         "INSERT INTO EMPLOYEE (" +
             "role_id, " +
@@ -177,13 +177,13 @@ public class EmployeeDAO {
       return pstmt.executeUpdate();
 
     } catch (SQLException e) {
-      throw new RuntimeException("직원 등록 중 오류가 발생했습니다.", e);
+      throw e;
     }
   }
 
   /* UPDATE */
   // 직원 전체 정보 수정
-  public int updateEmployee(EmployeeDTO employee) {
+  public int updateEmployee(EmployeeDTO employee) throws SQLException {
     String sql =
         "UPDATE EMPLOYEE SET " +
             "employee_name = ?, " +
@@ -215,12 +215,12 @@ public class EmployeeDAO {
       return pstmt.executeUpdate();
 
     } catch (SQLException e) {
-      throw new RuntimeException("직원 정보 수정 중 오류가 발생했습니다.", e);
+      throw e;
     }
   }
 
   // 직원명 수정
-  public int updateEmployeeName(EmployeeDTO employee) {
+  public int updateEmployeeName(EmployeeDTO employee) throws SQLException {
     String sql =
         "UPDATE EMPLOYEE SET " +
             "employee_name = ?, " +
@@ -238,12 +238,12 @@ public class EmployeeDAO {
       return pstmt.executeUpdate();
 
     } catch (SQLException e) {
-      throw new RuntimeException("직원명 수정 중 오류가 발생했습니다.", e);
+      throw e;
     }
   }
 
   // 연락처 수정
-  public int updatePhoneNumber(EmployeeDTO employee) {
+  public int updatePhoneNumber(EmployeeDTO employee) throws SQLException {
     String sql =
         "UPDATE EMPLOYEE SET " +
             "phone_number = ?, " +
@@ -261,12 +261,12 @@ public class EmployeeDAO {
       return pstmt.executeUpdate();
 
     } catch (SQLException e) {
-      throw new RuntimeException("직원 연락처 수정 중 오류가 발생했습니다.", e);
+      throw e;
     }
   }
 
   // 권한 수정 및 소속 매장
-  public int updateRoleAndStore(EmployeeDTO employee) {
+  public int updateRoleAndStore(EmployeeDTO employee) throws SQLException {
     String sql =
         "UPDATE EMPLOYEE SET " +
             "role_id = ?, " +
@@ -292,12 +292,12 @@ public class EmployeeDAO {
       return pstmt.executeUpdate();
 
     } catch (SQLException e) {
-      throw new RuntimeException("직원 권한 및 소속 매장 수정 중 오류가 발생했습니다.", e);
+      throw e;
     }
   }
 
   // 로그인 ID 수정
-  public int updateLoginId(EmployeeDTO employee) {
+  public int updateLoginId(EmployeeDTO employee) throws SQLException {
     String sql =
         "UPDATE EMPLOYEE SET " +
             "login_id = ?, " +
@@ -315,12 +315,12 @@ public class EmployeeDAO {
       return pstmt.executeUpdate();
 
     } catch (SQLException e) {
-      throw new RuntimeException("직원 로그인 ID 수정 중 오류가 발생했습니다.", e);
+      throw e;
     }
   }
 
   // 비밀번호 수정
-  public int updatePassword(EmployeeDTO employee) {
+  public int updatePassword(EmployeeDTO employee) throws SQLException{
     String sql =
         "UPDATE EMPLOYEE SET " +
             "password = ?, " +
@@ -338,12 +338,12 @@ public class EmployeeDAO {
       return pstmt.executeUpdate();
 
     } catch (SQLException e) {
-      throw new RuntimeException("직원 비밀번호 수정 중 오류가 발생했습니다.", e);
+      throw e;
     }
   }
 
   // 직원 사용 중지 처리
-  public int disableEmployee(EmployeeDTO employee) {
+  public int disableEmployee(EmployeeDTO employee) throws SQLException {
     String sql =
         "UPDATE EMPLOYEE SET " +
             "is_active = 'N', " +
@@ -360,12 +360,12 @@ public class EmployeeDAO {
       return pstmt.executeUpdate();
 
     } catch (SQLException e) {
-      throw new RuntimeException("직원 사용 중지 처리 중 오류가 발생했습니다.", e);
+      throw e;
     }
   }
 
   // 직원 사용 재개 처리
-  public int activateEmployee(EmployeeDTO employee) {
+  public int activateEmployee(EmployeeDTO employee) throws SQLException {
     String sql =
         "UPDATE EMPLOYEE SET " +
             "is_active = 'Y', " +
@@ -382,7 +382,7 @@ public class EmployeeDAO {
       return pstmt.executeUpdate();
 
     } catch (SQLException e) {
-      throw new RuntimeException("직원 사용 재개 처리 중 오류가 발생했습니다.", e);
+      throw e;
     }
   }
 }
