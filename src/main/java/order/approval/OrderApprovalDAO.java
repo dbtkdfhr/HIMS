@@ -13,8 +13,7 @@ public class OrderApprovalDAO {
         "order_request_id, approved_quantity, approval_status, approval_comment, created_at) " +
         "VALUES ( ?, ?, ?, ?, ?,?, SYSDATE)";
 
-    try (Connection conn = DBConnection.getConnection(DBType.ORACLE)) {
-      PreparedStatement pstmt = conn.prepareStatement(sql);
+    try (Connection conn = DBConnection.getConnection(DBType.ORACLE); PreparedStatement pstmt = conn.prepareStatement(sql)) {
       pstmt.setLong(1, dto.getOrderApprovalId());
       pstmt.setLong(2, dto.getApprovalEmployeeId());
       pstmt.setLong(3, dto.getOrderRequestId());
