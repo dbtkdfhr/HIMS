@@ -1,5 +1,6 @@
 package ui;
 
+import common.type.OrderStatus;
 import employee.EmployeeDTO;
 import exception.InputException;
 import inventory.InventoryDTO;
@@ -130,10 +131,10 @@ public class StoreManagerPanel {
     DefaultTableModel model = orderModel();
     JTable table = UiTableFactory.table(model);
     JButton refresh = new JButton("새로고침");
-    refresh.addActionListener(event -> fillOrders(model, "SHIPPED"));
+    refresh.addActionListener(event -> fillOrders(model, OrderStatus.SENT.name()));
     panel.add(toolbar(refresh), BorderLayout.NORTH);
     panel.add(UiTableFactory.scroll(table), BorderLayout.CENTER);
-    fillOrders(model, "SHIPPED");
+    fillOrders(model, OrderStatus.SENT.name());
     return panel;
   }
 
@@ -171,17 +172,17 @@ public class StoreManagerPanel {
         } else {
           store.rejectReceipt(orderId, user.getEmployeeId(), required(reasonField.getText(), "반려사유"));
         }
-        fillOrders(model, "SHIPPED");
+        fillOrders(model, OrderStatus.SENT.name());
         logger.accept(title + " 완료: 발주요청 " + orderId);
       } catch (RuntimeException e) {
         showError(panel, e);
       }
     });
-    refresh.addActionListener(event -> fillOrders(model, "SHIPPED"));
+    refresh.addActionListener(event -> fillOrders(model, OrderStatus.SENT.name()));
 
     panel.add(controls, BorderLayout.NORTH);
     panel.add(UiTableFactory.scroll(table), BorderLayout.CENTER);
-    fillOrders(model, "SHIPPED");
+    fillOrders(model, OrderStatus.SENT.name());
     return panel;
   }
 
