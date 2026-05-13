@@ -4,10 +4,12 @@ import common.DBConnection;
 import common.type.DBType;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
 public class ProductDAO {
+
   /* INSERT */
   // 상품 추가
   public int insertProduct(ProductDTO product) throws SQLException {
@@ -39,5 +41,22 @@ public class ProductDAO {
 
       return pstmt.executeUpdate();
     }
+  }
+
+  public String findProductNameById(long productId) throws SQLException {
+    String sql = "SELECT product_name FROM PRODUCT WHERE product_id = ?";
+
+    try (Connection conn = DBConnection.getConnection(DBType.ORACLE);
+        PreparedStatement pstmt = conn.prepareStatement(sql)) {
+      pstmt.setLong(1, productId);
+
+      try (ResultSet rs = pstmt.executeQuery()) {
+        if (rs.next()) {
+          return rs.getString("PRODUCT_NAME");
+        }
+      }
+    }
+
+    return "알 수 없음(" + productId + ")";
   }
 }

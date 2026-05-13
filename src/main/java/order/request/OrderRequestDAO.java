@@ -88,20 +88,26 @@ public class OrderRequestDAO {
     }
   }
 
+  public OrderRequestDTO findByOrderRequestId(long orderRequestId) throws SQLException {
+    try (Connection conn = DBConnection.getConnection(DBType.ORACLE)) {
+      return findByOrderRequestId(conn, orderRequestId);
+    }
+  }
+
   public List<OrderRequestDTO> findReceiptTargetOrderRequests(long storeId) throws SQLException {
     List<OrderRequestDTO> orderRequestDTOList = new ArrayList<>();
 
     String sql = "";
     sql += "SELECT orq.* ";
     sql += "FROM ORDER_REQUEST orq ";
-    sql += "WHERE orq.STORE_ID = ? ";
-    sql += "AND orq.ORDER_STATUS = 'SENT' ";
+    sql += "WHERE orq.store_id = ? ";
+    sql += "AND orq.order_status = 'SENT' ";
     sql += "AND NOT EXISTS (";
     sql += "SELECT 1 ";
     sql += "FROM STORE_RECEIPT sr ";
-    sql += "WHERE sr.ORDER_REQUEST_ID = orq.ORDER_REQUEST_ID";
+    sql += "WHERE sr.order_request_id = orq.order_request_id";
     sql += ") ";
-    sql += "ORDER BY orq.SENT_TO_SUPPLIER_AT DESC";
+    sql += "ORDER BY orq.sent_to_supplier_at DESC";
 
     Connection connection = null;
     PreparedStatement preparedStatement = null;
