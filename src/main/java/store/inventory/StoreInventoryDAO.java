@@ -17,13 +17,8 @@ public class StoreInventoryDAO {
     sql += "WHERE store_id = ? ";
     sql += "AND product_id = ?";
 
-    Connection conn = null;
-    PreparedStatement pstmt = null;
-
-    try {
-      conn = DBConnection.getConnection(DBType.ORACLE);
-      pstmt = conn.prepareStatement(sql);
-
+    try (Connection conn = DBConnection.getConnection(DBType.ORACLE);
+        PreparedStatement pstmt = conn.prepareStatement(sql)) {
       pstmt.setLong(1, storeId);
       pstmt.setLong(2, productId);
 
@@ -34,9 +29,6 @@ public class StoreInventoryDAO {
 
         return GetNullableVariable.getNullableInt(rs, "CURRENT_QUANTITY");
       }
-    } finally {
-      DBConnection.close(pstmt);
-      DBConnection.close(conn);
     }
   }
 
@@ -50,10 +42,7 @@ public class StoreInventoryDAO {
     decreaseQuantitySql += "AND current_quantity >= ? ";
     decreaseQuantitySql += "AND ? > 0";
 
-    PreparedStatement pstmt = null;
-
-    try {
-      pstmt = conn.prepareStatement(decreaseQuantitySql);
+    try (PreparedStatement pstmt = conn.prepareStatement(decreaseQuantitySql)) {
       pstmt.setInt(1, quantity);
       pstmt.setLong(2, storeId);
       pstmt.setLong(3, productId);
@@ -61,8 +50,6 @@ public class StoreInventoryDAO {
       pstmt.setInt(5, quantity);
 
       return pstmt.executeUpdate();
-    } finally {
-      DBConnection.close(pstmt);
     }
   }
 
@@ -75,18 +62,13 @@ public class StoreInventoryDAO {
     increaseQuantitySql += "AND product_id = ? ";
     increaseQuantitySql += "AND ? > 0";
 
-    PreparedStatement pstmt = null;
-
-    try {
-      pstmt = conn.prepareStatement(increaseQuantitySql);
+    try (PreparedStatement pstmt = conn.prepareStatement(increaseQuantitySql)) {
       pstmt.setInt(1, quantity);
       pstmt.setLong(2, storeId);
       pstmt.setLong(3, productId);
       pstmt.setInt(4, quantity);
 
       return pstmt.executeUpdate();
-    } finally {
-      DBConnection.close(pstmt);
     }
   }
 }
