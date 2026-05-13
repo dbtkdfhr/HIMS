@@ -1,6 +1,7 @@
-package inventory.dto;
+package inventory;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
+import common.type.ProductStatus;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -10,10 +11,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class InventoryDTO {
   private Long storeId; // 매장 ID
-  private int productId; // 상품 ID
+  private Long productId; // 상품 ID
   private int currentQuantity; // 현재 재고 수량
   private int safetyQuantity; // 안전 재고 수량
-  private LocalDate updatedAt; // 최종 수정 일시
+  private LocalDateTime updatedAt; // 최종 수정 일시
 
   private String productName; // 상품명
   private int price; // 판매가

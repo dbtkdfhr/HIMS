@@ -14,6 +14,22 @@ import java.util.List;
 
 public class OrderRequestDAO {
 
+  public List<OrderRequestDTO> findAll() throws SQLException {
+    List<OrderRequestDTO> orderRequestDTOList = new ArrayList<>();
+
+    String sql = "SELECT * FROM order_request ORDER BY requested_at DESC";
+
+    try (Connection conn = DBConnection.getConnection(DBType.ORACLE);
+        PreparedStatement pstmt = conn.prepareStatement(sql);
+        ResultSet rs = pstmt.executeQuery()) {
+
+      while (rs.next()) {
+        orderRequestDTOList.add(mapToOrderRequestDTO(rs));
+      }
+    }
+    return orderRequestDTOList;
+  }
+
   public List<OrderRequestDTO> findByOrderRequestIdAndOrderStatus(long orderRequestId,
       String orderStatus)
       throws SQLException {
