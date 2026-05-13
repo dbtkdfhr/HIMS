@@ -1,11 +1,10 @@
-package employee;
+package auth;
 
 import java.time.LocalDateTime;
-
-import lombok.Getter;
-import lombok.Setter;
-import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.ToString;
 
 @Getter
@@ -13,7 +12,7 @@ import lombok.ToString;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString(exclude = "password")
-public class EmployeeDTO {
+public class LoginEmployeeDTO {
 
   private long employeeId;
   private String loginId;
@@ -22,6 +21,7 @@ public class EmployeeDTO {
   private String phoneNumber;
 
   private int roleId;
+  private String roleName;
   private Long storeId;
 
   private String isActive;

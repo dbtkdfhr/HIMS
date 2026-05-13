@@ -1,6 +1,6 @@
 package auth;
 
-import role.RoleType;
+import common.type.RoleType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -17,8 +17,12 @@ public class LoginResponseDTO {
   private long employeeId;
   private String loginId;
   private String employeeName;
+  private String phoneNumber;
 
-  private long roleId;
+  private int roleId;
   private String roleName;
   private RoleType roleType;
+
+  private Long storeId;
+  private String isActive;
 }
