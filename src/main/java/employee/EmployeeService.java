@@ -1,6 +1,7 @@
 package employee;
 
 import common.type.RoleType;
+import exception.DuplicateException;
 import java.sql.SQLException;
 import java.util.List;
 
@@ -14,6 +15,7 @@ public class EmployeeService {
   public int registerEmployee(EmployeeDTO employee) throws SQLException {
     try {
       validateRequired(employee);
+      validateDuplicateLoginId(employee.getLoginId());
 
       RoleType roleType = RoleType.fromRoleId(employee.getRoleId());
 
@@ -43,6 +45,12 @@ public class EmployeeService {
   private void validateStoreId(Long storeId) {
     if (storeId == null) {
       throw new IllegalArgumentException("입점매장담당자는 storeId가 필수입니다.");
+    }
+  }
+
+  private void validateDuplicateLoginId(String loginId) throws SQLException {
+    if (employeeDAO.existsLoginId(loginId)) {
+      throw new DuplicateException("이미 사용 중인 로그인 ID입니다.");
     }
   }
 
