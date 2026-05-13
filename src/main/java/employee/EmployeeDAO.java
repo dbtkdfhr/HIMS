@@ -81,6 +81,37 @@ public class EmployeeDAO {
     return null;
   }
 
+  public EmployeeDTO findEmployeeById(long employeeId) throws SQLException {
+    String sql =
+        "SELECT " +
+            "employee_id, " +
+            "role_id, " +
+            "store_id, " +
+            "login_id, " +
+            "employee_name, " +
+            "phone_number, " +
+            "is_active, " +
+            "created_at, " +
+            "updated_at " +
+            "FROM EMPLOYEE " +
+            "WHERE employee_id = ?";
+
+    try (
+        Connection conn = DBConnection.getConnection(DBType.ORACLE);
+        PreparedStatement pstmt = conn.prepareStatement(sql)
+    ) {
+      pstmt.setLong(1, employeeId);
+
+      try (ResultSet rs = pstmt.executeQuery()) {
+        if (rs.next()) {
+          return mapEmployee(rs);
+        }
+      }
+    }
+
+    return null;
+  }
+
   // 전체 조회
   public List<EmployeeDTO> getEmployees() throws SQLException {
     List<EmployeeDTO> employees = new ArrayList<>();
@@ -105,35 +136,7 @@ public class EmployeeDAO {
     ) {
 
       while (rs.next()) {
-        EmployeeDTO employeeDTO = new EmployeeDTO();
-
-        employeeDTO.setEmployeeId(rs.getLong("EMPLOYEE_ID"));
-        employeeDTO.setRoleId(rs.getInt("ROLE_ID"));
-
-        long storeId = rs.getLong("STORE_ID");
-        if (rs.wasNull()) {
-          employeeDTO.setStoreId(null);
-        } else {
-          employeeDTO.setStoreId(storeId);
-        }
-
-        employeeDTO.setLoginId(rs.getString("LOGIN_ID"));
-        employeeDTO.setEmployeeName(rs.getString("EMPLOYEE_NAME"));
-        employeeDTO.setPhoneNumber(rs.getString("PHONE_NUMBER"));
-        employeeDTO.setIsActive(rs.getString("IS_ACTIVE"));
-
-        Timestamp createdAt = rs.getTimestamp("CREATED_AT");
-        Timestamp updatedAt = rs.getTimestamp("UPDATED_AT");
-
-        employeeDTO.setCreatedAt(
-            createdAt != null ? createdAt.toLocalDateTime() : null
-        );
-
-        employeeDTO.setUpdatedAt(
-            updatedAt != null ? updatedAt.toLocalDateTime() : null
-        );
-
-        employees.add(employeeDTO);
+        employees.add(mapEmployee(rs));
       }
     }
 
@@ -427,5 +430,37 @@ public class EmployeeDAO {
       return pstmt.executeUpdate();
 
     }
+  }
+
+  private EmployeeDTO mapEmployee(ResultSet rs) throws SQLException {
+    EmployeeDTO employeeDTO = new EmployeeDTO();
+
+    employeeDTO.setEmployeeId(rs.getLong("EMPLOYEE_ID"));
+    employeeDTO.setRoleId(rs.getInt("ROLE_ID"));
+
+    long storeId = rs.getLong("STORE_ID");
+    if (rs.wasNull()) {
+      employeeDTO.setStoreId(null);
+    } else {
+      employeeDTO.setStoreId(storeId);
+    }
+
+    employeeDTO.setLoginId(rs.getString("LOGIN_ID"));
+    employeeDTO.setEmployeeName(rs.getString("EMPLOYEE_NAME"));
+    employeeDTO.setPhoneNumber(rs.getString("PHONE_NUMBER"));
+    employeeDTO.setIsActive(rs.getString("IS_ACTIVE"));
+
+    Timestamp createdAt = rs.getTimestamp("CREATED_AT");
+    Timestamp updatedAt = rs.getTimestamp("UPDATED_AT");
+
+    employeeDTO.setCreatedAt(
+        createdAt != null ? createdAt.toLocalDateTime() : null
+    );
+
+    employeeDTO.setUpdatedAt(
+        updatedAt != null ? updatedAt.toLocalDateTime() : null
+    );
+
+    return employeeDTO;
   }
 }

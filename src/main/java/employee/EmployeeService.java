@@ -19,6 +19,22 @@ public class EmployeeService {
     return employeeDAO.findAllEmployeeSummaries();
   }
 
+  public EmployeeDTO findEmployeeById(long employeeId) throws SQLException {
+    try {
+      validateEmployeeId(employeeId);
+
+      EmployeeDTO employee = employeeDAO.findEmployeeById(employeeId);
+
+      if (employee == null) {
+        throw new NotFoundException("존재하지 않는 직원입니다.");
+      }
+
+      return employee;
+    } catch (SQLException | RuntimeException e) {
+      throw e;
+    }
+  }
+
   public int registerEmployee(EmployeeDTO employee) throws SQLException {
     try {
       validateRequired(employee);
@@ -67,7 +83,11 @@ public class EmployeeService {
       throw new IllegalArgumentException("직원 정보는 필수입니다.");
     }
 
-    if (employee.getEmployeeId() <= 0) {
+    validateEmployeeId(employee.getEmployeeId());
+  }
+
+  private void validateEmployeeId(long employeeId) {
+    if (employeeId <= 0) {
       throw new IllegalArgumentException("직원 ID는 필수입니다.");
     }
   }
