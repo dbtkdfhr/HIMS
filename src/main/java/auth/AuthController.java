@@ -1,6 +1,7 @@
 package auth;
 
 import common.Session;
+import java.sql.SQLException;
 import java.util.Scanner;
 
 public class AuthController {
@@ -27,6 +28,8 @@ public class AuthController {
       System.out.println("권한 : " + loginUser.getRoleName());
     } catch (IllegalArgumentException | IllegalStateException e) {
       System.out.println(e.getMessage());
+    } catch (SQLException e) {
+      e.printStackTrace();
     }
   }
 
