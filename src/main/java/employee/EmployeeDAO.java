@@ -47,6 +47,21 @@ public class EmployeeDAO {
     return list;
   }
 
+  public boolean existsLoginId(String loginId) throws SQLException {
+    String sql = "SELECT 1 FROM EMPLOYEE WHERE login_id = ?";
+
+    try (
+        Connection conn = DBConnection.getConnection(DBType.ORACLE);
+        PreparedStatement pstmt = conn.prepareStatement(sql)
+    ) {
+      pstmt.setString(1, loginId);
+
+      try (ResultSet rs = pstmt.executeQuery()) {
+        return rs.next();
+      }
+    }
+  }
+
   // 전체 조회
   public List<EmployeeDTO> getEmployees() throws SQLException {
     List<EmployeeDTO> employees = new ArrayList<>();
