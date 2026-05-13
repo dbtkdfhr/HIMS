@@ -68,7 +68,8 @@ public class InventoryDAO {
   }
 
   // [INV-04] 안전재고 수량 변경
-  public int updateSafetyQuantity(int storeId, int productId, int newSafetyQty) {
+  public int updateSafetyQuantity(int storeId, int productId, int newSafetyQty)
+      throws SQLException {
     String sql = "UPDATE store_inventory " + "SET safety_quantity = ?, updated_at = SYSDATE "
         + "WHERE store_id = ? AND product_id = ?";
 
@@ -80,9 +81,6 @@ public class InventoryDAO {
       pstmt.setInt(3, productId);
 
       return pstmt.executeUpdate(); // 1: 성공, 0: 실패
-
-    } catch (SQLException e) {
-      throw new RuntimeException("안전재고 변경 중 데이터베이스 오류가 발생했습니다.", e);
     }
   }
 
