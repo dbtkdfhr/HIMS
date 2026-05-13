@@ -62,6 +62,25 @@ public class EmployeeDAO {
     }
   }
 
+  public String findPasswordByEmployeeId(long employeeId) throws SQLException {
+    String sql = "SELECT password FROM EMPLOYEE WHERE employee_id = ?";
+
+    try (
+        Connection conn = DBConnection.getConnection(DBType.ORACLE);
+        PreparedStatement pstmt = conn.prepareStatement(sql)
+    ) {
+      pstmt.setLong(1, employeeId);
+
+      try (ResultSet rs = pstmt.executeQuery()) {
+        if (rs.next()) {
+          return rs.getString("PASSWORD");
+        }
+      }
+    }
+
+    return null;
+  }
+
   // 전체 조회
   public List<EmployeeDTO> getEmployees() throws SQLException {
     List<EmployeeDTO> employees = new ArrayList<>();
