@@ -1,6 +1,7 @@
 package inventory;
 
 import java.time.LocalDateTime;
+import common.type.ProductStatus;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

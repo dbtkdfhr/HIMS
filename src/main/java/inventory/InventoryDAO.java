@@ -3,6 +3,7 @@ package inventory;
 import common.DBConnection;
 import common.GetNullableVariable;
 import common.type.DBType;
+import common.type.ProductStatus;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
