@@ -245,4 +245,19 @@ public class OrderRequestDAO {
     }
     return null;
   }
+
+  public int updateStatus(Connection oracleConn, long orderRequestId, OrderStatus orderStatus)
+      throws SQLException {
+
+    String sql = "UPDATE order_request "
+        + "SET order_status = ? "
+        + "WHERE order_request_id = ?";
+
+    try (PreparedStatement pstmt = oracleConn.prepareStatement(sql)) {
+      pstmt.setString(1, orderStatus.name());
+      pstmt.setLong(2, orderRequestId);
+
+      return pstmt.executeUpdate();
+    }
+  }
 }

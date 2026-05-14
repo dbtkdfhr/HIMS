@@ -11,11 +11,10 @@ import java.util.List;
 
 public class ExternalSupplierInventoryDAO {
 
-  public void decreaseStock(long productId, int quantity) throws SQLException {
+  public void decreaseStock(Connection mariaConn, long productId, int quantity) throws SQLException {
     String sql = "UPDATE supplier_inventory SET current_quantity = current_quantity - ? WHERE supplier_product_id = ? AND current_quantity >= ?";
 
-    try (Connection conn = DBConnection.getConnection(
-        DBType.MARIADB); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+    try (PreparedStatement pstmt = mariaConn.prepareStatement(sql)) {
       pstmt.setInt(1, quantity);
       pstmt.setLong(2, productId);
       pstmt.setLong(3, quantity);
@@ -24,17 +23,6 @@ public class ExternalSupplierInventoryDAO {
       if (result == 0) {
         throw new SQLException("재고가 부족하여 승인 처리에 실패했습니다.");
       }
-    }
-  }
-
-  public void insertExternalReceipt(Connection mariaConn, long orderRequestId) throws SQLException {
-    String sql = "INSERT INTO external_order_receipt (internal_order_request_id, receipt_status) " +
-        "VALUES (?, 'RECEIVED')";
-
-    try (PreparedStatement pstmt = mariaConn.prepareStatement(sql)) {
-
-      pstmt.setLong(1, orderRequestId);
-      pstmt.executeUpdate();
     }
   }
 
@@ -56,11 +44,10 @@ public class ExternalSupplierInventoryDAO {
     return inventoryList;
   }
 
-  public ExternalSupplierInventoryDTO findInventoryById(long productId) throws SQLException {
+  public ExternalSupplierInventoryDTO findInventoryById(Connection mariaConn,long productId) throws SQLException {
     String sql = "SELECT supplier_id, supplier_product_id, current_quantity FROM supplier_inventory WHERE supplier_product_id = ?";
 
-    try (Connection conn = DBConnection.getConnection(DBType.MARIADB);
-        PreparedStatement pstmt = conn.prepareStatement(sql)) {
+    try (PreparedStatement pstmt = mariaConn.prepareStatement(sql)) {
       pstmt.setLong(1, productId);
 
       try (ResultSet rs = pstmt.executeQuery()) {
