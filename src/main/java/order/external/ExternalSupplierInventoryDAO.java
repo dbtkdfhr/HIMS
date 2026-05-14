@@ -27,14 +27,13 @@ public class ExternalSupplierInventoryDAO {
     }
   }
 
-  public void insertExternalReceipt(int orderRequestId) throws SQLException {
+  public void insertExternalReceipt(Connection mariaConn, long orderRequestId) throws SQLException {
     String sql = "INSERT INTO external_order_receipt (internal_order_request_id, receipt_status) " +
         "VALUES (?, 'RECEIVED')";
 
-    try (Connection conn = DBConnection.getConnection(DBType.MARIADB);
-        PreparedStatement pstmt = conn.prepareStatement(sql)) {
+    try (PreparedStatement pstmt = mariaConn.prepareStatement(sql)) {
 
-      pstmt.setInt(1, orderRequestId);
+      pstmt.setLong(1, orderRequestId);
       pstmt.executeUpdate();
     }
   }
