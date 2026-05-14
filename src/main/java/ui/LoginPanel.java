@@ -16,6 +16,7 @@ import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 import ui.common.UiConstants;
+import ui.common.UiExceptionHandler;
 import ui.data.MockDataStore;
 
 public class LoginPanel extends JPanel {
@@ -97,8 +98,8 @@ public class LoginPanel extends JPanel {
     try {
       EmployeeDTO user = store.authenticate(loginId, password, roleType);
       onLogin.accept(user);
-    } catch (RuntimeException e) {
-      JOptionPane.showMessageDialog(this, e.getMessage());
+    } catch (Exception e) {
+      JOptionPane.showMessageDialog(this, UiExceptionHandler.messageFor(e));
     }
   }
 }

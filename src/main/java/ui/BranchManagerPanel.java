@@ -19,6 +19,7 @@ import javax.swing.table.DefaultTableModel;
 import product.ProductDTO;
 import store.StoreDTO;
 import ui.common.UiConstants;
+import ui.common.UiExceptionHandler;
 import ui.common.UiTableFactory;
 import ui.data.MockDataStore;
 
@@ -65,10 +66,11 @@ public class BranchManagerPanel {
     controls.add(new JLabel(filterType + " 조건"));
     controls.add(keywordField);
     controls.add(search);
-    search.addActionListener(event -> fillInventory(model, filterType, keywordField.getText()));
+    search.addActionListener(event -> UiExceptionHandler.run(logger,
+        () -> fillInventory(model, filterType, keywordField.getText())));
     panel.add(controls, BorderLayout.NORTH);
     panel.add(UiTableFactory.scroll(table), BorderLayout.CENTER);
-    fillInventory(model, filterType, "");
+    UiExceptionHandler.run(logger, () -> fillInventory(model, filterType, ""));
     return panel;
   }
 
@@ -78,10 +80,10 @@ public class BranchManagerPanel {
         "위치", "상태");
     JTable table = UiTableFactory.table(model);
     JButton refresh = new JButton("새로고침");
-    refresh.addActionListener(event -> fillStores(model));
+    refresh.addActionListener(event -> UiExceptionHandler.run(logger, () -> fillStores(model)));
     panel.add(toolbar(refresh), BorderLayout.NORTH);
     panel.add(UiTableFactory.scroll(table), BorderLayout.CENTER);
-    fillStores(model);
+    UiExceptionHandler.run(logger, () -> fillStores(model));
     return panel;
   }
 
@@ -113,8 +115,7 @@ public class BranchManagerPanel {
     form.add(new JLabel());
     form.add(create);
 
-    create.addActionListener(event -> {
-      try {
+    create.addActionListener(event -> UiExceptionHandler.run(logger, () -> {
         String name = required(nameField.getText(), "매장명");
         long branchId = parseLong(branchField.getText(), "지점ID");
         long brandId = parseLong(brandField.getText(), "브랜드ID");
@@ -135,13 +136,10 @@ public class BranchManagerPanel {
             dto.getOperationStatus());
         fillMaster(masterModel, "입점매장");
         logger.accept("입점매장 등록 완료: " + name);
-      } catch (RuntimeException e) {
-        showError(panel, e);
-      }
-    });
+    }));
 
     panel.add(form, BorderLayout.NORTH);
-    fillMaster(masterModel, "입점매장");
+    UiExceptionHandler.run(logger, () -> fillMaster(masterModel, "입점매장"));
     panel.add(UiTableFactory.scroll(masterTable), BorderLayout.CENTER);
     return panel;
   }
@@ -174,8 +172,7 @@ public class BranchManagerPanel {
     form.add(new JLabel());
     form.add(create);
 
-    create.addActionListener(event -> {
-      try {
+    create.addActionListener(event -> UiExceptionHandler.run(logger, () -> {
         ProductDTO dto = new ProductDTO();
         dto.setProductId(nextProductId());
         dto.setProductName(required(nameField.getText(), "상품명"));
@@ -191,13 +188,10 @@ public class BranchManagerPanel {
             String.valueOf(dto.getPrice()), dto.getProductStatus());
         fillMaster(masterModel, "상품");
         logger.accept("상품 등록 완료: " + dto.getProductName());
-      } catch (RuntimeException e) {
-        showError(panel, e);
-      }
-    });
+    }));
 
     panel.add(form, BorderLayout.NORTH);
-    fillMaster(masterModel, "상품");
+    UiExceptionHandler.run(logger, () -> fillMaster(masterModel, "상품"));
     panel.add(UiTableFactory.scroll(masterTable), BorderLayout.CENTER);
     return panel;
   }
@@ -316,7 +310,4 @@ public class BranchManagerPanel {
     return text;
   }
 
-  private void showError(JPanel panel, RuntimeException e) {
-    logger.accept("오류: " + e.getMessage());
-  }
 }

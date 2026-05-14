@@ -14,6 +14,7 @@ import javax.swing.JTextField;
 import javax.swing.table.DefaultTableModel;
 import order.request.OrderRequestDTO;
 import ui.common.UiConstants;
+import ui.common.UiExceptionHandler;
 import ui.common.UiTableFactory;
 import ui.data.MockDataStore;
 
@@ -48,10 +49,10 @@ public class ExternalSupplierPanel {
     DefaultTableModel model = orderModel();
     JTable table = UiTableFactory.table(model);
     JButton refresh = new JButton("새로고침");
-    refresh.addActionListener(event -> fillExternalOrders(model, false));
+    refresh.addActionListener(event -> UiExceptionHandler.run(logger, () -> fillExternalOrders(model, false)));
     panel.add(toolbar(refresh), BorderLayout.NORTH);
     panel.add(UiTableFactory.scroll(table), BorderLayout.CENTER);
-    fillExternalOrders(model, false);
+    UiExceptionHandler.run(logger, () -> fillExternalOrders(model, false));
     return panel;
   }
 
@@ -70,32 +71,24 @@ public class ExternalSupplierPanel {
     controls.add(reject);
     controls.add(refresh);
 
-    approve.addActionListener(event -> {
-      try {
+    approve.addActionListener(event -> UiExceptionHandler.run(logger, () -> {
         long orderId = selectedOrderId(table);
         store.approveExternalOrder(orderId);
         fillExternalOrders(model, true);
         logger.accept("외부 발주처 승인 완료: " + orderId);
-      } catch (RuntimeException e) {
-        showError(e);
-      }
-    });
-    reject.addActionListener(event -> {
-      try {
+    }));
+    reject.addActionListener(event -> UiExceptionHandler.run(logger, () -> {
         long orderId = selectedOrderId(table);
         store.rejectExternalOrder(orderId, required(reasonField.getText(), "거절사유"));
         reasonField.setText("");
         fillExternalOrders(model, true);
         logger.accept("외부 발주처 거절 완료: " + orderId);
-      } catch (RuntimeException e) {
-        showError(e);
-      }
-    });
-    refresh.addActionListener(event -> fillExternalOrders(model, true));
+    }));
+    refresh.addActionListener(event -> UiExceptionHandler.run(logger, () -> fillExternalOrders(model, true)));
 
     panel.add(controls, BorderLayout.NORTH);
     panel.add(UiTableFactory.scroll(table), BorderLayout.CENTER);
-    fillExternalOrders(model, true);
+    UiExceptionHandler.run(logger, () -> fillExternalOrders(model, true));
     return panel;
   }
 
@@ -167,7 +160,4 @@ public class ExternalSupplierPanel {
     return text;
   }
 
-  private void showError(RuntimeException e) {
-    logger.accept("오류: " + e.getMessage());
-  }
 }
