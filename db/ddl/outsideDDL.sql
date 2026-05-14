@@ -25,19 +25,19 @@ SET FOREIGN_KEY_CHECKS = 1;
 ========================================================= */
 CREATE TABLE SUPPLIER
 (
-    SUPPLIER_ID      BIGINT AUTO_INCREMENT                 NOT NULL COMMENT '발주처 고유 번호',
+    SUPPLIER_ID      BIGINT AUTO_INCREMENT                 NOT NULL COMMENT '발주처ID',
     SUPPLIER_NAME    VARCHAR(100)                          NOT NULL COMMENT '발주처명',
-    SUPPLIER_TYPE    VARCHAR(50)                           NOT NULL COMMENT '발주처 유형',
-    ADDRESS          VARCHAR(300) COMMENT '발주처 주소',
-    PHONE_NUMBER     VARCHAR(30) COMMENT '발주처 연락처',
-    OPERATION_STATUS VARCHAR(20) DEFAULT 'ACTIVE'          NOT NULL COMMENT '발주처 운영 상태: ACTIVE, INACTIVE, CLOSED',
-    CREATED_AT       DATETIME    DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '발주처 정보 등록 일시',
-    UPDATED_AT       DATETIME                              NULL COMMENT '발주처 정보 최종 수정 일시',
+    SUPPLIER_TYPE    VARCHAR(50)                           NOT NULL COMMENT '발주처유형',
+    ADDRESS          VARCHAR(300) COMMENT '주소',
+    PHONE_NUMBER     VARCHAR(30) COMMENT '연락처',
+    OPERATION_STATUS VARCHAR(20) DEFAULT 'ACTIVE'          NOT NULL COMMENT '운영상태',
+    CREATED_AT       DATETIME    DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '등록일자',
+    UPDATED_AT       DATETIME                              NULL COMMENT '최종수정일자',
 
     CONSTRAINT PK_SUPPLIER PRIMARY KEY (SUPPLIER_ID),
     CONSTRAINT CK_SUPPLIER_STATUS
         CHECK (OPERATION_STATUS IN ('ACTIVE', 'INACTIVE', 'CLOSED'))
-) COMMENT = '외부 발주처 정보를 관리하는 테이블';
+) COMMENT = '발주처';
 
 
 /* =========================================================
@@ -45,14 +45,14 @@ CREATE TABLE SUPPLIER
 ========================================================= */
 CREATE TABLE SUPPLIER_PRODUCT
 (
-    SUPPLIER_PRODUCT_ID BIGINT AUTO_INCREMENT                 NOT NULL COMMENT '발주처 상품 고유 번호',
-    SUPPLIER_ID         BIGINT                                NOT NULL COMMENT '상품을 취급하는 발주처 고유 번호',
-    EXTERNAL_PRODUCT_ID VARCHAR(100)                          NOT NULL COMMENT '외부 발주처 시스템의 상품 식별값',
-    PRODUCT_NAME        VARCHAR(200)                          NOT NULL COMMENT '발주처 상품명',
-    SUPPLY_PRICE        BIGINT                                NOT NULL COMMENT '상품 공급가',
-    PRODUCT_STATUS      VARCHAR(20) DEFAULT 'ACTIVE'          NOT NULL COMMENT '발주처 상품 상태: ACTIVE, INACTIVE, DISCONTINUED',
-    CREATED_AT          DATETIME    DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '발주처 상품 등록 일시',
-    UPDATED_AT          DATETIME                              NULL COMMENT '발주처 상품 정보 최종 수정 일시',
+    SUPPLIER_PRODUCT_ID BIGINT AUTO_INCREMENT                 NOT NULL COMMENT '발주처상품ID',
+    SUPPLIER_ID         BIGINT                                NOT NULL COMMENT '발주처ID',
+    EXTERNAL_PRODUCT_ID VARCHAR(100)                          NOT NULL COMMENT '외부상품ID',
+    PRODUCT_NAME        VARCHAR(200)                          NOT NULL COMMENT '상품명',
+    SUPPLY_PRICE        BIGINT                                NOT NULL COMMENT '공급가',
+    PRODUCT_STATUS      VARCHAR(20) DEFAULT 'ACTIVE'          NOT NULL COMMENT '상품상태',
+    CREATED_AT          DATETIME    DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '등록일자',
+    UPDATED_AT          DATETIME                              NULL COMMENT '최종수정일자',
 
     CONSTRAINT PK_SUPPLIER_PRODUCT PRIMARY KEY (SUPPLIER_PRODUCT_ID),
 
@@ -68,7 +68,7 @@ CREATE TABLE SUPPLIER_PRODUCT
 
     CONSTRAINT CK_SUPPLIER_PRODUCT_STATUS
         CHECK (PRODUCT_STATUS IN ('ACTIVE', 'INACTIVE', 'DISCONTINUED'))
-) COMMENT = '외부 발주처에서 취급하는 상품 정보를 관리하는 테이블';
+) COMMENT = '발주처상품';
 
 
 /* =========================================================
@@ -76,11 +76,11 @@ CREATE TABLE SUPPLIER_PRODUCT
 ========================================================= */
 CREATE TABLE SUPPLIER_INVENTORY
 (
-    SUPPLIER_ID         BIGINT                             NOT NULL COMMENT '재고를 보유한 발주처 고유 번호',
-    SUPPLIER_PRODUCT_ID BIGINT                             NOT NULL COMMENT '재고 대상 발주처 상품 고유 번호',
-    CURRENT_QUANTITY    BIGINT   DEFAULT 0                 NOT NULL COMMENT '발주처의 현재 재고 수량',
-    CREATED_AT          DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '발주처 재고 정보 등록 일시',
-    UPDATED_AT          DATETIME                           NULL COMMENT '발주처 재고 정보 최종 수정 일시',
+    SUPPLIER_ID         BIGINT                             NOT NULL COMMENT '발주처ID',
+    SUPPLIER_PRODUCT_ID BIGINT                             NOT NULL COMMENT '발주처상품ID',
+    CURRENT_QUANTITY    BIGINT   DEFAULT 0                 NOT NULL COMMENT '현재수량',
+    CREATED_AT          DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '등록일자',
+    UPDATED_AT          DATETIME                           NULL COMMENT '최종수정일자',
 
     CONSTRAINT PK_SUPPLIER_INVENTORY
         PRIMARY KEY (SUPPLIER_ID, SUPPLIER_PRODUCT_ID),
@@ -95,7 +95,7 @@ CREATE TABLE SUPPLIER_INVENTORY
 
     CONSTRAINT CK_SUPPLIER_INVENTORY_QTY
         CHECK (CURRENT_QUANTITY >= 0)
-) COMMENT = '외부 발주처별 상품 재고 수량을 관리하는 테이블';
+) COMMENT = '발주처재고';
 
 
 /* =========================================================
@@ -103,16 +103,16 @@ CREATE TABLE SUPPLIER_INVENTORY
 ========================================================= */
 CREATE TABLE EXTERNAL_ORDER_RECEIPT
 (
-    EXTERNAL_ORDER_RECEIPT_ID BIGINT AUTO_INCREMENT                 NOT NULL COMMENT '외부 발주 접수 고유 번호',
-    SUPPLIER_ID               BIGINT                                NOT NULL COMMENT '발주를 접수한 발주처 고유 번호',
-    SUPPLIER_PRODUCT_ID       BIGINT                                NOT NULL COMMENT '발주 접수 상품 고유 번호',
-    INTERNAL_ORDER_REQUEST_ID VARCHAR(100)                          NOT NULL COMMENT '내부 시스템의 발주 요청 식별값',
-    REQUEST_STORE_NAME        VARCHAR(100)                          NOT NULL COMMENT '발주를 요청한 입점매장명',
-    REQUEST_QUANTITY          BIGINT                                NOT NULL COMMENT '내부 시스템에서 요청한 발주 수량',
-    APPROVED_QUANTITY         BIGINT                                NULL COMMENT '내부 시스템에서 승인된 발주 수량',
-    RECEIPT_STATUS            VARCHAR(30) DEFAULT 'RECEIVED'        NOT NULL COMMENT '외부 발주 접수 상태: RECEIVED, APPROVED, REJECTED, PROCESSING, SHIPPED, CANCELED',
-    CREATED_AT                DATETIME    DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '외부 발주 접수 등록 일시',
-    UPDATED_AT                DATETIME                              NULL COMMENT '외부 발주 접수 정보 최종 수정 일시',
+    EXTERNAL_ORDER_RECEIPT_ID BIGINT AUTO_INCREMENT                 NOT NULL COMMENT '외부발주접수ID',
+    SUPPLIER_ID               BIGINT                                NOT NULL COMMENT '발주처ID',
+    SUPPLIER_PRODUCT_ID       BIGINT                                NOT NULL COMMENT '발주처상품ID',
+    INTERNAL_ORDER_REQUEST_ID VARCHAR(100)                          NOT NULL COMMENT '내부발주요청ID',
+    REQUEST_STORE_NAME        VARCHAR(100)                          NOT NULL COMMENT '요청매장명',
+    REQUEST_QUANTITY          BIGINT                                NOT NULL COMMENT '요청수량',
+    APPROVED_QUANTITY         BIGINT                                NULL COMMENT '승인수량',
+    RECEIPT_STATUS            VARCHAR(30) DEFAULT 'RECEIVED'        NOT NULL COMMENT '접수상태',
+    CREATED_AT                DATETIME    DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '등록일자',
+    UPDATED_AT                DATETIME                              NULL COMMENT '최종수정일자',
 
     CONSTRAINT PK_EXTERNAL_ORDER_RECEIPT
         PRIMARY KEY (EXTERNAL_ORDER_RECEIPT_ID),
@@ -145,7 +145,7 @@ CREATE TABLE EXTERNAL_ORDER_RECEIPT
                                'CANCELED'
                 )
             )
-) COMMENT = '내부 시스템에서 전송한 발주 요청을 외부 발주처가 접수한 내역을 관리하는 테이블';
+) COMMENT = '외부발주접수';
 
 
 /* =========================================================
@@ -153,12 +153,12 @@ CREATE TABLE EXTERNAL_ORDER_RECEIPT
 ========================================================= */
 CREATE TABLE EXTERNAL_SHIPMENT
 (
-    EXTERNAL_SHIPMENT_ID      BIGINT AUTO_INCREMENT                 NOT NULL COMMENT '외부 출고 처리 고유 번호',
-    EXTERNAL_ORDER_RECEIPT_ID BIGINT                                NOT NULL COMMENT '출고 처리 대상 외부 발주 접수 고유 번호',
-    SHIPMENT_QUANTITY         BIGINT                                NOT NULL COMMENT '출고 처리된 수량',
-    SHIPMENT_STATUS           VARCHAR(30) DEFAULT 'SHIPPED'         NOT NULL COMMENT '출고 처리 상태: READY, SHIPPED, CANCELED, FAILED',
-    CREATED_AT                DATETIME    DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '외부 출고 처리 등록 일시',
-    UPDATED_AT                DATETIME                              NULL COMMENT '외부 출고 처리 정보 최종 수정 일시',
+    EXTERNAL_SHIPMENT_ID      BIGINT AUTO_INCREMENT                 NOT NULL COMMENT '외부출고처리ID',
+    EXTERNAL_ORDER_RECEIPT_ID BIGINT                                NOT NULL COMMENT '외부발주접수ID',
+    SHIPMENT_QUANTITY         BIGINT                                NOT NULL COMMENT '출고수량',
+    SHIPMENT_STATUS           VARCHAR(30) DEFAULT 'SHIPPED'         NOT NULL COMMENT '출고상태',
+    CREATED_AT                DATETIME    DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '등록일자',
+    UPDATED_AT                DATETIME                              NULL COMMENT '최종수정일자',
 
     CONSTRAINT PK_EXTERNAL_SHIPMENT
         PRIMARY KEY (EXTERNAL_SHIPMENT_ID),
@@ -179,7 +179,7 @@ CREATE TABLE EXTERNAL_SHIPMENT
                                 'FAILED'
                 )
             )
-) COMMENT = '외부 발주처에서 처리한 상품 출고 내역을 관리하는 테이블';
+) COMMENT = '외부출고처리';
 
 CREATE TRIGGER TRG_SUPPLIER_UPD_AT
     BEFORE UPDATE

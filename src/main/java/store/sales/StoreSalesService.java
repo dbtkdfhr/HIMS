@@ -19,7 +19,7 @@ public class StoreSalesService {
   private final StoreDAO storeDAO = new StoreDAO();
   private final ProductDAO productDAO = new ProductDAO();
 
-  public List<String> findSaleTargetSummaries(int storeId) {
+  public List<String> findSaleTargetSummaries(int storeId) throws SQLException {
     List<String> result = new ArrayList<>();
     List<InventoryDTO> inventories = inventoryService.getInventoryList(storeId);
 

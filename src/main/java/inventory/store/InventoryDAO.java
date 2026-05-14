@@ -16,19 +16,19 @@ public class InventoryDAO {
 
   // [INV-01] 내 매장 전체 재고 목록 조회 || [INV-02] 안전재고 미만 상품만 조회 || [INV-03] 재고 검색 (브랜드명 / 카테고리명 / 상품명 키워드)
   public List<InventoryDTO> searchInventory(int storeId, String brandName, String categoryName,
-      String keyword, boolean isLowStockOnly) {
+      String keyword, boolean isLowStockOnly) throws SQLException {
     List<InventoryDTO> list = new ArrayList<>();
 
-    StringBuilder sql = new StringBuilder("SELECT br.branch_id, br.branch_name, "
-        + "si.store_id, s.store_name, si.product_id, "
-        + "si.current_quantity, si.safety_quantity, si.updated_at, si.is_low_stock, "
-        + "p.product_name, p.price, p.season_type, p.product_status, b.brand_name, "
-        + "c.category_name " + "FROM store_inventory si "
-        + "JOIN store s ON si.store_id = s.store_id "
-        + "JOIN branch br ON s.branch_id = br.branch_id "
-        + "JOIN product p ON si.product_id = p.product_id "
-        + "JOIN brand b ON p.brand_id = b.brand_id "
-        + "JOIN category c ON p.category_id = c.category_id " + "WHERE si.store_id = ? ");
+    StringBuilder sql = new StringBuilder(
+        "SELECT br.branch_id, br.branch_name, " + "si.store_id, s.store_name, si.product_id, "
+            + "si.current_quantity, si.safety_quantity, si.updated_at, si.is_low_stock, "
+            + "p.product_name, p.price, p.season_type, p.product_status, b.brand_name, "
+            + "c.category_name " + "FROM store_inventory si "
+            + "JOIN store s ON si.store_id = s.store_id "
+            + "JOIN branch br ON s.branch_id = br.branch_id "
+            + "JOIN product p ON si.product_id = p.product_id "
+            + "JOIN brand b ON p.brand_id = b.brand_id "
+            + "JOIN category c ON p.category_id = c.category_id " + "WHERE si.store_id = ? ");
 
     List<Object> params = new ArrayList<>();
     params.add(storeId);
@@ -63,8 +63,6 @@ public class InventoryDAO {
         }
       }
 
-    } catch (SQLException e) {
-      throw new RuntimeException("재고 목록 조회 중 데이터베이스 오류가 발생했습니다.", e);
     }
 
     return list;

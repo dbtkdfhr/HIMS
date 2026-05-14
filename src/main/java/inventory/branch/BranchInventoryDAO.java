@@ -18,20 +18,20 @@ public class BranchInventoryDAO {
   // [BM-INV-02] 지점/브랜드/카테고리/매장/상품명 기준 검색
   // [BM-INV-03] 재고 부족 상품만 조회
   public List<InventoryDTO> searchAllStoreInventory(String branchName, String brandName,
-      String categoryName, String storeName, String productName, boolean isLowStockOnly) {
+      String categoryName, String storeName, String productName, boolean isLowStockOnly)
+      throws SQLException {
     List<InventoryDTO> list = new ArrayList<>();
 
-    StringBuilder sql = new StringBuilder("SELECT br.branch_id, br.branch_name, "
-        + "si.store_id, s.store_name, si.product_id, "
-        + "si.current_quantity, si.safety_quantity, si.updated_at, si.is_low_stock, "
-        + "p.product_name, p.price, p.season_type, p.product_status, b.brand_name, "
-        + "c.category_name " + "FROM store_inventory si "
-        + "JOIN store s ON si.store_id = s.store_id "
-        + "JOIN branch br ON s.branch_id = br.branch_id "
-        + "JOIN product p ON si.product_id = p.product_id "
-        + "JOIN brand b ON p.brand_id = b.brand_id "
-        + "JOIN category c ON p.category_id = c.category_id "
-        + "WHERE 1 = 1 ");
+    StringBuilder sql = new StringBuilder(
+        "SELECT br.branch_id, br.branch_name, " + "si.store_id, s.store_name, si.product_id, "
+            + "si.current_quantity, si.safety_quantity, si.updated_at, si.is_low_stock, "
+            + "p.product_name, p.price, p.season_type, p.product_status, b.brand_name, "
+            + "c.category_name " + "FROM store_inventory si "
+            + "JOIN store s ON si.store_id = s.store_id "
+            + "JOIN branch br ON s.branch_id = br.branch_id "
+            + "JOIN product p ON si.product_id = p.product_id "
+            + "JOIN brand b ON p.brand_id = b.brand_id "
+            + "JOIN category c ON p.category_id = c.category_id " + "WHERE 1 = 1 ");
 
     List<Object> params = new ArrayList<>();
 
@@ -75,8 +75,6 @@ public class BranchInventoryDAO {
         }
       }
 
-    } catch (SQLException e) {
-      throw new RuntimeException("전체 입점매장 재고 목록 조회 중 데이터베이스 오류가 발생했습니다.", e);
     }
 
     return list;
