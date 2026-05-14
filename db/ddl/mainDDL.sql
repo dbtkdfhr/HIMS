@@ -236,7 +236,10 @@ CREATE TABLE STORE_INVENTORY
     PRODUCT_ID       NUMBER                 NOT NULL,
     CURRENT_QUANTITY NUMBER DEFAULT 0       NOT NULL,
     SAFETY_QUANTITY  NUMBER DEFAULT 0       NOT NULL,
-    IS_LOW_STOCK     VARCHAR2(1) GENERATED ALWAYS AS (CASE WHEN CURRENT_QUANTITY < SAFETY_QUANTITY THEN 'Y' ELSE 'N' END) VIRTUAL,
+    IS_LOW_STOCK     VARCHAR2(1) GENERATED ALWAYS AS (CASE
+                                                          WHEN CURRENT_QUANTITY < SAFETY_QUANTITY
+                                                              THEN 'Y'
+                                                          ELSE 'N' END) VIRTUAL,
     CREATED_AT       DATE   DEFAULT SYSDATE NOT NULL,
     UPDATED_AT       DATE,
 
@@ -326,7 +329,8 @@ CREATE TABLE ORDER_REQUEST
                              'REJECTED',
                              'SENT',
                              'RECEIVED',
-                             'CANCELED'
+                             'CANCELED',
+                             'DONE'
                 )
             )
 );
@@ -549,13 +553,11 @@ BEGIN
         WHERE ORDER_REQUEST_ID = :NEW.ORDER_REQUEST_ID;
     ELSE
         UPDATE ORDER_REQUEST
-        SET ORDER_STATUS = 'RECEIVED'
+        SET ORDER_STATUS = 'DONE'
         WHERE ORDER_REQUEST_ID = :NEW.ORDER_REQUEST_ID;
     END IF;
 END;
 /
-
-COMMIT;
 
 /* =========================================================
    TABLE COMMENTS

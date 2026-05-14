@@ -1,9 +1,10 @@
 package order.request;
 
-import java.sql.SQLException;
-import java.util.List;
+import common.type.OrderStatus;
 import exception.InputException;
 import exception.NotFoundException;
+import java.sql.SQLException;
+import java.util.List;
 
 public class OrderRequestService {
 
@@ -35,5 +36,10 @@ public class OrderRequestService {
   // [STORE-ORDER-03] 내 발주 요청 목록 조회
   public List<OrderRequestDTO> getMyOrderRequests(long storeId) throws SQLException {
     return orderRequestDAO.findAllByStoreId(storeId);
+  }
+
+  public List<OrderRequestDTO> getOrdersBeforeDone(long storeId) throws SQLException {
+    return orderRequestDAO.findByOrderRequestIdAndOrderStatus(storeId,
+        OrderStatus.RECEIVED.name());
   }
 }
