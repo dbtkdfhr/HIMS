@@ -4,7 +4,7 @@ import common.DBConnection;
 import common.type.DBType;
 import exception.MismatchQuantityException;
 import inventory.InventoryDTO;
-import inventory.InventoryService;
+import inventory.store.InventoryService;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
