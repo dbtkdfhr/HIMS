@@ -316,8 +316,9 @@ public class MockDataStore {
   }
 
   public EmployeeDTO createEmployee(String loginId, String name, RoleType roleType, Long storeId) {
+    Long branchId = findBranchIdByStoreId(storeId);
     EmployeeDTO employee = new EmployeeDTO(nextEmployeeId++, loginId, "1234", name, "010-0000-0000",
-        roleType.getRoleId(), storeId, "Y", LocalDateTime.now(), LocalDateTime.now());
+        roleType.getRoleId(), storeId, branchId, "Y", LocalDateTime.now(), LocalDateTime.now());
     employees.add(employee);
     return employee;
   }
@@ -383,15 +384,15 @@ public class MockDataStore {
   private void seed() {
     LocalDateTime now = LocalDateTime.now();
     employees.add(new EmployeeDTO(9001, "branch", "1234", "최우진", "010-1111-1111",
-        RoleType.BRANCH_MANAGER.getRoleId(), null, "Y", now, now));
+        RoleType.BRANCH_MANAGER.getRoleId(), null, 1L, "Y", now, now));
     employees.add(new EmployeeDTO(9002, "vendor", "1234", "Annie", "010-2222-2222",
-        RoleType.SUPPLIER_MANAGER.getRoleId(), null, "Y", now, now));
+        RoleType.SUPPLIER_MANAGER.getRoleId(), null, 1L, "Y", now, now));
     employees.add(new EmployeeDTO(9003, "store", "1234", "유상록", "010-3333-3333",
-        RoleType.STORE_MANAGER.getRoleId(), 101L, "Y", now, now));
+        RoleType.STORE_MANAGER.getRoleId(), 101L, 1L, "Y", now, now));
     employees.add(new EmployeeDTO(9004, "system", "1234", "시스템관리자", "010-4444-4444",
-        RoleType.SYSTEM_MANAGER.getRoleId(), null, "Y", now, now));
+        RoleType.SYSTEM_MANAGER.getRoleId(), null, null, "Y", now, now));
     employees.add(new EmployeeDTO(9005, "staff", "1234", "일반직원", "010-5555-5555",
-        RoleType.STAFF.getRoleId(), 101L, "Y", now, now));
+        RoleType.STAFF.getRoleId(), 101L, 1L, "Y", now, now));
 
     stores.add(store(101, 1, 10, "더한섬하우스 무역센터점", "3F", "서관 3층", "운영중"));
     stores.add(store(102, 1, 11, "타임 압구정본점", "2F", "본관 2층", "운영중"));
@@ -448,6 +449,20 @@ public class MockDataStore {
     store.setCreatedAt(LocalDateTime.now());
     store.setUpdatedAt(LocalDateTime.now());
     return store;
+  }
+
+  private Long findBranchIdByStoreId(Long storeId) {
+    if (storeId == null) {
+      return null;
+    }
+
+    for (StoreDTO store : stores) {
+      if (store.getStoreId() == storeId) {
+        return store.getBranchId();
+      }
+    }
+
+    return null;
   }
 
   private ProductDTO product(long productId, long brandId, long categoryId, String name, int price,
