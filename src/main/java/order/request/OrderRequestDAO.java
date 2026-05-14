@@ -33,8 +33,7 @@ public class OrderRequestDAO {
   }
 
   public List<OrderRequestDTO> findByOrderRequestIdAndOrderStatus(long orderRequestId,
-      String orderStatus)
-      throws SQLException {
+      String orderStatus) throws SQLException {
     List<OrderRequestDTO> orderRequestDTOList = new ArrayList<>();
 
     String sql = "SELECT * FROM ORDER_REQUEST WHERE order_request_id = ? AND order_status = ?";
@@ -133,8 +132,8 @@ public class OrderRequestDAO {
   public List<OrderRequestDTO> findAllByStatus(OrderStatus orderStatus) throws SQLException {
     List<OrderRequestDTO> orderRequestDTOList = new ArrayList<>();
     String sql = "SELECT * FROM ORDER_REQUEST WHERE order_status = ? ORDER BY requested_at DESC";
-    try (Connection conn = DBConnection.getConnection(
-        DBType.ORACLE); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+    try (Connection conn = DBConnection.getConnection(DBType.ORACLE);
+        PreparedStatement pstmt = conn.prepareStatement(sql)) {
       pstmt.setString(1, orderStatus.name());
       try (ResultSet rs = pstmt.executeQuery()) {
         while (rs.next()) {
@@ -147,8 +146,8 @@ public class OrderRequestDAO {
 
   public int updateStatusAndQuantity(long requestId, int approvedQuantity, long employeeId)
       throws SQLException {
-    String sql = "UPDATE order_request SET order_status = ?, approved_quantity = ?, " +
-        "approval_employee_id = ?, approved_at = SYSDATE WHERE order_request_id = ?";
+    String sql = "UPDATE order_request SET order_status = ?, approved_quantity = ?, "
+        + "approval_employee_id = ?, approved_at = SYSDATE WHERE order_request_id = ?";
 
     try (Connection conn = DBConnection.getConnection(DBType.ORACLE);
         PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -164,8 +163,8 @@ public class OrderRequestDAO {
 
   public int updateRejectStatus(long requestId, String rejectReason, long employeeId)
       throws SQLException {
-    String sql = "UPDATE order_request SET order_status = ?, reject_reason = ?, " +
-        "approval_employee_id = ?, rejected_at = SYSDATE WHERE order_request_id = ?";
+    String sql = "UPDATE order_request SET order_status = ?, reject_reason = ?, "
+        + "approval_employee_id = ?, rejected_at = SYSDATE WHERE order_request_id = ?";
 
     try (Connection conn = DBConnection.getConnection(DBType.ORACLE);
         PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -177,5 +176,75 @@ public class OrderRequestDAO {
 
       return pstmt.executeUpdate();
     }
+  }
+
+  // 발주 요청 생성 (STORE-ORDER-02)
+  public int insertOrderRequest(OrderRequestDTO dto) throws SQLException {
+    String sql = "INSERT INTO ORDER_REQUEST "
+        + "(STORE_ID, SUPPLIER_INTEGRATION_ID, PRODUCT_ID, REQUEST_EMPLOYEE_ID, "
+        + "ORDER_QUANTITY, REQUEST_REASON, ORDER_STATUS, REQUESTED_AT) "
+        + "VALUES (?, ?, ?, ?, ?, ?, ?, SYSDATE)";
+
+    try (Connection conn = DBConnection.getConnection(DBType.ORACLE);
+        PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+      pstmt.setLong(1, dto.getStoreId());
+      pstmt.setLong(2, dto.getSupplierIntegrationId());
+      pstmt.setLong(3, dto.getProductId());
+      pstmt.setLong(4, dto.getRequestEmployeeId());
+      pstmt.setInt(5, dto.getOrderQuantity());
+      pstmt.setString(6, dto.getRequestReason());
+      pstmt.setString(7, OrderStatus.REQUESTED.name());
+
+      return pstmt.executeUpdate();
+    }
+  }
+
+  // 내 발주 요청 목록 조회 (STORE-ORDER-03)
+  public List<OrderRequestDTO> findAllByStoreId(long storeId) throws SQLException {
+    List<OrderRequestDTO> list = new ArrayList<>();
+    String sql = "SELECT * FROM ORDER_REQUEST WHERE store_id = ? ORDER BY requested_at DESC";
+
+    try (Connection conn = DBConnection.getConnection(DBType.ORACLE);
+        PreparedStatement pstmt = conn.prepareStatement(sql)) {
+      pstmt.setLong(1, storeId);
+      try (ResultSet rs = pstmt.executeQuery()) {
+        while (rs.next()) {
+          list.add(mapToOrderRequestDTO(rs));
+        }
+      }
+    }
+    return list;
+  }
+
+  // 상품 존재 여부 확인 (발주 요청 전 검증용)
+  public boolean isProductExist(long productId) throws SQLException {
+    String sql = "SELECT COUNT(*) FROM PRODUCT WHERE PRODUCT_ID = ?";
+    try (Connection conn = DBConnection.getConnection(DBType.ORACLE);
+        PreparedStatement pstmt = conn.prepareStatement(sql)) {
+      pstmt.setLong(1, productId);
+      try (ResultSet rs = pstmt.executeQuery()) {
+        if (rs.next()) {
+          return rs.getInt(1) > 0;
+        }
+      }
+    }
+    return false;
+  }
+
+  // 상품 ID로 해당 브랜드의 발주처 연동 ID(SUPPLIER_INTEGRATION_ID) 조회
+  public Long findSupplierIdByProductId(long productId) throws SQLException {
+    String sql = "SELECT si.SUPPLIER_INTEGRATION_ID " + "FROM PRODUCT p "
+        + "JOIN SUPPLIER_INTEGRATION si ON p.BRAND_ID = si.BRAND_ID " + "WHERE p.PRODUCT_ID = ?";
+    try (Connection conn = DBConnection.getConnection(DBType.ORACLE);
+        PreparedStatement pstmt = conn.prepareStatement(sql)) {
+      pstmt.setLong(1, productId);
+      try (ResultSet rs = pstmt.executeQuery()) {
+        if (rs.next()) {
+          return rs.getLong(1);
+        }
+      }
+    }
+    return null;
   }
 }

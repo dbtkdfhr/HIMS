@@ -1,8 +1,9 @@
 package inventory;
 
-import exception.MismatchQuantityException;
 import java.sql.SQLException;
 import java.util.List;
+import exception.InputException;
+import exception.MismatchQuantityException;
 
 public class InventoryService {
 
@@ -24,12 +25,48 @@ public class InventoryService {
     return inventoryDAO.searchInventory(storeId, brandName, categoryName, keyword, false);
   }
 
+  // [BM-INV-01] 지점 관리자 전체 입점매장 재고 목록 조회
+  public List<InventoryDTO> getAllStoreInventoryList() {
+    return inventoryDAO.searchAllStoreInventory(null, null, null, null, null, false);
+  }
+
+  // [BM-INV-02] 지점/브랜드/카테고리/매장/상품명 기준 검색
+  public List<InventoryDTO> searchAllStoreInventory(String branchName, String brandName,
+      String categoryName, String storeName, String productName) {
+    return inventoryDAO.searchAllStoreInventory(
+        branchName,
+        brandName,
+        categoryName,
+        storeName,
+        productName,
+        false
+    );
+  }
+
+  // [BM-INV-03] 재고 부족 상품만 조회
+  public List<InventoryDTO> getAllStoreLowStockList() {
+    return inventoryDAO.searchAllStoreInventory(null, null, null, null, null, true);
+  }
+
+  // [BM-INV-03] 검색 조건을 포함한 재고 부족 상품 조회
+  public List<InventoryDTO> searchAllStoreLowStockInventory(String branchName, String brandName,
+      String categoryName, String storeName, String productName) {
+    return inventoryDAO.searchAllStoreInventory(
+        branchName,
+        brandName,
+        categoryName,
+        storeName,
+        productName,
+        true
+    );
+  }
+
   // [INV-04] 안전재고 수량 변경
   // 0 미만 입력 방지 유효성 검사 포함
   public boolean updateSafetyQuantity(int storeId, int productId, int newSafetyQty)
       throws SQLException {
     if (newSafetyQty < 0) {
-      throw new MismatchQuantityException("안전재고 수량은 0 이상이어야 합니다.");
+      throw new InputException("안전재고 수량은 0 이상이어야 합니다.");
     }
     int result = inventoryDAO.updateSafetyQuantity(storeId, productId, newSafetyQty);
     return result > 0;
