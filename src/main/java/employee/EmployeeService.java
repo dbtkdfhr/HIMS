@@ -39,7 +39,6 @@ public class EmployeeService {
     try {
       validateRequired(employee);
       validateDuplicateLoginId(employee.getLoginId());
-
       RoleType roleType = RoleType.fromRoleId(employee.getRoleId());
 
       if (roleType == RoleType.STORE_MANAGER) {
@@ -83,6 +82,22 @@ public class EmployeeService {
       updateTarget.setPassword(newPassword);
 
       int result = employeeDAO.updatePassword(updateTarget);
+      if (result == 0) {
+        throw new NotFoundException("존재하지 않는 직원입니다.");
+      }
+
+      return result;
+    } catch (SQLException | RuntimeException e) {
+      throw e;
+    }
+  }
+
+  public int updateRoleAndStore(EmployeeDTO employee) throws SQLException {
+    try {
+      validateEmployeeId(employee);
+      RoleType.fromRoleId(employee.getRoleId());
+
+      int result = employeeDAO.updateRoleAndStore(employee);
       if (result == 0) {
         throw new NotFoundException("존재하지 않는 직원입니다.");
       }
