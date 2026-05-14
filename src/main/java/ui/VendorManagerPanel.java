@@ -19,7 +19,7 @@ import order.request.OrderRequestDTO;
 import ui.common.UiConstants;
 import ui.common.UiExceptionHandler;
 import ui.common.UiTableFactory;
-import ui.data.MockDataStore;
+import ui.data.UiServiceStore;
 
 public class VendorManagerPanel {
 
@@ -33,11 +33,11 @@ public class VendorManagerPanel {
       "발주 승인/반려 이력 조회"
   };
 
-  private final MockDataStore store;
+  private final UiServiceStore store;
   private final EmployeeDTO user;
   private final Consumer<String> logger;
 
-  public VendorManagerPanel(MockDataStore store, EmployeeDTO user, Consumer<String> logger) {
+  public VendorManagerPanel(UiServiceStore store, EmployeeDTO user, Consumer<String> logger) {
     this.store = store;
     this.user = user;
     this.logger = logger;
@@ -75,12 +75,14 @@ public class VendorManagerPanel {
     table.getSelectionModel().addListSelectionListener(event -> {
       if (!event.getValueIsAdjusting() && table.getSelectedRow() >= 0) {
         long orderId = ((Number) table.getValueAt(table.getSelectedRow(), 0)).longValue();
-        OrderRequestDTO order = store.findOrder(orderId);
-        if (order != null) {
-          detail.setText("발주ID " + orderId + " | 매장 " + store.findStoreName(order.getStoreId())
-              + " | 상품 " + store.findProductName(order.getProductId()) + " | 상태 "
-              + order.getOrderStatus());
-        }
+        UiExceptionHandler.run(logger, () -> {
+          OrderRequestDTO order = store.findOrder(orderId);
+          if (order != null) {
+            detail.setText("발주ID " + orderId + " | 매장 " + store.findStoreName(order.getStoreId())
+                + " | 상품 " + store.findProductName(order.getProductId()) + " | 상태 "
+                + order.getOrderStatus());
+          }
+        });
       }
     });
     panel.add(detail, BorderLayout.NORTH);
@@ -159,14 +161,15 @@ public class VendorManagerPanel {
     process.addActionListener(event -> UiExceptionHandler.run(logger, () -> {
         long orderId = selectedOrderId(table);
         store.sendOrderToVendor(orderId);
-        fillOrders(model, status, "-");
+        fillOrders(model, status, "RECEIVED");
         logger.accept(title + " 완료: " + orderId);
     }));
-    refresh.addActionListener(event -> UiExceptionHandler.run(logger, () -> fillOrders(model, status, "-")));
+    refresh.addActionListener(event -> UiExceptionHandler.run(logger,
+        () -> fillOrders(model, status, "RECEIVED")));
 
     panel.add(controls, BorderLayout.NORTH);
     panel.add(UiTableFactory.scroll(table), BorderLayout.CENTER);
-    UiExceptionHandler.run(logger, () -> fillOrders(model, status, "-"));
+    UiExceptionHandler.run(logger, () -> fillOrders(model, status, "RECEIVED"));
     return panel;
   }
 
@@ -212,11 +215,12 @@ public class VendorManagerPanel {
         "요청사유", "반려사유");
   }
 
-  private void fillOrders(DefaultTableModel model, String status) {
+  private void fillOrders(DefaultTableModel model, String status) throws Exception {
     fillOrders(model, status, null);
   }
 
-  private void fillOrders(DefaultTableModel model, String status, String externalStatus) {
+  private void fillOrders(DefaultTableModel model, String status, String externalStatus)
+      throws Exception {
     model.setRowCount(0);
     for (OrderRequestDTO order : store.findOrdersByStatus(status)) {
       if (externalStatus == null || externalStatus.equals(store.findExternalOrderStatus(order.getOrderRequestId()))) {
@@ -225,7 +229,7 @@ public class VendorManagerPanel {
     }
   }
 
-  private void fillHistory(DefaultTableModel model) {
+  private void fillHistory(DefaultTableModel model) throws Exception {
     model.setRowCount(0);
     for (OrderRequestDTO order : store.orders()) {
       if (OrderStatus.APPROVED.name().equals(order.getOrderStatus())
@@ -236,7 +240,7 @@ public class VendorManagerPanel {
     }
   }
 
-  private Object[] row(OrderRequestDTO order) {
+  private Object[] row(OrderRequestDTO order) throws Exception {
     return new Object[]{
         order.getOrderRequestId(),
         store.findStoreName(order.getStoreId()),

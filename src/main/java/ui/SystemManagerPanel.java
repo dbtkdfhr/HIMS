@@ -20,7 +20,7 @@ import javax.swing.table.DefaultTableModel;
 import ui.common.UiConstants;
 import ui.common.UiExceptionHandler;
 import ui.common.UiTableFactory;
-import ui.data.MockDataStore;
+import ui.data.UiServiceStore;
 
 public class SystemManagerPanel {
 
@@ -31,10 +31,10 @@ public class SystemManagerPanel {
       "직원 계정 정지 처리"
   };
 
-  private final MockDataStore store;
+  private final UiServiceStore store;
   private final Consumer<String> logger;
 
-  public SystemManagerPanel(MockDataStore store, Consumer<String> logger) {
+  public SystemManagerPanel(UiServiceStore store, Consumer<String> logger) {
     this.store = store;
     this.logger = logger;
   }
@@ -109,15 +109,19 @@ public class SystemManagerPanel {
     change.addActionListener(event -> UiExceptionHandler.run(logger, () -> {
         long employeeId = selectedEmployeeId(table);
         RoleType role = (RoleType) roleBox.getSelectedItem();
+        EmployeeDTO target = null;
         for (EmployeeDTO employee : store.employees()) {
           if (employee.getEmployeeId() == employeeId) {
-            employee.setRoleId(role.getRoleId());
-            fillEmployees(model);
-            logger.accept("직원 권한 변경 완료: " + employee.getEmployeeName());
-            return;
+            target = employee;
+            break;
           }
         }
-        throw new NotFoundException("직원을 찾을 수 없습니다.");
+        if (target == null) {
+          throw new NotFoundException("직원을 찾을 수 없습니다.");
+        }
+        store.changeEmployeeRole(employeeId, role);
+        fillEmployees(model);
+        logger.accept("직원 권한 변경 완료: " + target.getEmployeeName());
     }));
     refresh.addActionListener(event -> UiExceptionHandler.run(logger, () -> fillEmployees(model)));
 
@@ -155,7 +159,7 @@ public class SystemManagerPanel {
     return UiTableFactory.model("직원ID", "로그인ID", "직원명", "권한", "매장ID", "사용여부");
   }
 
-  private void fillEmployees(DefaultTableModel model) {
+  private void fillEmployees(DefaultTableModel model) throws Exception {
     model.setRowCount(0);
     for (EmployeeDTO employee : store.employees()) {
       model.addRow(new Object[]{

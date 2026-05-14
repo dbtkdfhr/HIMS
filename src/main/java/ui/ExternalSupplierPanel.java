@@ -16,7 +16,7 @@ import order.request.OrderRequestDTO;
 import ui.common.UiConstants;
 import ui.common.UiExceptionHandler;
 import ui.common.UiTableFactory;
-import ui.data.MockDataStore;
+import ui.data.UiServiceStore;
 
 public class ExternalSupplierPanel {
 
@@ -26,13 +26,13 @@ public class ExternalSupplierPanel {
   };
 
   private static final String RECEIVED_STATUS = "RECEIVED";
-  private static final String APPROVED_STATUS = "APPROVED";
+  private static final String SHIPPED_STATUS = "SHIPPED";
   private static final String REJECTED_STATUS = "REJECTED";
 
-  private final MockDataStore store;
+  private final UiServiceStore store;
   private final Consumer<String> logger;
 
-  public ExternalSupplierPanel(MockDataStore store, Consumer<String> logger) {
+  public ExternalSupplierPanel(UiServiceStore store, Consumer<String> logger) {
     this.store = store;
     this.logger = logger;
   }
@@ -97,7 +97,7 @@ public class ExternalSupplierPanel {
         "외부상태", "사유");
   }
 
-  private void fillExternalOrders(DefaultTableModel model, boolean onlyReceived) {
+  private void fillExternalOrders(DefaultTableModel model, boolean onlyReceived) throws Exception {
     model.setRowCount(0);
     for (OrderRequestDTO order : store.orders()) {
       if (isExternalOrder(order, onlyReceived)) {
@@ -106,17 +106,17 @@ public class ExternalSupplierPanel {
     }
   }
 
-  private boolean isExternalOrder(OrderRequestDTO order, boolean onlyReceived) {
+  private boolean isExternalOrder(OrderRequestDTO order, boolean onlyReceived) throws Exception {
     String externalStatus = store.findExternalOrderStatus(order.getOrderRequestId());
     if (onlyReceived) {
       return RECEIVED_STATUS.equals(externalStatus);
     }
     return RECEIVED_STATUS.equals(externalStatus)
-        || APPROVED_STATUS.equals(externalStatus)
+        || SHIPPED_STATUS.equals(externalStatus)
         || REJECTED_STATUS.equals(externalStatus);
   }
 
-  private Object[] row(OrderRequestDTO order) {
+  private Object[] row(OrderRequestDTO order) throws Exception {
     return new Object[]{
         order.getOrderRequestId(),
         store.findStoreName(order.getStoreId()),

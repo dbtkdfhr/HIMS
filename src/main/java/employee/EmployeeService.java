@@ -11,8 +11,16 @@ public class EmployeeService {
 
   private final EmployeeDAO employeeDAO;
 
+  public EmployeeService() {
+    this(new EmployeeDAO());
+  }
+
   public EmployeeService(EmployeeDAO employeeDAO) {
     this.employeeDAO = employeeDAO;
+  }
+
+  public List<EmployeeDTO> findAllEmployees() throws SQLException {
+    return employeeDAO.getEmployees();
   }
 
   public List<String> findAllEmployeeSummaries() throws SQLException {
@@ -106,6 +114,20 @@ public class EmployeeService {
     } catch (SQLException | RuntimeException e) {
       throw e;
     }
+  }
+
+  public int disableEmployee(long employeeId) throws SQLException {
+    validateEmployeeId(employeeId);
+
+    EmployeeDTO employee = new EmployeeDTO();
+    employee.setEmployeeId(employeeId);
+
+    int result = employeeDAO.disableEmployee(employee);
+    if (result == 0) {
+      throw new NotFoundException("존재하지 않는 직원입니다.");
+    }
+
+    return result;
   }
 
   private void validateRequired(EmployeeDTO employee) {

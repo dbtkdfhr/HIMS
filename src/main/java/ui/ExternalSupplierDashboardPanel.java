@@ -14,7 +14,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import ui.common.UiConstants;
-import ui.data.MockDataStore;
+import ui.data.UiServiceStore;
 
 public class ExternalSupplierDashboardPanel extends JPanel {
 
@@ -23,7 +23,7 @@ public class ExternalSupplierDashboardPanel extends JPanel {
   private final JTextArea logArea = new JTextArea(5, 20);
   private final Map<String, JPanel> views = new LinkedHashMap<>();
 
-  public ExternalSupplierDashboardPanel(MockDataStore store) {
+  public ExternalSupplierDashboardPanel(UiServiceStore store) {
     setLayout(new BorderLayout());
     setBackground(UiConstants.BACKGROUND);
     add(header(), BorderLayout.NORTH);

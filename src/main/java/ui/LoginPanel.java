@@ -1,6 +1,5 @@
 package ui;
 
-import common.type.RoleType;
 import employee.EmployeeDTO;
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
@@ -9,7 +8,6 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.util.function.Consumer;
 import javax.swing.JButton;
-import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -17,23 +15,16 @@ import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 import ui.common.UiConstants;
 import ui.common.UiExceptionHandler;
-import ui.data.MockDataStore;
+import ui.data.UiServiceStore;
 
 public class LoginPanel extends JPanel {
 
-  private final MockDataStore store;
+  private final UiServiceStore store;
   private final Consumer<EmployeeDTO> onLogin;
   private final JTextField loginIdField = new JTextField(18);
   private final JPasswordField passwordField = new JPasswordField(18);
-  private final JComboBox<RoleType> roleBox = new JComboBox<>(new RoleType[]{
-      RoleType.STORE_MANAGER,
-      RoleType.SUPPLIER_MANAGER,
-      RoleType.BRANCH_MANAGER,
-      RoleType.SYSTEM_MANAGER,
-      RoleType.STAFF
-  });
 
-  public LoginPanel(MockDataStore store, Consumer<EmployeeDTO> onLogin) {
+  public LoginPanel(UiServiceStore store, Consumer<EmployeeDTO> onLogin) {
     this.store = store;
     this.onLogin = onLogin;
     setLayout(new BorderLayout());
@@ -60,17 +51,14 @@ public class LoginPanel extends JPanel {
 
     addRow(panel, c, 0, "로그인 ID", loginIdField);
     addRow(panel, c, 1, "비밀번호", passwordField);
-    addRow(panel, c, 2, "역할", roleBox);
 
     JButton button = new JButton("로그인");
     button.addActionListener(event -> login());
     c.gridx = 1;
-    c.gridy = 3;
+    c.gridy = 2;
     c.fill = GridBagConstraints.HORIZONTAL;
     panel.add(button, c);
 
-    loginIdField.setText("store");
-    passwordField.setText("1234");
     return panel;
   }
 
@@ -94,9 +82,8 @@ public class LoginPanel extends JPanel {
       JOptionPane.showMessageDialog(this, "로그인 ID와 비밀번호를 입력해 주세요.");
       return;
     }
-    RoleType roleType = (RoleType) roleBox.getSelectedItem();
     try {
-      EmployeeDTO user = store.authenticate(loginId, password, roleType);
+      EmployeeDTO user = store.authenticate(loginId, password);
       onLogin.accept(user);
     } catch (Exception e) {
       JOptionPane.showMessageDialog(this, UiExceptionHandler.messageFor(e));

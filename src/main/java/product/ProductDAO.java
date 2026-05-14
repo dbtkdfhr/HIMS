@@ -7,8 +7,37 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ProductDAO {
+  public List<ProductDTO> findAll() throws SQLException {
+    String sql = "SELECT product_id, brand_id, category_id, product_name, price, "
+        + "season_type, product_status, created_at, updated_at "
+        + "FROM product ORDER BY product_id";
+
+    try (Connection conn = DBConnection.getConnection(DBType.ORACLE);
+        PreparedStatement pstmt = conn.prepareStatement(sql);
+        ResultSet rs = pstmt.executeQuery()) {
+      List<ProductDTO> products = new ArrayList<>();
+
+      while (rs.next()) {
+        ProductDTO product = new ProductDTO();
+        product.setProductId(rs.getLong("PRODUCT_ID"));
+        product.setBrandId(rs.getLong("BRAND_ID"));
+        product.setCategoryId(rs.getLong("CATEGORY_ID"));
+        product.setProductName(rs.getString("PRODUCT_NAME"));
+        product.setPrice(rs.getInt("PRICE"));
+        product.setSeasonType(rs.getString("SEASON_TYPE"));
+        product.setProductStatus(rs.getString("PRODUCT_STATUS"));
+        product.setCreatedAt(common.GetNullableVariable.getNullableLocalDateTime(rs, "CREATED_AT"));
+        product.setUpdatedAt(common.GetNullableVariable.getNullableLocalDateTime(rs, "UPDATED_AT"));
+        products.add(product);
+      }
+
+      return products;
+    }
+  }
 
   /* INSERT */
   // 상품 추가

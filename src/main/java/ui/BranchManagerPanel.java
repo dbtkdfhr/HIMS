@@ -5,7 +5,6 @@ import inventory.InventoryDTO;
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
-import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -21,7 +20,7 @@ import store.StoreDTO;
 import ui.common.UiConstants;
 import ui.common.UiExceptionHandler;
 import ui.common.UiTableFactory;
-import ui.data.MockDataStore;
+import ui.data.UiServiceStore;
 
 public class BranchManagerPanel {
 
@@ -35,10 +34,10 @@ public class BranchManagerPanel {
       "상품 등록 폼"
   };
 
-  private final MockDataStore store;
+  private final UiServiceStore store;
   private final Consumer<String> logger;
 
-  public BranchManagerPanel(MockDataStore store, Consumer<String> logger) {
+  public BranchManagerPanel(UiServiceStore store, Consumer<String> logger) {
     this.store = store;
     this.logger = logger;
   }
@@ -122,18 +121,13 @@ public class BranchManagerPanel {
         String floor = required(floorField.getText(), "층 정보");
         String location = required(locationField.getText(), "매장 위치");
         StoreDTO dto = new StoreDTO();
-        dto.setStoreId(nextStoreId());
         dto.setBranchId(branchId);
         dto.setBrandId(brandId);
         dto.setStoreName(name);
         dto.setFloorInfo(floor);
         dto.setStoreLocation(location);
         dto.setOperationStatus(String.valueOf(statusBox.getSelectedItem()));
-        dto.setCreatedAt(LocalDateTime.now());
-        dto.setUpdatedAt(LocalDateTime.now());
-        store.stores().add(dto);
-        store.addMasterRecord("입점매장", String.valueOf(dto.getStoreId()), name, location,
-            dto.getOperationStatus());
+        store.createStore(dto);
         fillMaster(masterModel, "입점매장");
         logger.accept("입점매장 등록 완료: " + name);
     }));
@@ -174,18 +168,13 @@ public class BranchManagerPanel {
 
     create.addActionListener(event -> UiExceptionHandler.run(logger, () -> {
         ProductDTO dto = new ProductDTO();
-        dto.setProductId(nextProductId());
         dto.setProductName(required(nameField.getText(), "상품명"));
         dto.setBrandId(parseLong(brandField.getText(), "브랜드ID"));
         dto.setCategoryId(parseLong(categoryField.getText(), "카테고리ID"));
         dto.setPrice((int) parseLong(priceField.getText(), "판매가"));
         dto.setSeasonType(String.valueOf(seasonBox.getSelectedItem()));
         dto.setProductStatus(String.valueOf(statusBox.getSelectedItem()));
-        dto.setCreatedAt(LocalDateTime.now());
-        dto.setUpdatedAt(LocalDateTime.now());
-        store.products().add(dto);
-        store.addMasterRecord("상품", String.valueOf(dto.getProductId()), dto.getProductName(),
-            String.valueOf(dto.getPrice()), dto.getProductStatus());
+        store.createProduct(dto);
         fillMaster(masterModel, "상품");
         logger.accept("상품 등록 완료: " + dto.getProductName());
     }));
@@ -196,7 +185,8 @@ public class BranchManagerPanel {
     return panel;
   }
 
-  private void fillInventory(DefaultTableModel model, String filterType, String keyword) {
+  private void fillInventory(DefaultTableModel model, String filterType, String keyword)
+      throws Exception {
     model.setRowCount(0);
     String normalized = keyword == null ? "" : keyword.trim();
     for (InventoryDTO inventory : store.inventories()) {
@@ -216,7 +206,8 @@ public class BranchManagerPanel {
     }
   }
 
-  private boolean matches(InventoryDTO inventory, String filterType, String keyword) {
+  private boolean matches(InventoryDTO inventory, String filterType, String keyword)
+      throws Exception {
     if (keyword.isEmpty() || "전체".equals(filterType)) {
       return true;
     }
@@ -232,7 +223,7 @@ public class BranchManagerPanel {
     return true;
   }
 
-  private void fillStores(DefaultTableModel model) {
+  private void fillStores(DefaultTableModel model) throws Exception {
     model.setRowCount(0);
     for (StoreDTO dto : store.stores()) {
       model.addRow(new Object[]{
@@ -247,7 +238,7 @@ public class BranchManagerPanel {
     }
   }
 
-  private void fillMaster(DefaultTableModel model, String type) {
+  private void fillMaster(DefaultTableModel model, String type) throws Exception {
     model.setRowCount(0);
     for (String[] row : store.masterRecords().getOrDefault(type, java.util.Collections.emptyList())) {
       model.addRow(row);
@@ -272,22 +263,6 @@ public class BranchManagerPanel {
     JPanel panel = new JPanel(new GridLayout(0, 2, 10, 10));
     panel.setOpaque(false);
     return panel;
-  }
-
-  private long nextStoreId() {
-    long max = 100;
-    for (StoreDTO dto : store.stores()) {
-      max = Math.max(max, dto.getStoreId());
-    }
-    return max + 1;
-  }
-
-  private long nextProductId() {
-    long max = 1000;
-    for (ProductDTO dto : store.products()) {
-      max = Math.max(max, dto.getProductId());
-    }
-    return max + 1;
   }
 
   private long parseLong(String value, String label) {

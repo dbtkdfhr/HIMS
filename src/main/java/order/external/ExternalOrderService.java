@@ -5,7 +5,7 @@ import common.TransactionHelper;
 import common.type.DBType;
 import common.type.External_OrderStatus;
 import common.type.OrderStatus;
-import common.type.ReceiptStatus;
+import exception.InputException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -20,6 +20,31 @@ public class ExternalOrderService {
   private final ExternalOrderReceiptDAO receiptDAO;
   private final ExternalSupplierInventoryDAO inventoryDAO;
   private final OrderRequestDAO orderRequestDAO;
+
+  public ExternalOrderService() {
+    this(new ExternalOrderReceiptDAO(), new ExternalSupplierInventoryDAO(), new OrderRequestDAO());
+  }
+
+  public List<ExternalOrderReceiptDTO> getExternalOrderReceipts() throws SQLException {
+    try (Connection mariaConn = DBConnection.getConnection(DBType.MARIADB)) {
+      return receiptDAO.findAll(mariaConn);
+    }
+  }
+
+  public ExternalOrderReceiptDTO getExternalOrderReceipt(long orderRequestId) throws SQLException {
+    try (Connection mariaConn = DBConnection.getConnection(DBType.MARIADB)) {
+      return receiptDAO.findByInternalOrderRequestId(mariaConn, orderRequestId);
+    }
+  }
+
+  public String findExternalOrderStatus(long orderRequestId) throws SQLException {
+    ExternalOrderReceiptDTO receipt = getExternalOrderReceipt(orderRequestId);
+    if (receipt == null) {
+      return "-";
+    }
+
+    return receipt.getReceiptStatus();
+  }
 
   // 발주 목록 보기 (+ 재고 조회)
   public List<SupplierDashboardDTO> getSupplierDashboard() throws SQLException {
@@ -99,6 +124,13 @@ public class ExternalOrderService {
 
   // 출고 거절
   public void rejectShipping(long orderRequestId) throws SQLException {
+    rejectShipping(orderRequestId, null);
+  }
+
+  public void rejectShipping(long orderRequestId, String rejectReason) throws SQLException {
+    if (rejectReason != null && rejectReason.isBlank()) {
+      throw new InputException("거절 사유를 입력해 주세요.");
+    }
 
     TransactionHelper.executeTwo(
         DBType.MARIADB,
@@ -116,11 +148,11 @@ public class ExternalOrderService {
             throw new SQLException("거절 처리할 수 없습니다. 접수증이 없거나 이미 처리된 상태입니다.");
           }
 
-          // 2. Oracle 발주 상태 REJECTED 변경
-          int orderUpdatedCount = orderRequestDAO.updateStatus(
+          // 2. Oracle 발주 상태 CANCELED 변경
+          int orderUpdatedCount = orderRequestDAO.updateCanceledByExternalReject(
               oracleConn,
               orderRequestId,
-              OrderStatus.REJECTED
+              rejectReason
           );
 
           if (orderUpdatedCount == 0) {

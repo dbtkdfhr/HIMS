@@ -28,6 +28,37 @@ public class ExternalOrderReceiptDAO {
     }
   }
 
+  public List<ExternalOrderReceiptDTO> findAll(Connection mariaConn) throws SQLException {
+    String sql = "SELECT * FROM external_order_receipt ORDER BY created_at DESC";
+    List<ExternalOrderReceiptDTO> list = new ArrayList<>();
+
+    try (PreparedStatement pstmt = mariaConn.prepareStatement(sql);
+        ResultSet rs = pstmt.executeQuery()) {
+      while (rs.next()) {
+        list.add(mapToExternalOrderReceiptDTO(rs));
+      }
+    }
+
+    return list;
+  }
+
+  public ExternalOrderReceiptDTO findByInternalOrderRequestId(Connection mariaConn,
+      long internalOrderRequestId) throws SQLException {
+    String sql = "SELECT * FROM external_order_receipt WHERE internal_order_request_id = ?";
+
+    try (PreparedStatement pstmt = mariaConn.prepareStatement(sql)) {
+      pstmt.setLong(1, internalOrderRequestId);
+
+      try (ResultSet rs = pstmt.executeQuery()) {
+        if (rs.next()) {
+          return mapToExternalOrderReceiptDTO(rs);
+        }
+      }
+    }
+
+    return null;
+  }
+
   // 공급처에 들어온 모든 발주 접수 조회
   public List<ExternalOrderReceiptDTO> findAllByStatus(
       Connection mariaConn,
@@ -44,18 +75,7 @@ public class ExternalOrderReceiptDAO {
 
       try (ResultSet rs = pstmt.executeQuery()) {
         while (rs.next()) {
-          ExternalOrderReceiptDTO dto = new ExternalOrderReceiptDTO();
-
-          dto.setExternalOrderReceiptId(rs.getLong("external_order_receipt_id"));
-          dto.setSupplierId(rs.getLong("supplier_id"));
-          dto.setSupplierProductId(rs.getLong("supplier_product_id"));
-          dto.setInternalOrderRequestId(rs.getLong("internal_order_request_id"));
-          dto.setRequestStoreName(rs.getString("request_store_name"));
-          dto.setRequestQuantity(rs.getInt("request_quantity"));
-          dto.setApprovedQuantity(rs.getInt("approved_quantity"));
-          dto.setReceiptStatus(rs.getString("receipt_status"));
-
-          list.add(dto);
+          list.add(mapToExternalOrderReceiptDTO(rs));
         }
       }
     }
@@ -72,5 +92,20 @@ public class ExternalOrderReceiptDAO {
       pstmt.setString(3, External_OrderStatus.RECEIVED.name());
       return pstmt.executeUpdate();
     }
+  }
+
+  private ExternalOrderReceiptDTO mapToExternalOrderReceiptDTO(ResultSet rs) throws SQLException {
+    ExternalOrderReceiptDTO dto = new ExternalOrderReceiptDTO();
+
+    dto.setExternalOrderReceiptId(rs.getLong("external_order_receipt_id"));
+    dto.setSupplierId(rs.getLong("supplier_id"));
+    dto.setSupplierProductId(rs.getLong("supplier_product_id"));
+    dto.setInternalOrderRequestId(rs.getLong("internal_order_request_id"));
+    dto.setRequestStoreName(rs.getString("request_store_name"));
+    dto.setRequestQuantity(rs.getInt("request_quantity"));
+    dto.setApprovedQuantity(rs.getInt("approved_quantity"));
+    dto.setReceiptStatus(rs.getString("receipt_status"));
+
+    return dto;
   }
 }
