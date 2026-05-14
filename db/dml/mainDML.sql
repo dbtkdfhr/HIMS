@@ -1063,7 +1063,7 @@ VALUES ((SELECT STORE_ID FROM STORE WHERE STORE_NAME = 'SYSTEM 무역센터점')
         12,
         '주말 행사 대비 재고 보충',
         NULL,
-        'SENT',
+        'RECEIVED',
         TO_DATE('2026-05-01 11:20:00', 'YYYY-MM-DD HH24:MI:SS'),
         TO_DATE('2026-05-01 13:00:00', 'YYYY-MM-DD HH24:MI:SS'),
         NULL,

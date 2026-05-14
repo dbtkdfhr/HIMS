@@ -327,7 +327,6 @@ CREATE TABLE ORDER_REQUEST
                              'REQUESTED',
                              'APPROVED',
                              'REJECTED',
-                             'SENT',
                              'RECEIVED',
                              'CANCELED',
                              'DONE'
@@ -547,15 +546,9 @@ CREATE OR REPLACE TRIGGER TRG_STORE_RCPT_AI
     ON STORE_RECEIPT
     FOR EACH ROW
 BEGIN
-    IF :NEW.RECEIPT_STATUS = 'CANCELED' THEN
-        UPDATE ORDER_REQUEST
-        SET ORDER_STATUS = 'CANCELED'
-        WHERE ORDER_REQUEST_ID = :NEW.ORDER_REQUEST_ID;
-    ELSE
-        UPDATE ORDER_REQUEST
-        SET ORDER_STATUS = 'DONE'
-        WHERE ORDER_REQUEST_ID = :NEW.ORDER_REQUEST_ID;
-    END IF;
+    UPDATE ORDER_REQUEST
+    SET ORDER_STATUS = 'DONE'
+    WHERE ORDER_REQUEST_ID = :NEW.ORDER_REQUEST_ID;
 END;
 /
 

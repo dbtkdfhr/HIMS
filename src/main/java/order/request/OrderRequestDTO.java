@@ -18,7 +18,7 @@ public class OrderRequestDTO {
   private Integer approvedQuantity;
   private String requestReason;
   private String rejectReason;
-  private String orderStatus; // REQUESTED, APPROVED, REJECTED, SENT, RECEIVED, CANCELED
+  private String orderStatus; // REQUESTED, APPROVED, REJECTED, RECEIVED, CANCELED, DONE
   private LocalDateTime requestedAt;
   private LocalDateTime approvedAt;
   private LocalDateTime rejectedAt;

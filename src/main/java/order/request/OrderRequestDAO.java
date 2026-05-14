@@ -83,7 +83,7 @@ public class OrderRequestDAO {
     sql += "SELECT orq.* ";
     sql += "FROM ORDER_REQUEST orq ";
     sql += "WHERE orq.store_id = ? ";
-    sql += "AND orq.order_status = 'SENT' ";
+    sql += "AND orq.order_status = 'RECEIVED' ";
     sql += "AND NOT EXISTS (";
     sql += "SELECT 1 ";
     sql += "FROM STORE_RECEIPT sr ";
@@ -171,6 +171,35 @@ public class OrderRequestDAO {
       pstmt.setString(2, rejectReason);
       pstmt.setLong(3, employeeId);
       pstmt.setLong(4, requestId);
+
+      return pstmt.executeUpdate();
+    }
+  }
+
+  public int updateCanceledByExternalReject(Connection oracleConn, long requestId, String rejectReason)
+      throws SQLException {
+    String sql = "UPDATE order_request SET order_status = ?, reject_reason = ?, rejected_at = SYSDATE "
+        + "WHERE order_request_id = ? AND order_status = ?";
+
+    try (PreparedStatement pstmt = oracleConn.prepareStatement(sql)) {
+      pstmt.setString(1, OrderStatus.CANCELED.name());
+      pstmt.setString(2, rejectReason);
+      pstmt.setLong(3, requestId);
+      pstmt.setString(4, OrderStatus.APPROVED.name());
+
+      return pstmt.executeUpdate();
+    }
+  }
+
+  public int updateReceivedByExternalCompletion(Connection oracleConn, long requestId)
+      throws SQLException {
+    String sql = "UPDATE order_request SET order_status = ? "
+        + "WHERE order_request_id = ? AND order_status = ?";
+
+    try (PreparedStatement pstmt = oracleConn.prepareStatement(sql)) {
+      pstmt.setString(1, OrderStatus.RECEIVED.name());
+      pstmt.setLong(2, requestId);
+      pstmt.setString(3, OrderStatus.APPROVED.name());
 
       return pstmt.executeUpdate();
     }

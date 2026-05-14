@@ -28,7 +28,6 @@ public class VendorManagerPanel {
       "발주 승인",
       "발주 반려",
       "승인 발주 외부 전송",
-      "외부 출고 처리",
       "발주 상태별 필터링",
       "발주 승인/반려 이력 조회"
   };
@@ -49,10 +48,9 @@ public class VendorManagerPanel {
     views.put(MENUS[1], detailPanel());
     views.put(MENUS[2], approvePanel());
     views.put(MENUS[3], rejectPanel());
-    views.put(MENUS[4], transitionPanel("승인 발주 외부 전송", OrderStatus.APPROVED.name(), "-"));
-    views.put(MENUS[5], transitionPanel("외부 출고 처리", OrderStatus.APPROVED.name(), OrderStatus.APPROVED.name()));
-    views.put(MENUS[6], filterPanel());
-    views.put(MENUS[7], historyPanel());
+    views.put(MENUS[4], transitionPanel("승인 발주 외부 전송", OrderStatus.APPROVED.name()));
+    views.put(MENUS[5], filterPanel());
+    views.put(MENUS[6], historyPanel());
     return views;
   }
 
@@ -154,10 +152,6 @@ public class VendorManagerPanel {
   }
 
   private JPanel transitionPanel(String title, String status) {
-    return transitionPanel(title, status, null);
-  }
-
-  private JPanel transitionPanel(String title, String status, String externalStatus) {
     JPanel panel = page(title);
     DefaultTableModel model = orderModel();
     JTable table = UiTableFactory.table(model);
@@ -170,22 +164,18 @@ public class VendorManagerPanel {
     process.addActionListener(event -> {
       try {
         long orderId = selectedOrderId(table);
-        if ("-".equals(externalStatus)) {
-          store.sendOrderToVendor(orderId);
-        } else {
-          store.shipOrder(orderId);
-        }
-        fillOrders(model, status, externalStatus);
+        store.sendOrderToVendor(orderId);
+        fillOrders(model, status, "-");
         logger.accept(title + " 완료: " + orderId);
       } catch (RuntimeException e) {
         showError(panel, e);
       }
     });
-    refresh.addActionListener(event -> fillOrders(model, status, externalStatus));
+    refresh.addActionListener(event -> fillOrders(model, status, "-"));
 
     panel.add(controls, BorderLayout.NORTH);
     panel.add(UiTableFactory.scroll(table), BorderLayout.CENTER);
-    fillOrders(model, status, externalStatus);
+    fillOrders(model, status, "-");
     return panel;
   }
 
@@ -195,8 +185,8 @@ public class VendorManagerPanel {
     JTable table = UiTableFactory.table(model);
     JComboBox<String> statusBox = new JComboBox<>(new String[]{
         "전체", OrderStatus.REQUESTED.name(), OrderStatus.APPROVED.name(),
-        OrderStatus.REJECTED.name(), OrderStatus.SENT.name(), OrderStatus.RECEIVED.name(),
-        OrderStatus.CANCELED.name()
+        OrderStatus.REJECTED.name(), OrderStatus.RECEIVED.name(), OrderStatus.CANCELED.name(),
+        OrderStatus.DONE.name()
     });
     JButton search = new JButton("조회");
     JPanel controls = new JPanel(new FlowLayout(FlowLayout.LEFT));
