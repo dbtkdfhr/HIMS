@@ -42,6 +42,7 @@ public class AuthService {
         employee.getRoleName(),
         roleType,
         employee.getStoreId(),
+        employee.getBranchId(),
         employee.getIsActive()
     );
   }

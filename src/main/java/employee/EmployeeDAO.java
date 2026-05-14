@@ -171,6 +171,7 @@ public class EmployeeDAO {
             "e.employee_id, " +
             "e.role_id, " +
             "e.store_id, " +
+            "e.branch_id, " +
             "e.login_id, " +
             "e.password, " +
             "e.employee_name, " +
@@ -197,6 +198,7 @@ public class EmployeeDAO {
           employeeDTO.setRoleName(rs.getString("ROLE_NAME"));
 
           employeeDTO.setStoreId(getNullableLong(rs, "STORE_ID"));
+          employeeDTO.setBranchId(getNullableLong(rs, "BRANCH_ID"));
 
           employeeDTO.setLoginId(rs.getString("LOGIN_ID"));
           employeeDTO.setPassword(rs.getString("PASSWORD"));
