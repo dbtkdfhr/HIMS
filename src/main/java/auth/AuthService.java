@@ -13,8 +13,12 @@ public class AuthService {
 
   private final EmployeeDAO employeeDAO;
 
+  public AuthService(EmployeeDAO employeeDAO) {
+    this.employeeDAO = employeeDAO;
+  }
+
   public AuthService() {
-    employeeDAO = new EmployeeDAO();
+    this(new EmployeeDAO());
   }
 
   public LoginResponseDTO login(LoginRequestDTO loginRequestDTO) throws SQLException {
