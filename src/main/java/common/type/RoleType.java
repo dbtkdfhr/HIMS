@@ -1,5 +1,6 @@
 package common.type;
 
+import exception.NotFoundException;
 import lombok.Getter;
 
 @Getter
@@ -22,6 +23,6 @@ public enum RoleType {
       }
     }
 
-    throw new IllegalArgumentException("존재하지 않는 권한 ID" + roleId);
+    throw new NotFoundException("존재하지 않는 권한 ID" + roleId);
   }
 }

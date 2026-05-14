@@ -22,16 +22,16 @@ public class BranchInventoryDAO {
       throws SQLException {
     List<InventoryDTO> list = new ArrayList<>();
 
-    StringBuilder sql = new StringBuilder(
-        "SELECT br.branch_id, br.branch_name, " + "si.store_id, s.store_name, s.floor_info, s.store_location, si.product_id, "
-            + "si.current_quantity, si.safety_quantity, si.updated_at, si.is_low_stock, "
-            + "p.product_name, p.price, p.season_type, p.product_status, b.brand_name, "
-            + "c.category_name " + "FROM store_inventory si "
-            + "JOIN store s ON si.store_id = s.store_id "
-            + "JOIN branch br ON s.branch_id = br.branch_id "
-            + "JOIN product p ON si.product_id = p.product_id "
-            + "JOIN brand b ON p.brand_id = b.brand_id "
-            + "JOIN category c ON p.category_id = c.category_id " + "WHERE 1 = 1 ");
+    StringBuilder sql = new StringBuilder("SELECT br.branch_id, br.branch_name, "
+        + "si.store_id, s.store_name, s.floor_info, s.store_location, si.product_id, "
+        + "si.current_quantity, si.safety_quantity, si.updated_at, si.is_low_stock, "
+        + "p.product_name, p.price, p.season_type, p.product_status, b.brand_name, "
+        + "c.category_name " + "FROM store_inventory si "
+        + "JOIN store s ON si.store_id = s.store_id "
+        + "JOIN branch br ON s.branch_id = br.branch_id "
+        + "JOIN product p ON si.product_id = p.product_id "
+        + "JOIN brand b ON p.brand_id = b.brand_id "
+        + "JOIN category c ON p.category_id = c.category_id " + "WHERE 1 = 1 ");
 
     List<Object> params = new ArrayList<>();
 
@@ -78,6 +78,23 @@ public class BranchInventoryDAO {
     }
 
     return list;
+  }
+
+  public int updateCurrentQuantity(int storeId, int productId, int newCurrentQty)
+      throws SQLException {
+    String sql = "UPDATE store_inventory " + "SET current_quantity = ?, updated_at = SYSDATE "
+        + "WHERE store_id = ? AND product_id = ?";
+
+    try (Connection conn = DBConnection.getConnection(DBType.ORACLE);
+        PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+      pstmt.setInt(1, newCurrentQty);
+      pstmt.setInt(2, storeId);
+      pstmt.setInt(3, productId);
+
+      return pstmt.executeUpdate();
+
+    }
   }
 
   private InventoryDTO mapRow(ResultSet rs) throws SQLException {

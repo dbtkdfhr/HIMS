@@ -1,5 +1,9 @@
 package employee;
 
+import static common.GetNullableVariable.getNullableLocalDateTime;
+import static common.GetNullableVariable.getNullableLong;
+import static common.SetNullableVariable.setNullableLong;
+
 import auth.LoginEmployeeDTO;
 import common.DBConnection;
 import common.type.DBType;
@@ -8,13 +12,13 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
+
 public class EmployeeDAO {
   /* SELECT */
-  public String findEmployeeNameById(long employeeId) throws java.sql.SQLException {
+  public String findEmployeeNameById(long employeeId) throws SQLException {
     String sql = "SELECT employee_name FROM EMPLOYEE WHERE employee_id = ?";
 
     try (Connection conn = DBConnection.getConnection(DBType.ORACLE);
@@ -31,20 +35,100 @@ public class EmployeeDAO {
     return "알 수 없음(" + employeeId + ")";
   }
 
-  public List<String> findAllEmployeeSummaries() throws java.sql.SQLException {
+  public List<String> findAllEmployeeSummaries() throws SQLException {
     List<String> list = new ArrayList<>();
-    String sql = "SELECT employee_id, employee_name, login_id FROM EMPLOYEE ORDER BY employee_id";
+    String sql =
+        "SELECT " +
+            "employee_id, " +
+            "role_id, " +
+            "store_id, " +
+            "branch_id, " +
+            "login_id, " +
+            "employee_name, " +
+            "phone_number, " +
+            "is_active, " +
+            "created_at, " +
+            "updated_at " +
+            "FROM EMPLOYEE " +
+            "ORDER BY employee_id";
 
     try (Connection conn = DBConnection.getConnection(DBType.ORACLE);
         PreparedStatement pstmt = conn.prepareStatement(sql);
         ResultSet rs = pstmt.executeQuery()) {
       while (rs.next()) {
-        list.add(rs.getLong("EMPLOYEE_ID") + ". " + rs.getString("EMPLOYEE_NAME")
-            + " (" + rs.getString("LOGIN_ID") + ")");
+        EmployeeDTO employee = mapEmployee(rs);
+        list.add(employee.getEmployeeId() + ". " + employee.getEmployeeName()
+            + " (" + employee.getLoginId() + ")");
       }
     }
 
     return list;
+  }
+
+  public boolean existsLoginId(String loginId) throws SQLException {
+    String sql = "SELECT 1 FROM EMPLOYEE WHERE login_id = ?";
+
+    try (
+        Connection conn = DBConnection.getConnection(DBType.ORACLE);
+        PreparedStatement pstmt = conn.prepareStatement(sql)
+    ) {
+      pstmt.setString(1, loginId);
+
+      try (ResultSet rs = pstmt.executeQuery()) {
+        return rs.next();
+      }
+    }
+  }
+
+  public String findPasswordByEmployeeId(long employeeId) throws SQLException {
+    String sql = "SELECT password FROM EMPLOYEE WHERE employee_id = ?";
+
+    try (
+        Connection conn = DBConnection.getConnection(DBType.ORACLE);
+        PreparedStatement pstmt = conn.prepareStatement(sql)
+    ) {
+      pstmt.setLong(1, employeeId);
+
+      try (ResultSet rs = pstmt.executeQuery()) {
+        if (rs.next()) {
+          return rs.getString("PASSWORD");
+        }
+      }
+    }
+
+    return null;
+  }
+
+  public EmployeeDTO findEmployeeById(long employeeId) throws SQLException {
+    String sql =
+        "SELECT " +
+            "employee_id, " +
+            "role_id, " +
+            "store_id, " +
+            "branch_id, " +
+            "login_id, " +
+            "employee_name, " +
+            "phone_number, " +
+            "is_active, " +
+            "created_at, " +
+            "updated_at " +
+            "FROM EMPLOYEE " +
+            "WHERE employee_id = ?";
+
+    try (
+        Connection conn = DBConnection.getConnection(DBType.ORACLE);
+        PreparedStatement pstmt = conn.prepareStatement(sql)
+    ) {
+      pstmt.setLong(1, employeeId);
+
+      try (ResultSet rs = pstmt.executeQuery()) {
+        if (rs.next()) {
+          return mapEmployee(rs);
+        }
+      }
+    }
+
+    return null;
   }
 
   // 전체 조회
@@ -56,13 +140,15 @@ public class EmployeeDAO {
             "employee_id, " +
             "role_id, " +
             "store_id, " +
+            "branch_id, " +
             "login_id, " +
             "employee_name, " +
             "phone_number, " +
             "is_active, " +
             "created_at, " +
             "updated_at " +
-            "FROM EMPLOYEE";
+            "FROM EMPLOYEE " +
+            "ORDER BY employee_id ";
 
     try (
         Connection conn = DBConnection.getConnection(DBType.ORACLE);
@@ -71,35 +157,7 @@ public class EmployeeDAO {
     ) {
 
       while (rs.next()) {
-        EmployeeDTO employeeDTO = new EmployeeDTO();
-
-        employeeDTO.setEmployeeId(rs.getLong("EMPLOYEE_ID"));
-        employeeDTO.setRoleId(rs.getInt("ROLE_ID"));
-
-        long storeId = rs.getLong("STORE_ID");
-        if (rs.wasNull()) {
-          employeeDTO.setStoreId(null);
-        } else {
-          employeeDTO.setStoreId(storeId);
-        }
-
-        employeeDTO.setLoginId(rs.getString("LOGIN_ID"));
-        employeeDTO.setEmployeeName(rs.getString("EMPLOYEE_NAME"));
-        employeeDTO.setPhoneNumber(rs.getString("PHONE_NUMBER"));
-        employeeDTO.setIsActive(rs.getString("IS_ACTIVE"));
-
-        Timestamp createdAt = rs.getTimestamp("CREATED_AT");
-        Timestamp updatedAt = rs.getTimestamp("UPDATED_AT");
-
-        employeeDTO.setCreatedAt(
-            createdAt != null ? createdAt.toLocalDateTime() : null
-        );
-
-        employeeDTO.setUpdatedAt(
-            updatedAt != null ? updatedAt.toLocalDateTime() : null
-        );
-
-        employees.add(employeeDTO);
+        employees.add(mapEmployee(rs));
       }
     }
 
@@ -113,6 +171,7 @@ public class EmployeeDAO {
             "e.employee_id, " +
             "e.role_id, " +
             "e.store_id, " +
+            "e.branch_id, " +
             "e.login_id, " +
             "e.password, " +
             "e.employee_name, " +
@@ -138,12 +197,8 @@ public class EmployeeDAO {
           employeeDTO.setRoleId(rs.getInt("ROLE_ID"));
           employeeDTO.setRoleName(rs.getString("ROLE_NAME"));
 
-          long storeId = rs.getLong("STORE_ID");
-          if (rs.wasNull()) {
-            employeeDTO.setStoreId(null);
-          } else {
-            employeeDTO.setStoreId(storeId);
-          }
+          employeeDTO.setStoreId(getNullableLong(rs, "STORE_ID"));
+          employeeDTO.setBranchId(getNullableLong(rs, "BRANCH_ID"));
 
           employeeDTO.setLoginId(rs.getString("LOGIN_ID"));
           employeeDTO.setPassword(rs.getString("PASSWORD"));
@@ -160,9 +215,6 @@ public class EmployeeDAO {
     return null;
   }
 
-  // EMPLOYEE_ID로 권한 조회
-
-
   /* INSERT */
   // 직원 추가
   public int insertEmployee(EmployeeDTO employee) throws SQLException {
@@ -170,12 +222,13 @@ public class EmployeeDAO {
         "INSERT INTO EMPLOYEE (" +
             "role_id, " +
             "store_id, " +
+            "branch_id, " +
             "login_id, " +
             "password, " +
             "employee_name, " +
             "phone_number, " +
             "is_active" +
-            ") VALUES (?, ?, ?, ?, ?, ?, ?)";
+            ") VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
     try (
         Connection conn = DBConnection.getConnection(DBType.ORACLE);
@@ -184,21 +237,17 @@ public class EmployeeDAO {
 
       pstmt.setInt(1, employee.getRoleId());
 
-      if (employee.getStoreId() == null) {
-        pstmt.setNull(2, java.sql.Types.NUMERIC);
-      } else {
-        pstmt.setLong(2, employee.getStoreId());
-      }
-
-      pstmt.setString(3, employee.getLoginId());
-      pstmt.setString(4, employee.getPassword());
-      pstmt.setString(5, employee.getEmployeeName());
-      pstmt.setString(6, employee.getPhoneNumber());
+      setNullableLong(pstmt, 2, employee.getStoreId());
+      setNullableLong(pstmt, 3, employee.getBranchId());
+      pstmt.setString(4, employee.getLoginId());
+      pstmt.setString(5, employee.getPassword());
+      pstmt.setString(6, employee.getEmployeeName());
+      pstmt.setString(7, employee.getPhoneNumber());
 
       if (employee.getIsActive() == null) {
-        pstmt.setString(7, "Y");
+        pstmt.setString(8, "Y");
       } else {
-        pstmt.setString(7, employee.getIsActive());
+        pstmt.setString(8, employee.getIsActive());
       }
 
       return pstmt.executeUpdate();
@@ -215,6 +264,7 @@ public class EmployeeDAO {
             "phone_number = ?, " +
             "role_id = ?, " +
             "store_id = ?, " +
+            "branch_id = ?, " +
             "is_active = ?, " +
             "updated_at = SYSDATE " +
             "WHERE employee_id = ?";
@@ -228,14 +278,10 @@ public class EmployeeDAO {
       pstmt.setString(2, employee.getPhoneNumber());
       pstmt.setInt(3, employee.getRoleId());
 
-      if (employee.getStoreId() == null) {
-        pstmt.setNull(4, java.sql.Types.NUMERIC);
-      } else {
-        pstmt.setLong(4, employee.getStoreId());
-      }
-
-      pstmt.setString(5, employee.getIsActive());
-      pstmt.setLong(6, employee.getEmployeeId());
+      setNullableLong(pstmt, 4, employee.getStoreId());
+      setNullableLong(pstmt, 5, employee.getBranchId());
+      pstmt.setString(6, employee.getIsActive());
+      pstmt.setLong(7, employee.getEmployeeId());
 
       return pstmt.executeUpdate();
 
@@ -300,11 +346,7 @@ public class EmployeeDAO {
 
       pstmt.setInt(1, employee.getRoleId());
 
-      if (employee.getStoreId() == null) {
-        pstmt.setNull(2, java.sql.Types.NUMERIC);
-      } else {
-        pstmt.setLong(2, employee.getStoreId());
-      }
+      setNullableLong(pstmt, 2, employee.getStoreId());
 
       pstmt.setLong(3, employee.getEmployeeId());
 
@@ -393,5 +435,25 @@ public class EmployeeDAO {
       return pstmt.executeUpdate();
 
     }
+  }
+
+  private EmployeeDTO mapEmployee(ResultSet rs) throws SQLException {
+    EmployeeDTO employeeDTO = new EmployeeDTO();
+
+    employeeDTO.setEmployeeId(rs.getLong("EMPLOYEE_ID"));
+    employeeDTO.setRoleId(rs.getInt("ROLE_ID"));
+
+    employeeDTO.setStoreId(getNullableLong(rs, "STORE_ID"));
+    employeeDTO.setBranchId(getNullableLong(rs, "BRANCH_ID"));
+
+    employeeDTO.setLoginId(rs.getString("LOGIN_ID"));
+    employeeDTO.setEmployeeName(rs.getString("EMPLOYEE_NAME"));
+    employeeDTO.setPhoneNumber(rs.getString("PHONE_NUMBER"));
+    employeeDTO.setIsActive(rs.getString("IS_ACTIVE"));
+
+    employeeDTO.setCreatedAt(getNullableLocalDateTime(rs, "CREATED_AT"));
+    employeeDTO.setUpdatedAt(getNullableLocalDateTime(rs, "UPDATED_AT"));
+
+    return employeeDTO;
   }
 }

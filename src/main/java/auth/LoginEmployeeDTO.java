@@ -23,6 +23,7 @@ public class LoginEmployeeDTO {
   private int roleId;
   private String roleName;
   private Long storeId;
+  private Long branchId;
 
   private String isActive;
 

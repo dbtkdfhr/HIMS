@@ -13,7 +13,7 @@
 ========================================================= */
 INSERT INTO ROLE (ROLE_NAME,
                   ROLE_DESCRIPTION)
-VALUES ('관리자',
+VALUES ('지점관리자',
         '기준 정보 및 전체 현황 관리');
 
 INSERT INTO ROLE (ROLE_NAME,
@@ -736,16 +736,20 @@ VALUES ((SELECT BRAND_ID FROM BRAND WHERE BRAND_NAME = 'THE CASHMERE'),
    7. EMPLOYEE - 직원
    주의:
    - Excel에는 발주처ID 컬럼이 있지만 현재 EMPLOYEE DDL에는 해당 컬럼이 없으므로 제외
-   - STORE_ID가 없는 발주처담당자/관리자는 NULL 처리
+   - 시스템담당자는 BRANCH_ID, STORE_ID를 NULL 처리
+   - 지점관리자는 소속 BRANCH_ID를 지정하고 STORE_ID만 NULL 처리
+   - STORE_ID가 없는 발주처담당자는 STORE_ID만 NULL 처리
 ========================================================= */
 INSERT INTO EMPLOYEE (ROLE_ID,
+                      BRANCH_ID,
                       STORE_ID,
                       LOGIN_ID,
                       PASSWORD,
                       EMPLOYEE_NAME,
                       PHONE_NUMBER,
                       IS_ACTIVE)
-VALUES ((SELECT ROLE_ID FROM ROLE WHERE ROLE_NAME = '관리자'),
+VALUES ((SELECT ROLE_ID FROM ROLE WHERE ROLE_NAME = '지점관리자'),
+        (SELECT BRANCH_ID FROM BRANCH WHERE BRANCH_NAME = '더현대서울'),
         NULL,
         'admin01',
         'pass1234',
@@ -754,6 +758,7 @@ VALUES ((SELECT ROLE_ID FROM ROLE WHERE ROLE_NAME = '관리자'),
         'Y');
 
 INSERT INTO EMPLOYEE (ROLE_ID,
+                      BRANCH_ID,
                       STORE_ID,
                       LOGIN_ID,
                       PASSWORD,
@@ -761,6 +766,7 @@ INSERT INTO EMPLOYEE (ROLE_ID,
                       PHONE_NUMBER,
                       IS_ACTIVE)
 VALUES ((SELECT ROLE_ID FROM ROLE WHERE ROLE_NAME = '발주처담당자'),
+        (SELECT BRANCH_ID FROM BRANCH WHERE BRANCH_NAME = '현대백화점 판교점'),
         NULL,
         'logi_time',
         'pass1234',
@@ -769,6 +775,7 @@ VALUES ((SELECT ROLE_ID FROM ROLE WHERE ROLE_NAME = '발주처담당자'),
         'Y');
 
 INSERT INTO EMPLOYEE (ROLE_ID,
+                      BRANCH_ID,
                       STORE_ID,
                       LOGIN_ID,
                       PASSWORD,
@@ -776,6 +783,7 @@ INSERT INTO EMPLOYEE (ROLE_ID,
                       PHONE_NUMBER,
                       IS_ACTIVE)
 VALUES ((SELECT ROLE_ID FROM ROLE WHERE ROLE_NAME = '발주처담당자'),
+        (SELECT BRANCH_ID FROM BRANCH WHERE BRANCH_NAME = '현대백화점 무역센터점'),
         NULL,
         'logi_system',
         'pass1234',
@@ -784,6 +792,7 @@ VALUES ((SELECT ROLE_ID FROM ROLE WHERE ROLE_NAME = '발주처담당자'),
         'Y');
 
 INSERT INTO EMPLOYEE (ROLE_ID,
+                      BRANCH_ID,
                       STORE_ID,
                       LOGIN_ID,
                       PASSWORD,
@@ -791,6 +800,7 @@ INSERT INTO EMPLOYEE (ROLE_ID,
                       PHONE_NUMBER,
                       IS_ACTIVE)
 VALUES ((SELECT ROLE_ID FROM ROLE WHERE ROLE_NAME = '발주처담당자'),
+        (SELECT BRANCH_ID FROM BRANCH WHERE BRANCH_NAME = '더현대서울'),
         NULL,
         'logi_mine',
         'pass1234',
@@ -799,6 +809,7 @@ VALUES ((SELECT ROLE_ID FROM ROLE WHERE ROLE_NAME = '발주처담당자'),
         'Y');
 
 INSERT INTO EMPLOYEE (ROLE_ID,
+                      BRANCH_ID,
                       STORE_ID,
                       LOGIN_ID,
                       PASSWORD,
@@ -806,6 +817,7 @@ INSERT INTO EMPLOYEE (ROLE_ID,
                       PHONE_NUMBER,
                       IS_ACTIVE)
 VALUES ((SELECT ROLE_ID FROM ROLE WHERE ROLE_NAME = '발주처담당자'),
+        (SELECT BRANCH_ID FROM BRANCH WHERE BRANCH_NAME = '더현대서울'),
         NULL,
         'logi_cashmere',
         'pass1234',
@@ -814,6 +826,7 @@ VALUES ((SELECT ROLE_ID FROM ROLE WHERE ROLE_NAME = '발주처담당자'),
         'Y');
 
 INSERT INTO EMPLOYEE (ROLE_ID,
+                      BRANCH_ID,
                       STORE_ID,
                       LOGIN_ID,
                       PASSWORD,
@@ -821,6 +834,7 @@ INSERT INTO EMPLOYEE (ROLE_ID,
                       PHONE_NUMBER,
                       IS_ACTIVE)
 VALUES ((SELECT ROLE_ID FROM ROLE WHERE ROLE_NAME = '입점매장담당자'),
+        (SELECT BRANCH_ID FROM BRANCH WHERE BRANCH_NAME = '더현대서울'),
         (SELECT STORE_ID FROM STORE WHERE STORE_NAME = 'THE CASHMERE 더현대서울점'),
         'store_cashmere',
         'pass1234',
@@ -829,6 +843,7 @@ VALUES ((SELECT ROLE_ID FROM ROLE WHERE ROLE_NAME = '입점매장담당자'),
         'Y');
 
 INSERT INTO EMPLOYEE (ROLE_ID,
+                      BRANCH_ID,
                       STORE_ID,
                       LOGIN_ID,
                       PASSWORD,
@@ -836,6 +851,7 @@ INSERT INTO EMPLOYEE (ROLE_ID,
                       PHONE_NUMBER,
                       IS_ACTIVE)
 VALUES ((SELECT ROLE_ID FROM ROLE WHERE ROLE_NAME = '입점매장담당자'),
+        (SELECT BRANCH_ID FROM BRANCH WHERE BRANCH_NAME = '현대백화점 판교점'),
         (SELECT STORE_ID FROM STORE WHERE STORE_NAME = 'TIME 판교점'),
         'store_time',
         'pass1234',
@@ -844,6 +860,7 @@ VALUES ((SELECT ROLE_ID FROM ROLE WHERE ROLE_NAME = '입점매장담당자'),
         'Y');
 
 INSERT INTO EMPLOYEE (ROLE_ID,
+                      BRANCH_ID,
                       STORE_ID,
                       LOGIN_ID,
                       PASSWORD,
@@ -851,6 +868,7 @@ INSERT INTO EMPLOYEE (ROLE_ID,
                       PHONE_NUMBER,
                       IS_ACTIVE)
 VALUES ((SELECT ROLE_ID FROM ROLE WHERE ROLE_NAME = '입점매장담당자'),
+        (SELECT BRANCH_ID FROM BRANCH WHERE BRANCH_NAME = '현대백화점 무역센터점'),
         (SELECT STORE_ID FROM STORE WHERE STORE_NAME = 'SYSTEM 무역센터점'),
         'store_system',
         'pass1234',
@@ -859,6 +877,7 @@ VALUES ((SELECT ROLE_ID FROM ROLE WHERE ROLE_NAME = '입점매장담당자'),
         'Y');
 
 INSERT INTO EMPLOYEE (ROLE_ID,
+                      BRANCH_ID,
                       STORE_ID,
                       LOGIN_ID,
                       PASSWORD,
@@ -866,6 +885,7 @@ INSERT INTO EMPLOYEE (ROLE_ID,
                       PHONE_NUMBER,
                       IS_ACTIVE)
 VALUES ((SELECT ROLE_ID FROM ROLE WHERE ROLE_NAME = '입점매장담당자'),
+        (SELECT BRANCH_ID FROM BRANCH WHERE BRANCH_NAME = '더현대서울'),
         (SELECT STORE_ID FROM STORE WHERE STORE_NAME = 'MINE 더현대서울점'),
         'store_mine',
         'pass1234',
@@ -874,6 +894,7 @@ VALUES ((SELECT ROLE_ID FROM ROLE WHERE ROLE_NAME = '입점매장담당자'),
         'Y');
 
 INSERT INTO EMPLOYEE (ROLE_ID,
+                      BRANCH_ID,
                       STORE_ID,
                       LOGIN_ID,
                       PASSWORD,
@@ -881,7 +902,8 @@ INSERT INTO EMPLOYEE (ROLE_ID,
                       PHONE_NUMBER,
                       IS_ACTIVE)
 VALUES ((SELECT ROLE_ID FROM ROLE WHERE ROLE_NAME = '시스템담당자'),
-        (SELECT STORE_ID FROM STORE WHERE STORE_NAME = 'MINE 더현대서울점'),
+        NULL,
+        NULL,
         'system_mine',
         'pass1234',
         '시담당',
@@ -994,7 +1016,9 @@ INSERT INTO ORDER_REQUEST (STORE_ID,
                            REJECTED_AT,
                            SENT_TO_SUPPLIER_AT)
 VALUES ((SELECT STORE_ID FROM STORE WHERE STORE_NAME = 'TIME 판교점'),
-        (SELECT SUPPLIER_INTEGRATION_ID FROM SUPPLIER_INTEGRATION WHERE EXTERNAL_SUPPLIER_ID = 'SUP-TIME-001'),
+        (SELECT SUPPLIER_INTEGRATION_ID
+         FROM SUPPLIER_INTEGRATION
+         WHERE EXTERNAL_SUPPLIER_ID = 'SUP-TIME-001'),
         (SELECT PRODUCT_ID FROM PRODUCT WHERE PRODUCT_NAME = 'TIME 썸머 린넨 원피스'),
         (SELECT EMPLOYEE_ID FROM EMPLOYEE WHERE LOGIN_ID = 'store_time'),
         NULL,
@@ -1027,7 +1051,9 @@ INSERT INTO ORDER_REQUEST (STORE_ID,
                            REJECTED_AT,
                            SENT_TO_SUPPLIER_AT)
 VALUES ((SELECT STORE_ID FROM STORE WHERE STORE_NAME = 'SYSTEM 무역센터점'),
-        (SELECT SUPPLIER_INTEGRATION_ID FROM SUPPLIER_INTEGRATION WHERE EXTERNAL_SUPPLIER_ID = 'SUP-SYSTEM-001'),
+        (SELECT SUPPLIER_INTEGRATION_ID
+         FROM SUPPLIER_INTEGRATION
+         WHERE EXTERNAL_SUPPLIER_ID = 'SUP-SYSTEM-001'),
         (SELECT PRODUCT_ID FROM PRODUCT WHERE PRODUCT_NAME = 'SYSTEM 캐시미어 니트'),
         (SELECT EMPLOYEE_ID FROM EMPLOYEE WHERE LOGIN_ID = 'store_system'),
         (SELECT EMPLOYEE_ID FROM EMPLOYEE WHERE LOGIN_ID = 'logi_system'),
@@ -1060,7 +1086,9 @@ INSERT INTO ORDER_REQUEST (STORE_ID,
                            REJECTED_AT,
                            SENT_TO_SUPPLIER_AT)
 VALUES ((SELECT STORE_ID FROM STORE WHERE STORE_NAME = 'MINE 더현대서울점'),
-        (SELECT SUPPLIER_INTEGRATION_ID FROM SUPPLIER_INTEGRATION WHERE EXTERNAL_SUPPLIER_ID = 'SUP-MINE-001'),
+        (SELECT SUPPLIER_INTEGRATION_ID
+         FROM SUPPLIER_INTEGRATION
+         WHERE EXTERNAL_SUPPLIER_ID = 'SUP-MINE-001'),
         (SELECT PRODUCT_ID FROM PRODUCT WHERE PRODUCT_NAME = 'MINE 트렌치 코트'),
         (SELECT EMPLOYEE_ID FROM EMPLOYEE WHERE LOGIN_ID = 'store_mine'),
         (SELECT EMPLOYEE_ID FROM EMPLOYEE WHERE LOGIN_ID = 'logi_mine'),
@@ -1093,7 +1121,9 @@ INSERT INTO ORDER_REQUEST (STORE_ID,
                            REJECTED_AT,
                            SENT_TO_SUPPLIER_AT)
 VALUES ((SELECT STORE_ID FROM STORE WHERE STORE_NAME = 'THE CASHMERE 더현대서울점'),
-        (SELECT SUPPLIER_INTEGRATION_ID FROM SUPPLIER_INTEGRATION WHERE EXTERNAL_SUPPLIER_ID = 'SUP-CASHMERE-001'),
+        (SELECT SUPPLIER_INTEGRATION_ID
+         FROM SUPPLIER_INTEGRATION
+         WHERE EXTERNAL_SUPPLIER_ID = 'SUP-CASHMERE-001'),
         (SELECT PRODUCT_ID FROM PRODUCT WHERE PRODUCT_NAME = 'THE CASHMERE 홀가먼트 니트'),
         (SELECT EMPLOYEE_ID FROM EMPLOYEE WHERE LOGIN_ID = 'store_cashmere'),
         (SELECT EMPLOYEE_ID FROM EMPLOYEE WHERE LOGIN_ID = 'logi_cashmere'),
@@ -1115,7 +1145,9 @@ INSERT INTO ORDER_APPROVAL (APPROVAL_EMPLOYEE_ID,
                             APPROVAL_STATUS,
                             APPROVAL_COMMENT)
 VALUES ((SELECT EMPLOYEE_ID FROM EMPLOYEE WHERE LOGIN_ID = 'logi_system'),
-        (SELECT ORDER_REQUEST_ID FROM ORDER_REQUEST WHERE EXTERNAL_ORDER_ID = 'EXT-SYSTEM-20260501-001'),
+        (SELECT ORDER_REQUEST_ID
+         FROM ORDER_REQUEST
+         WHERE EXTERNAL_ORDER_ID = 'EXT-SYSTEM-20260501-001'),
         12,
         'APPROVED',
         '요청 수량 전량 승인');
@@ -1141,7 +1173,9 @@ INSERT INTO ORDER_APPROVAL (APPROVAL_EMPLOYEE_ID,
                             APPROVAL_STATUS,
                             APPROVAL_COMMENT)
 VALUES ((SELECT EMPLOYEE_ID FROM EMPLOYEE WHERE LOGIN_ID = 'logi_cashmere'),
-        (SELECT ORDER_REQUEST_ID FROM ORDER_REQUEST WHERE EXTERNAL_ORDER_ID = 'EXT-CASHMERE-20260503-001'),
+        (SELECT ORDER_REQUEST_ID
+         FROM ORDER_REQUEST
+         WHERE EXTERNAL_ORDER_ID = 'EXT-CASHMERE-20260503-001'),
         5,
         'APPROVED',
         '요청 수량 중 5개 승인');
@@ -1153,7 +1187,9 @@ INSERT INTO STORE_RECEIPT (ORDER_REQUEST_ID,
                            DIFFERENCE_REASON,
                            RECEIPT_STATUS,
                            CREATED_AT)
-VALUES ((SELECT ORDER_REQUEST_ID FROM ORDER_REQUEST WHERE EXTERNAL_ORDER_ID = 'EXT-CASHMERE-20260503-001'),
+VALUES ((SELECT ORDER_REQUEST_ID
+         FROM ORDER_REQUEST
+         WHERE EXTERNAL_ORDER_ID = 'EXT-CASHMERE-20260503-001'),
         (SELECT EMPLOYEE_ID FROM EMPLOYEE WHERE LOGIN_ID = 'store_cashmere'),
         5,
         0,

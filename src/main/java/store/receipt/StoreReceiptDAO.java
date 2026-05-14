@@ -16,26 +16,15 @@ public class StoreReceiptDAO {
   public List<StoreReceiptDTO> findAll() throws SQLException {
     List<StoreReceiptDTO> list = new ArrayList<>();
 
-    Connection conn = null;
-    PreparedStatement pstmt = null;
+    String sql = "SELECT * FROM STORE_RECEIPT";
 
-    ResultSet rs = null;
-
-    try {
-      conn = DBConnection.getConnection(DBType.ORACLE);
-      String sql = "SELECT * FROM STORE_RECEIPT";
-      pstmt = conn.prepareStatement(sql);
-      rs = pstmt.executeQuery();
+    try (Connection conn = DBConnection.getConnection(DBType.ORACLE);
+        PreparedStatement pstmt = conn.prepareStatement(sql);
+        ResultSet rs = pstmt.executeQuery()) {
 
       while (rs.next()) {
         list.add(mapToStoreReceiptDTO(rs));
       }
-    } catch (SQLException e) {
-      throw e;
-    } finally {
-      DBConnection.close(rs);
-      DBConnection.close(pstmt);
-      DBConnection.close(conn);
     }
 
     return list;
@@ -44,30 +33,22 @@ public class StoreReceiptDAO {
   public List<StoreReceiptDTO> findByStoreId(long storeId) throws SQLException {
     List<StoreReceiptDTO> list = new ArrayList<>();
 
-    Connection conn = null;
-    PreparedStatement pstmt = null;
-    ResultSet rs = null;
+    String sql = "";
+    sql += "SELECT sr.* ";
+    sql += "FROM STORE_RECEIPT sr ";
+    sql += "JOIN ORDER_REQUEST orq ON sr.order_request_id = orq.order_request_id ";
+    sql += "WHERE orq.store_id = ? ";
+    sql += "ORDER BY sr.created_at DESC";
 
-    try {
-      conn = DBConnection.getConnection(DBType.ORACLE);
-      String sql = "";
-      sql += "SELECT sr.* ";
-      sql += "FROM STORE_RECEIPT sr ";
-      sql += "JOIN ORDER_REQUEST orq ON sr.order_request_id = orq.order_request_id ";
-      sql += "WHERE orq.store_id = ? ";
-      sql += "ORDER BY sr.created_at DESC";
-
-      pstmt = conn.prepareStatement(sql);
+    try (Connection conn = DBConnection.getConnection(DBType.ORACLE);
+        PreparedStatement pstmt = conn.prepareStatement(sql)) {
       pstmt.setLong(1, storeId);
-      rs = pstmt.executeQuery();
 
-      while (rs.next()) {
-        list.add(mapToStoreReceiptDTO(rs));
+      try (ResultSet rs = pstmt.executeQuery()) {
+        while (rs.next()) {
+          list.add(mapToStoreReceiptDTO(rs));
+        }
       }
-    } finally {
-      DBConnection.close(rs);
-      DBConnection.close(pstmt);
-      DBConnection.close(conn);
     }
 
     return list;
@@ -76,25 +57,17 @@ public class StoreReceiptDAO {
   public StoreReceiptDTO findByOrderRequestId(long orderRequestId) throws SQLException {
     String sql = "SELECT * FROM STORE_RECEIPT WHERE order_request_id = ?";
 
-    Connection conn = null;
-    PreparedStatement pstmt = null;
-    ResultSet rs = null;
-
-    try {
-      conn = DBConnection.getConnection(DBType.ORACLE);
-      pstmt = conn.prepareStatement(sql);
+    try (Connection conn = DBConnection.getConnection(DBType.ORACLE);
+        PreparedStatement pstmt = conn.prepareStatement(sql)) {
       pstmt.setLong(1, orderRequestId);
-      rs = pstmt.executeQuery();
 
-      if (rs.next()) {
-        return mapToStoreReceiptDTO(rs);
+      try (ResultSet rs = pstmt.executeQuery()) {
+        if (rs.next()) {
+          return mapToStoreReceiptDTO(rs);
+        }
+
+        return null;
       }
-
-      return null;
-    } finally {
-      DBConnection.close(rs);
-      DBConnection.close(pstmt);
-      DBConnection.close(conn);
     }
   }
 
@@ -109,10 +82,7 @@ public class StoreReceiptDAO {
     sql += "receipt_status";
     sql += ") VALUES (?, ?, ?, ?, ?, ?)";
 
-    PreparedStatement pstmt = null;
-
-    try {
-      pstmt = conn.prepareStatement(sql);
+    try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
       pstmt.setLong(1, storeReceiptDTO.getOrderRequestId());
       pstmt.setLong(2, storeReceiptDTO.getConfirmEmployeeId());
       pstmt.setInt(3, storeReceiptDTO.getReceivedQuantity());
@@ -121,26 +91,18 @@ public class StoreReceiptDAO {
       pstmt.setString(6, storeReceiptDTO.getReceiptStatus());
 
       return pstmt.executeUpdate();
-    } finally {
-      DBConnection.close(pstmt);
     }
   }
 
   public boolean existsByOrderRequestId(Connection conn, long orderRequestId) throws SQLException {
     String sql = "SELECT 1 FROM STORE_RECEIPT WHERE order_request_id = ?";
 
-    PreparedStatement pstmt = null;
-    ResultSet rs = null;
-
-    try {
-      pstmt = conn.prepareStatement(sql);
+    try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
       pstmt.setLong(1, orderRequestId);
-      rs = pstmt.executeQuery();
 
-      return rs.next();
-    } finally {
-      DBConnection.close(rs);
-      DBConnection.close(pstmt);
+      try (ResultSet rs = pstmt.executeQuery()) {
+        return rs.next();
+      }
     }
   }
 

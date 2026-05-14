@@ -19,16 +19,16 @@ public class InventoryDAO {
       String keyword, boolean isLowStockOnly) throws SQLException {
     List<InventoryDTO> list = new ArrayList<>();
 
-    StringBuilder sql = new StringBuilder(
-        "SELECT br.branch_id, br.branch_name, " + "si.store_id, s.store_name, s.floor_info, s.store_location, si.product_id, "
-            + "si.current_quantity, si.safety_quantity, si.updated_at, si.is_low_stock, "
-            + "p.product_name, p.price, p.season_type, p.product_status, b.brand_name, "
-            + "c.category_name " + "FROM store_inventory si "
-            + "JOIN store s ON si.store_id = s.store_id "
-            + "JOIN branch br ON s.branch_id = br.branch_id "
-            + "JOIN product p ON si.product_id = p.product_id "
-            + "JOIN brand b ON p.brand_id = b.brand_id "
-            + "JOIN category c ON p.category_id = c.category_id " + "WHERE si.store_id = ? ");
+    StringBuilder sql = new StringBuilder("SELECT br.branch_id, br.branch_name, "
+        + "si.store_id, s.store_name, s.floor_info, s.store_location, si.product_id, "
+        + "si.current_quantity, si.safety_quantity, si.updated_at, si.is_low_stock, "
+        + "p.product_name, p.price, p.season_type, p.product_status, b.brand_name, "
+        + "c.category_name " + "FROM store_inventory si "
+        + "JOIN store s ON si.store_id = s.store_id "
+        + "JOIN branch br ON s.branch_id = br.branch_id "
+        + "JOIN product p ON si.product_id = p.product_id "
+        + "JOIN brand b ON p.brand_id = b.brand_id "
+        + "JOIN category c ON p.category_id = c.category_id " + "WHERE si.store_id = ? ");
 
     List<Object> params = new ArrayList<>();
     params.add(storeId);

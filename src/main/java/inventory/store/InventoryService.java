@@ -7,7 +7,15 @@ import inventory.InventoryDTO;
 
 public class InventoryService {
 
-  private final InventoryDAO inventoryDAO = new InventoryDAO();
+  private final InventoryDAO inventoryDAO;
+
+  public InventoryService() {
+    this(new InventoryDAO());
+  }
+
+  public InventoryService(InventoryDAO inventoryDAO) {
+    this.inventoryDAO = inventoryDAO;
+  }
 
   // [INV-01] 내 매장 전체 재고 목록 조회
   public List<InventoryDTO> getInventoryList(int storeId) throws SQLException {
@@ -26,6 +34,7 @@ public class InventoryService {
   }
 
   // [INV-04] 안전재고 수량 변경
+  // 0 미만 입력 방지 유효성 검사 포함
   public boolean updateSafetyQuantity(int storeId, int productId, int newSafetyQty)
       throws SQLException {
     if (newSafetyQty < 0) {
@@ -34,4 +43,5 @@ public class InventoryService {
     int result = inventoryDAO.updateSafetyQuantity(storeId, productId, newSafetyQty);
     return result > 0;
   }
+
 }

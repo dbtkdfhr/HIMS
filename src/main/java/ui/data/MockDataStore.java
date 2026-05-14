@@ -1,7 +1,9 @@
 package ui.data;
 
 import common.type.ProductStatus;
+import common.type.OrderStatus;
 import common.type.RoleType;
+import common.type.ReceiptStatus;
 import employee.EmployeeDTO;
 import exception.DisableUserException;
 import exception.InputException;
@@ -27,6 +29,8 @@ public class MockDataStore {
   private final List<InventoryDTO> inventories = new ArrayList<>();
   private final List<OrderRequestDTO> orders = new ArrayList<>();
   private final List<StoreReceiptDTO> receipts = new ArrayList<>();
+  private final Map<Long, String> externalOrderStatuses = new LinkedHashMap<>();
+  private final Map<Long, String> externalRejectReasons = new LinkedHashMap<>();
   private final Map<String, List<String[]>> masterRecords = new LinkedHashMap<>();
   private long nextOrderId = 1004;
   private long nextReceiptId = 5002;
@@ -188,7 +192,7 @@ public class MockDataStore {
     order.setApprovalRoleId((long) RoleType.SUPPLIER_MANAGER.getRoleId());
     order.setOrderQuantity(quantity);
     order.setRequestReason(reason);
-    order.setOrderStatus("REQUESTED");
+    order.setOrderStatus(OrderStatus.REQUESTED.name());
     order.setRequestedAt(LocalDateTime.now());
     orders.add(order);
     return order;
@@ -196,75 +200,102 @@ public class MockDataStore {
 
   public void approveOrder(long orderId, long employeeId, int approvedQuantity) {
     OrderRequestDTO order = requireOrder(orderId);
-    requireStatus(order, "REQUESTED");
+    requireStatus(order, OrderStatus.REQUESTED.name());
     if (approvedQuantity > order.getOrderQuantity()) {
       throw new MismatchQuantityException("승인수량은 요청수량을 초과할 수 없습니다.");
     }
     order.setApprovalEmployeeId(employeeId);
     order.setApprovedQuantity(approvedQuantity);
-    order.setOrderStatus("APPROVED");
+    order.setOrderStatus(OrderStatus.APPROVED.name());
     order.setApprovedAt(LocalDateTime.now());
   }
 
   public void rejectOrder(long orderId, long employeeId, String reason) {
     OrderRequestDTO order = requireOrder(orderId);
-    requireStatus(order, "REQUESTED");
+    requireStatus(order, OrderStatus.REQUESTED.name());
     order.setApprovalEmployeeId(employeeId);
     order.setRejectReason(reason);
-    order.setOrderStatus("REJECTED_BY_VENDOR");
+    order.setOrderStatus(OrderStatus.REJECTED.name());
     order.setRejectedAt(LocalDateTime.now());
   }
 
   public void sendOrderToVendor(long orderId) {
     OrderRequestDTO order = requireOrder(orderId);
-    requireStatus(order, "APPROVED");
-    order.setOrderStatus("SENT_TO_VENDOR");
+    requireStatus(order, OrderStatus.APPROVED.name());
     order.setExternalOrderId("EXT-" + orderId);
     order.setSentToSupplierAt(LocalDateTime.now());
+    externalOrderStatuses.put(orderId, "RECEIVED");
   }
 
   public void shipOrder(long orderId) {
     OrderRequestDTO order = requireOrder(orderId);
-    requireStatus(order, "SENT_TO_VENDOR");
-    order.setOrderStatus("SHIPPED");
+    requireStatus(order, OrderStatus.APPROVED.name());
+    requireExternalStatus(orderId, "APPROVED");
+    order.setOrderStatus(OrderStatus.SENT.name());
+  }
+
+  public void approveExternalOrder(long orderId) {
+    requireOrder(orderId);
+    requireExternalStatus(orderId, "RECEIVED");
+    externalOrderStatuses.put(orderId, "APPROVED");
+    externalRejectReasons.remove(orderId);
+  }
+
+  public void rejectExternalOrder(long orderId, String reason) {
+    requireOrder(orderId);
+    requireExternalStatus(orderId, "RECEIVED");
+    externalOrderStatuses.put(orderId, "REJECTED");
+    externalRejectReasons.put(orderId, reason);
+  }
+
+  public String findExternalOrderStatus(long orderId) {
+    return externalOrderStatuses.getOrDefault(orderId, "-");
+  }
+
+  public String findExternalRejectReason(long orderId) {
+    return externalRejectReasons.getOrDefault(orderId, "");
   }
 
   public StoreReceiptDTO confirmReceipt(long orderId, long employeeId) {
     OrderRequestDTO order = requireOrder(orderId);
-    requireStatus(order, "SHIPPED");
+    requireStatus(order, OrderStatus.SENT.name());
+    requireExternalStatus(orderId, "APPROVED");
     int quantity = approvedQuantity(order);
-    StoreReceiptDTO receipt = createReceipt(orderId, employeeId, quantity, 0, "", "CONFIRMED");
+    StoreReceiptDTO receipt = createReceipt(orderId, employeeId, quantity, 0, "",
+        ReceiptStatus.RECEIVED.getLabel());
     InventoryDTO inventory = findInventory(order.getStoreId(), order.getProductId());
     if (inventory != null) {
       inventory.setCurrentQuantity(inventory.getCurrentQuantity() + quantity);
       inventory.setUpdatedAt(LocalDateTime.now());
       inventory.setLowStock(inventory.getCurrentQuantity() <= inventory.getSafetyQuantity());
     }
-    order.setOrderStatus("COMPLETED");
+    order.setOrderStatus(OrderStatus.RECEIVED.name());
     return receipt;
   }
 
   public StoreReceiptDTO markReceiptDifference(long orderId, long employeeId, int receivedQuantity,
       String reason) {
     OrderRequestDTO order = requireOrder(orderId);
-    requireStatus(order, "SHIPPED");
+    requireStatus(order, OrderStatus.SENT.name());
+    requireExternalStatus(orderId, "APPROVED");
     int approvedQuantity = approvedQuantity(order);
     if (receivedQuantity >= approvedQuantity) {
       throw new MismatchQuantityException("수량 차이 입고는 승인수량보다 적은 수량만 입력할 수 있습니다.");
     }
     int difference = approvedQuantity - receivedQuantity;
     StoreReceiptDTO receipt = createReceipt(orderId, employeeId, receivedQuantity, difference,
-        reason, "DIFFERENCE");
-    order.setOrderStatus("RETURNED_BY_STORE");
+        reason, ReceiptStatus.PARTIAL_RECEIVED.getLabel());
+    order.setOrderStatus(OrderStatus.RECEIVED.name());
     return receipt;
   }
 
   public StoreReceiptDTO rejectReceipt(long orderId, long employeeId, String reason) {
     OrderRequestDTO order = requireOrder(orderId);
-    requireStatus(order, "SHIPPED");
+    requireStatus(order, OrderStatus.SENT.name());
+    requireExternalStatus(orderId, "APPROVED");
     StoreReceiptDTO receipt = createReceipt(orderId, employeeId, 0, approvedQuantity(order), reason,
-        "CANCELED");
-    order.setOrderStatus("RETURNED_BY_STORE");
+        ReceiptStatus.CANCELED.getLabel());
+    order.setOrderStatus(OrderStatus.CANCELED.name());
     return receipt;
   }
 
@@ -285,8 +316,9 @@ public class MockDataStore {
   }
 
   public EmployeeDTO createEmployee(String loginId, String name, RoleType roleType, Long storeId) {
+    Long branchId = findBranchIdByStoreId(storeId);
     EmployeeDTO employee = new EmployeeDTO(nextEmployeeId++, loginId, "1234", name, "010-0000-0000",
-        roleType.getRoleId(), storeId, "Y", LocalDateTime.now(), LocalDateTime.now());
+        roleType.getRoleId(), storeId, branchId, "Y", LocalDateTime.now(), LocalDateTime.now());
     employees.add(employee);
     return employee;
   }
@@ -336,6 +368,12 @@ public class MockDataStore {
     }
   }
 
+  private void requireExternalStatus(long orderId, String status) {
+    if (!status.equals(findExternalOrderStatus(orderId))) {
+      throw new NotReceptableException("외부 발주처 상태가 처리 가능한 상태가 아닙니다.");
+    }
+  }
+
   private int approvedQuantity(OrderRequestDTO order) {
     if (order.getApprovedQuantity() == null) {
       return order.getOrderQuantity();
@@ -346,15 +384,15 @@ public class MockDataStore {
   private void seed() {
     LocalDateTime now = LocalDateTime.now();
     employees.add(new EmployeeDTO(9001, "branch", "1234", "최우진", "010-1111-1111",
-        RoleType.BRANCH_MANAGER.getRoleId(), null, "Y", now, now));
+        RoleType.BRANCH_MANAGER.getRoleId(), null, 1L, "Y", now, now));
     employees.add(new EmployeeDTO(9002, "vendor", "1234", "Annie", "010-2222-2222",
-        RoleType.SUPPLIER_MANAGER.getRoleId(), null, "Y", now, now));
+        RoleType.SUPPLIER_MANAGER.getRoleId(), null, 1L, "Y", now, now));
     employees.add(new EmployeeDTO(9003, "store", "1234", "유상록", "010-3333-3333",
-        RoleType.STORE_MANAGER.getRoleId(), 101L, "Y", now, now));
+        RoleType.STORE_MANAGER.getRoleId(), 101L, 1L, "Y", now, now));
     employees.add(new EmployeeDTO(9004, "system", "1234", "시스템관리자", "010-4444-4444",
-        RoleType.SYSTEM_MANAGER.getRoleId(), null, "Y", now, now));
+        RoleType.SYSTEM_MANAGER.getRoleId(), null, null, "Y", now, now));
     employees.add(new EmployeeDTO(9005, "staff", "1234", "일반직원", "010-5555-5555",
-        RoleType.STAFF.getRoleId(), 101L, "Y", now, now));
+        RoleType.STAFF.getRoleId(), 101L, 1L, "Y", now, now));
 
     stores.add(store(101, 1, 10, "더한섬하우스 무역센터점", "3F", "서관 3층", "운영중"));
     stores.add(store(102, 1, 11, "타임 압구정본점", "2F", "본관 2층", "운영중"));
@@ -375,7 +413,7 @@ public class MockDataStore {
     requested.setRequestEmployeeId(9003);
     requested.setOrderQuantity(12);
     requested.setRequestReason("안전재고 이하");
-    requested.setOrderStatus("REQUESTED");
+    requested.setOrderStatus(OrderStatus.REQUESTED.name());
     requested.setRequestedAt(now);
     orders.add(requested);
 
@@ -389,12 +427,13 @@ public class MockDataStore {
     shipped.setOrderQuantity(10);
     shipped.setApprovedQuantity(10);
     shipped.setRequestReason("판매량 증가");
-    shipped.setOrderStatus("SHIPPED");
+    shipped.setOrderStatus(OrderStatus.SENT.name());
     shipped.setRequestedAt(now.minusDays(2));
     shipped.setApprovedAt(now.minusDays(1));
     shipped.setSentToSupplierAt(now.minusHours(10));
     shipped.setExternalOrderId("EXT-1002");
     orders.add(shipped);
+    externalOrderStatuses.put(shipped.getOrderRequestId(), "APPROVED");
   }
 
   private StoreDTO store(long storeId, long branchId, long brandId, String name, String floor,
@@ -410,6 +449,20 @@ public class MockDataStore {
     store.setCreatedAt(LocalDateTime.now());
     store.setUpdatedAt(LocalDateTime.now());
     return store;
+  }
+
+  private Long findBranchIdByStoreId(Long storeId) {
+    if (storeId == null) {
+      return null;
+    }
+
+    for (StoreDTO store : stores) {
+      if (store.getStoreId() == storeId) {
+        return store.getBranchId();
+      }
+    }
+
+    return null;
   }
 
   private ProductDTO product(long productId, long brandId, long categoryId, String name, int price,

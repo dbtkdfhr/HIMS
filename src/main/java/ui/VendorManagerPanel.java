@@ -1,10 +1,10 @@
 package ui;
 
+import common.type.OrderStatus;
 import employee.EmployeeDTO;
 import exception.InputException;
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
-import java.awt.GridLayout;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -49,8 +49,8 @@ public class VendorManagerPanel {
     views.put(MENUS[1], detailPanel());
     views.put(MENUS[2], approvePanel());
     views.put(MENUS[3], rejectPanel());
-    views.put(MENUS[4], transitionPanel("승인 발주 외부 전송", "APPROVED"));
-    views.put(MENUS[5], transitionPanel("외부 출고 처리", "SENT_TO_VENDOR"));
+    views.put(MENUS[4], transitionPanel("승인 발주 외부 전송", OrderStatus.APPROVED.name(), "-"));
+    views.put(MENUS[5], transitionPanel("외부 출고 처리", OrderStatus.APPROVED.name(), OrderStatus.APPROVED.name()));
     views.put(MENUS[6], filterPanel());
     views.put(MENUS[7], historyPanel());
     return views;
@@ -108,17 +108,17 @@ public class VendorManagerPanel {
         long orderId = selectedOrderId(table);
         int quantity = parsePositive(quantityField.getText(), "승인수량");
         store.approveOrder(orderId, user.getEmployeeId(), quantity);
-        fillOrders(model, "REQUESTED");
+        fillOrders(model, OrderStatus.REQUESTED.name());
         logger.accept("발주 승인 완료: " + orderId);
       } catch (RuntimeException e) {
         showError(panel, e);
       }
     });
-    refresh.addActionListener(event -> fillOrders(model, "REQUESTED"));
+    refresh.addActionListener(event -> fillOrders(model, OrderStatus.REQUESTED.name()));
 
     panel.add(controls, BorderLayout.NORTH);
     panel.add(UiTableFactory.scroll(table), BorderLayout.CENTER);
-    fillOrders(model, "REQUESTED");
+    fillOrders(model, OrderStatus.REQUESTED.name());
     return panel;
   }
 
@@ -139,21 +139,25 @@ public class VendorManagerPanel {
       try {
         long orderId = selectedOrderId(table);
         store.rejectOrder(orderId, user.getEmployeeId(), required(reasonField.getText(), "반려사유"));
-        fillOrders(model, "REQUESTED");
+        fillOrders(model, OrderStatus.REQUESTED.name());
         logger.accept("발주 반려 완료: " + orderId);
       } catch (RuntimeException e) {
         showError(panel, e);
       }
     });
-    refresh.addActionListener(event -> fillOrders(model, "REQUESTED"));
+    refresh.addActionListener(event -> fillOrders(model, OrderStatus.REQUESTED.name()));
 
     panel.add(controls, BorderLayout.NORTH);
     panel.add(UiTableFactory.scroll(table), BorderLayout.CENTER);
-    fillOrders(model, "REQUESTED");
+    fillOrders(model, OrderStatus.REQUESTED.name());
     return panel;
   }
 
   private JPanel transitionPanel(String title, String status) {
+    return transitionPanel(title, status, null);
+  }
+
+  private JPanel transitionPanel(String title, String status, String externalStatus) {
     JPanel panel = page(title);
     DefaultTableModel model = orderModel();
     JTable table = UiTableFactory.table(model);
@@ -166,22 +170,22 @@ public class VendorManagerPanel {
     process.addActionListener(event -> {
       try {
         long orderId = selectedOrderId(table);
-        if ("APPROVED".equals(status)) {
+        if ("-".equals(externalStatus)) {
           store.sendOrderToVendor(orderId);
         } else {
           store.shipOrder(orderId);
         }
-        fillOrders(model, status);
+        fillOrders(model, status, externalStatus);
         logger.accept(title + " 완료: " + orderId);
       } catch (RuntimeException e) {
         showError(panel, e);
       }
     });
-    refresh.addActionListener(event -> fillOrders(model, status));
+    refresh.addActionListener(event -> fillOrders(model, status, externalStatus));
 
     panel.add(controls, BorderLayout.NORTH);
     panel.add(UiTableFactory.scroll(table), BorderLayout.CENTER);
-    fillOrders(model, status);
+    fillOrders(model, status, externalStatus);
     return panel;
   }
 
@@ -190,8 +194,9 @@ public class VendorManagerPanel {
     DefaultTableModel model = orderModel();
     JTable table = UiTableFactory.table(model);
     JComboBox<String> statusBox = new JComboBox<>(new String[]{
-        "전체", "REQUESTED", "APPROVED", "REJECTED_BY_VENDOR", "SENT_TO_VENDOR", "SHIPPED",
-        "RETURNED_BY_STORE", "COMPLETED"
+        "전체", OrderStatus.REQUESTED.name(), OrderStatus.APPROVED.name(),
+        OrderStatus.REJECTED.name(), OrderStatus.SENT.name(), OrderStatus.RECEIVED.name(),
+        OrderStatus.CANCELED.name()
     });
     JButton search = new JButton("조회");
     JPanel controls = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -199,7 +204,8 @@ public class VendorManagerPanel {
     controls.add(statusBox);
     controls.add(search);
     search.addActionListener(event -> {
-      String status = "전체".equals(statusBox.getSelectedItem()) ? null : String.valueOf(statusBox.getSelectedItem());
+      String status = "전체".equals(statusBox.getSelectedItem()) ? null
+          : String.valueOf(statusBox.getSelectedItem());
       fillOrders(model, status);
     });
     panel.add(controls, BorderLayout.NORTH);
@@ -221,21 +227,28 @@ public class VendorManagerPanel {
   }
 
   private DefaultTableModel orderModel() {
-    return UiTableFactory.model("발주ID", "매장", "상품", "요청수량", "승인수량", "상태", "요청사유",
-        "반려사유");
+    return UiTableFactory.model("발주ID", "매장", "상품", "요청수량", "승인수량", "상태", "외부상태",
+        "요청사유", "반려사유");
   }
 
   private void fillOrders(DefaultTableModel model, String status) {
+    fillOrders(model, status, null);
+  }
+
+  private void fillOrders(DefaultTableModel model, String status, String externalStatus) {
     model.setRowCount(0);
     for (OrderRequestDTO order : store.findOrdersByStatus(status)) {
-      model.addRow(row(order));
+      if (externalStatus == null || externalStatus.equals(store.findExternalOrderStatus(order.getOrderRequestId()))) {
+        model.addRow(row(order));
+      }
     }
   }
 
   private void fillHistory(DefaultTableModel model) {
     model.setRowCount(0);
     for (OrderRequestDTO order : store.orders()) {
-      if ("APPROVED".equals(order.getOrderStatus()) || "REJECTED_BY_VENDOR".equals(order.getOrderStatus())
+      if (OrderStatus.APPROVED.name().equals(order.getOrderStatus())
+          || OrderStatus.REJECTED.name().equals(order.getOrderStatus())
           || order.getApprovalEmployeeId() != null) {
         model.addRow(row(order));
       }
@@ -250,6 +263,7 @@ public class VendorManagerPanel {
         order.getOrderQuantity(),
         order.getApprovedQuantity() == null ? "-" : order.getApprovedQuantity(),
         order.getOrderStatus(),
+        store.findExternalOrderStatus(order.getOrderRequestId()),
         nullToBlank(order.getRequestReason()),
         nullToBlank(order.getRejectReason())
     };
