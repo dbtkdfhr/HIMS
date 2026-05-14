@@ -8,6 +8,8 @@ import java.sql.Connection;
 import lombok.RequiredArgsConstructor;
 import order.approval.OrderApprovalDAO;
 import order.approval.OrderApprovalDTO;
+import order.external.ExternalOrderReceiptDAO;
+import order.external.ExternalOrderReceiptDTO;
 import order.external.ExternalSupplierInventoryDAO;
 import order.request.OrderRequestDAO;
 import order.request.OrderRequestDTO;
@@ -18,7 +20,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class OrderManagementService {
   private final OrderRequestDAO orderRequestDAO;
-  private final ExternalSupplierInventoryDAO externalSupplierDAO;
+  private final ExternalOrderReceiptDAO externalOrderReceiptDAO;
   private final OrderApprovalDAO orderApprovalDAO;
 
   // 발주 요청 전체 목록 조회하기
@@ -64,7 +66,18 @@ public class OrderManagementService {
         orderApprovalDAO.insertApprovalHistory(oracleConn, approvalDTO);
 
         // 3. MariaDB 외부 공급사 접수증 생성
-        externalSupplierDAO.insertExternalReceipt(mariaConn, orderRequestId);
+        OrderRequestDTO orderRequest = orderRequestDAO.findByOrderRequestId(oracleConn, orderRequestId);
+
+        ExternalOrderReceiptDTO receiptDTO = new ExternalOrderReceiptDTO();
+        receiptDTO.setSupplierId(orderRequest.getSupplierIntegrationId());
+        receiptDTO.setSupplierProductId(orderRequest.getProductId());
+        receiptDTO.setInternalOrderRequestId(orderRequest.getOrderRequestId());
+        receiptDTO.setRequestStoreName("매장ID: " + orderRequest.getStoreId());
+        receiptDTO.setRequestQuantity(orderRequest.getOrderQuantity());
+        receiptDTO.setApprovedQuantity(approvedQuantity);
+        receiptDTO.setReceiptStatus("RECEIVED");
+
+        externalOrderReceiptDAO.insertExternalReceipt(mariaConn, receiptDTO);
 
         // 4. 두 DB 작업 모두 성공하면 commit
         oracleConn.commit();
