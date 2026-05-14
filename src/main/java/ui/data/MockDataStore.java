@@ -222,7 +222,6 @@ public class MockDataStore {
   public void sendOrderToVendor(long orderId) {
     OrderRequestDTO order = requireOrder(orderId);
     requireStatus(order, OrderStatus.APPROVED.name());
-    order.setOrderStatus(OrderStatus.SENT.name());
     order.setExternalOrderId("EXT-" + orderId);
     order.setSentToSupplierAt(LocalDateTime.now());
     externalOrderStatuses.put(orderId, "RECEIVED");
@@ -230,7 +229,7 @@ public class MockDataStore {
 
   public void shipOrder(long orderId) {
     OrderRequestDTO order = requireOrder(orderId);
-    requireStatus(order, OrderStatus.SENT.name());
+    requireStatus(order, OrderStatus.APPROVED.name());
     requireExternalStatus(orderId, "APPROVED");
     order.setOrderStatus(OrderStatus.SENT.name());
   }
@@ -260,6 +259,7 @@ public class MockDataStore {
   public StoreReceiptDTO confirmReceipt(long orderId, long employeeId) {
     OrderRequestDTO order = requireOrder(orderId);
     requireStatus(order, OrderStatus.SENT.name());
+    requireExternalStatus(orderId, "APPROVED");
     int quantity = approvedQuantity(order);
     StoreReceiptDTO receipt = createReceipt(orderId, employeeId, quantity, 0, "",
         ReceiptStatus.RECEIVED.getLabel());
@@ -277,6 +277,7 @@ public class MockDataStore {
       String reason) {
     OrderRequestDTO order = requireOrder(orderId);
     requireStatus(order, OrderStatus.SENT.name());
+    requireExternalStatus(orderId, "APPROVED");
     int approvedQuantity = approvedQuantity(order);
     if (receivedQuantity >= approvedQuantity) {
       throw new MismatchQuantityException("수량 차이 입고는 승인수량보다 적은 수량만 입력할 수 있습니다.");
@@ -291,6 +292,7 @@ public class MockDataStore {
   public StoreReceiptDTO rejectReceipt(long orderId, long employeeId, String reason) {
     OrderRequestDTO order = requireOrder(orderId);
     requireStatus(order, OrderStatus.SENT.name());
+    requireExternalStatus(orderId, "APPROVED");
     StoreReceiptDTO receipt = createReceipt(orderId, employeeId, 0, approvedQuantity(order), reason,
         ReceiptStatus.CANCELED.getLabel());
     order.setOrderStatus(OrderStatus.CANCELED.name());

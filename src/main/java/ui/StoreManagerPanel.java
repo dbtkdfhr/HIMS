@@ -131,10 +131,10 @@ public class StoreManagerPanel {
     DefaultTableModel model = orderModel();
     JTable table = UiTableFactory.table(model);
     JButton refresh = new JButton("새로고침");
-    refresh.addActionListener(event -> fillOrders(model, OrderStatus.SENT.name()));
+    refresh.addActionListener(event -> fillOrders(model, OrderStatus.SENT.name(), "APPROVED"));
     panel.add(toolbar(refresh), BorderLayout.NORTH);
     panel.add(UiTableFactory.scroll(table), BorderLayout.CENTER);
-    fillOrders(model, OrderStatus.SENT.name());
+    fillOrders(model, OrderStatus.SENT.name(), "APPROVED");
     return panel;
   }
 
@@ -172,17 +172,17 @@ public class StoreManagerPanel {
         } else {
           store.rejectReceipt(orderId, user.getEmployeeId(), required(reasonField.getText(), "반려사유"));
         }
-        fillOrders(model, OrderStatus.SENT.name());
+        fillOrders(model, OrderStatus.SENT.name(), "APPROVED");
         logger.accept(title + " 완료: 발주요청 " + orderId);
       } catch (RuntimeException e) {
         showError(panel, e);
       }
     });
-    refresh.addActionListener(event -> fillOrders(model, OrderStatus.SENT.name()));
+    refresh.addActionListener(event -> fillOrders(model, OrderStatus.SENT.name(), "APPROVED"));
 
     panel.add(controls, BorderLayout.NORTH);
     panel.add(UiTableFactory.scroll(table), BorderLayout.CENTER);
-    fillOrders(model, OrderStatus.SENT.name());
+    fillOrders(model, OrderStatus.SENT.name(), "APPROVED");
     return panel;
   }
 
@@ -250,8 +250,8 @@ public class StoreManagerPanel {
   }
 
   private DefaultTableModel orderModel() {
-    return UiTableFactory.model("발주ID", "매장", "상품", "요청수량", "승인수량", "상태", "요청사유",
-        "반려사유");
+    return UiTableFactory.model("발주ID", "매장", "상품", "요청수량", "승인수량", "상태", "외부상태",
+        "요청사유", "반려사유");
   }
 
   private void fillInventory(DefaultTableModel model, boolean lowOnly) {
@@ -274,9 +274,17 @@ public class StoreManagerPanel {
   }
 
   private void fillOrders(DefaultTableModel model, String status) {
+    fillOrders(model, status, null);
+  }
+
+  private void fillOrders(DefaultTableModel model, String status, String externalStatus) {
     model.setRowCount(0);
     for (OrderRequestDTO order : store.findOrdersByStore(storeId())) {
       if (!status.equals(order.getOrderStatus())) {
+        continue;
+      }
+      if (externalStatus != null
+          && !externalStatus.equals(store.findExternalOrderStatus(order.getOrderRequestId()))) {
         continue;
       }
       model.addRow(new Object[]{
@@ -286,6 +294,7 @@ public class StoreManagerPanel {
           order.getOrderQuantity(),
           order.getApprovedQuantity() == null ? "-" : order.getApprovedQuantity(),
           order.getOrderStatus(),
+          store.findExternalOrderStatus(order.getOrderRequestId()),
           nullToBlank(order.getRequestReason()),
           nullToBlank(order.getRejectReason())
       });

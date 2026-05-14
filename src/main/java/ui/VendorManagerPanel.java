@@ -49,8 +49,8 @@ public class VendorManagerPanel {
     views.put(MENUS[1], detailPanel());
     views.put(MENUS[2], approvePanel());
     views.put(MENUS[3], rejectPanel());
-    views.put(MENUS[4], transitionPanel("승인 발주 외부 전송", OrderStatus.APPROVED.name()));
-    views.put(MENUS[5], transitionPanel("외부 출고 처리", OrderStatus.SENT.name(), OrderStatus.APPROVED.name()));
+    views.put(MENUS[4], transitionPanel("승인 발주 외부 전송", OrderStatus.APPROVED.name(), "-"));
+    views.put(MENUS[5], transitionPanel("외부 출고 처리", OrderStatus.APPROVED.name(), OrderStatus.APPROVED.name()));
     views.put(MENUS[6], filterPanel());
     views.put(MENUS[7], historyPanel());
     return views;
@@ -170,7 +170,7 @@ public class VendorManagerPanel {
     process.addActionListener(event -> {
       try {
         long orderId = selectedOrderId(table);
-        if (OrderStatus.APPROVED.name().equals(status)) {
+        if ("-".equals(externalStatus)) {
           store.sendOrderToVendor(orderId);
         } else {
           store.shipOrder(orderId);

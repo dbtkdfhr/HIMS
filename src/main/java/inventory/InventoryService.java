@@ -1,6 +1,7 @@
 package inventory;
 
 import exception.InputException;
+import exception.MismatchQuantityException;
 import java.sql.SQLException;
 import java.util.List;
 
