@@ -13,7 +13,7 @@
 ========================================================= */
 INSERT INTO ROLE (ROLE_NAME,
                   ROLE_DESCRIPTION)
-VALUES ('관리자',
+VALUES ('지점관리자',
         '기준 정보 및 전체 현황 관리');
 
 INSERT INTO ROLE (ROLE_NAME,
@@ -736,7 +736,8 @@ VALUES ((SELECT BRAND_ID FROM BRAND WHERE BRAND_NAME = 'THE CASHMERE'),
    7. EMPLOYEE - 직원
    주의:
    - Excel에는 발주처ID 컬럼이 있지만 현재 EMPLOYEE DDL에는 해당 컬럼이 없으므로 제외
-   - 관리자/시스템담당자는 BRANCH_ID, STORE_ID를 NULL 처리
+   - 시스템담당자는 BRANCH_ID, STORE_ID를 NULL 처리
+   - 지점관리자는 소속 BRANCH_ID를 지정하고 STORE_ID만 NULL 처리
    - STORE_ID가 없는 발주처담당자는 STORE_ID만 NULL 처리
 ========================================================= */
 INSERT INTO EMPLOYEE (ROLE_ID,
@@ -748,7 +749,7 @@ INSERT INTO EMPLOYEE (ROLE_ID,
                       PHONE_NUMBER,
                       IS_ACTIVE)
 VALUES ((SELECT ROLE_ID FROM ROLE WHERE ROLE_NAME = '관리자'),
-        NULL,
+        (SELECT BRANCH_ID FROM BRANCH WHERE BRANCH_NAME = '더현대서울'),
         NULL,
         'admin01',
         'pass1234',
