@@ -1,5 +1,147 @@
 package product;
 
+import common.DBConnection;
+import common.type.DBType;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
+
 public class ProductDAO {
-  
+
+  /* INSERT */
+  // 상품 추가
+  public int insertProduct(ProductDTO product) throws SQLException {
+    String sql = "INSERT INTO product (" +
+        "brand_id, " +
+        "category_id, " +
+        "product_name, " +
+        "price, " +
+        "season_type, " +
+        "product_status" +
+        ") VALUES (?, ?, ?, ?, ?, ?)";
+
+    try (
+        Connection conn = DBConnection.getConnection(DBType.ORACLE);
+        PreparedStatement pstmt = conn.prepareStatement(sql)
+    ) {
+      pstmt.setLong(1, product.getBrandId());
+      pstmt.setLong(2, product.getCategoryId());
+      pstmt.setString(3, product.getProductName());
+      pstmt.setInt(4, product.getPrice());
+
+      if (product.getSeasonType() == null) {
+        pstmt.setNull(5, Types.VARCHAR);
+      } else {
+        pstmt.setString(5, product.getSeasonType());
+      }
+
+      pstmt.setString(6, product.getProductStatus());
+
+      return pstmt.executeUpdate();
+    }
+  }
+
+  public String findProductNameById(long productId) throws SQLException {
+    String sql = "SELECT product_name FROM PRODUCT WHERE product_id = ?";
+
+    try (Connection conn = DBConnection.getConnection(DBType.ORACLE);
+        PreparedStatement pstmt = conn.prepareStatement(sql)) {
+      pstmt.setLong(1, productId);
+
+      try (ResultSet rs = pstmt.executeQuery()) {
+        if (rs.next()) {
+          return rs.getString("PRODUCT_NAME");
+        }
+      }
+    }
+
+    return "알 수 없음(" + productId + ")";
+  }
+
+  /* UPDATE */
+  public int updateProductPrice(ProductDTO product) throws SQLException {
+    String sql = "UPDATE product SET " +
+        "price = ?, " +
+        "updated_at = SYSDATE " +
+        "WHERE product_id = ?";
+
+    try (
+        Connection conn = DBConnection.getConnection(DBType.ORACLE);
+        PreparedStatement pstmt = conn.prepareStatement(sql)
+    ) {
+      pstmt.setInt(1, product.getPrice());
+      pstmt.setLong(2, product.getProductId());
+
+      return pstmt.executeUpdate();
+    }
+  }
+
+  public int updateProductStatus(ProductDTO product) throws SQLException {
+    String sql = "UPDATE product SET " +
+        "product_status = ?, " +
+        "updated_at = SYSDATE " +
+        "WHERE product_id = ?";
+
+    try (
+        Connection conn = DBConnection.getConnection(DBType.ORACLE);
+        PreparedStatement pstmt = conn.prepareStatement(sql)
+    ) {
+      pstmt.setString(1, product.getProductStatus());
+      pstmt.setLong(2, product.getProductId());
+
+      return pstmt.executeUpdate();
+    }
+  }
+
+  public int updateProductSeasonType(ProductDTO product) throws SQLException {
+    String sql = "UPDATE product SET " +
+        "season_type = ?, " +
+        "updated_at = SYSDATE " +
+        "WHERE product_id = ?";
+
+    try (
+        Connection conn = DBConnection.getConnection(DBType.ORACLE);
+        PreparedStatement pstmt = conn.prepareStatement(sql)
+    ) {
+      if (product.getSeasonType() == null) {
+        pstmt.setNull(1, Types.VARCHAR);
+      } else {
+        pstmt.setString(1, product.getSeasonType());
+      }
+
+      pstmt.setLong(2, product.getProductId());
+
+      return pstmt.executeUpdate();
+    }
+  }
+
+  // 상품 basicInfo(가격, 상태, 시즌) 수정
+  public int updateProductBasicInfo(ProductDTO product) throws SQLException {
+    String sql = "UPDATE product SET " +
+        "price = ?, " +
+        "product_status = ?, " +
+        "season_type = ?, " +
+        "updated_at = SYSDATE " +
+        "WHERE product_id = ?";
+
+    try (
+        Connection conn = DBConnection.getConnection(DBType.ORACLE);
+        PreparedStatement pstmt = conn.prepareStatement(sql)
+    ) {
+      pstmt.setInt(1, product.getPrice());
+      pstmt.setString(2, product.getProductStatus());
+
+      if (product.getSeasonType() == null) {
+        pstmt.setNull(3, Types.VARCHAR);
+      } else {
+        pstmt.setString(3, product.getSeasonType());
+      }
+
+      pstmt.setLong(4, product.getProductId());
+
+      return pstmt.executeUpdate();
+    }
+  }
 }

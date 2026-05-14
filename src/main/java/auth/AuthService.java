@@ -2,13 +2,20 @@ package auth;
 
 import common.type.RoleType;
 import employee.EmployeeDAO;
+import java.sql.SQLException;
 
 public class AuthService {
 
   private final EmployeeDAO employeeDAO = new EmployeeDAO();
 
-  public LoginResponseDTO login(LoginRequestDTO loginRequestDTO) {
-    LoginEmployeeDTO employee = employeeDAO.getEmployeeByLoginId(loginRequestDTO.getLoginId());
+  public LoginResponseDTO login(LoginRequestDTO loginRequestDTO) throws SQLException {
+    LoginEmployeeDTO employee;
+
+    try {
+      employee = employeeDAO.getEmployeeByLoginId(loginRequestDTO.getLoginId());
+    } catch (SQLException e) {
+      throw e;
+    }
 
     if (employee == null) {
       throw new IllegalArgumentException("존재하지 않는 ID입니다.");
