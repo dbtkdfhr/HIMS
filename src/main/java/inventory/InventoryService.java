@@ -6,7 +6,15 @@ import exception.InputException;
 
 public class InventoryService {
 
-  private final InventoryDAO inventoryDAO = new InventoryDAO();
+  private final InventoryDAO inventoryDAO;
+
+  public InventoryService(){
+    this(new InventoryDAO());
+  }
+
+  public InventoryService(InventoryDAO inventoryDAO) {
+    this.inventoryDAO = inventoryDAO;
+  }
 
   // [INV-01] 내 매장 전체 재고 목록 조회
   public List<InventoryDTO> getInventoryList(int storeId) {
@@ -69,5 +77,31 @@ public class InventoryService {
     }
     int result = inventoryDAO.updateSafetyQuantity(storeId, productId, newSafetyQty);
     return result > 0;
+  }
+
+  // 현재재고 수량 변경
+  public boolean updateCurrentQuantity(int storeId, int productId, int newCurrentQty)
+      throws SQLException {
+    validateInventoryKey(storeId, productId);
+    validateNonNegativeQuantity(newCurrentQty, "현재재고 수량");
+
+    int result = inventoryDAO.updateCurrentQuantity(storeId, productId, newCurrentQty);
+    return result > 0;
+  }
+
+  private void validateInventoryKey(int storeId, int productId) {
+    if (storeId <= 0) {
+      throw new IllegalArgumentException("매장 ID는 필수입니다.");
+    }
+
+    if (productId <= 0) {
+      throw new IllegalArgumentException("상품 ID는 필수입니다.");
+    }
+  }
+
+  private void validateNonNegativeQuantity(int quantity, String fieldName) {
+    if (quantity < 0) {
+      throw new MismatchQuantityException(fieldName + "은 0 이상이어야 합니다.");
+    }
   }
 }
