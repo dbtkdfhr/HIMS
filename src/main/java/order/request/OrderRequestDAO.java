@@ -195,13 +195,12 @@ public class OrderRequestDAO {
     return orderRequestDTOList;
   }
 
-  public int updateStatusAndQuantity(long requestId, int approvedQuantity, long employeeId)
+  public int updateStatusAndQuantity(Connection oracleConn, long requestId, int approvedQuantity, long employeeId)
       throws SQLException {
     String sql = "UPDATE order_request SET order_status = ?, approved_quantity = ?, " +
         "approval_employee_id = ?, approved_at = SYSDATE WHERE order_request_id = ?";
 
-    try (Connection conn = DBConnection.getConnection(DBType.ORACLE);
-        PreparedStatement pstmt = conn.prepareStatement(sql)) {
+    try (PreparedStatement pstmt = oracleConn.prepareStatement(sql)) {
 
       pstmt.setString(1, OrderStatus.APPROVED.name());
       pstmt.setInt(2, approvedQuantity);
@@ -212,13 +211,12 @@ public class OrderRequestDAO {
     }
   }
 
-  public int updateRejectStatus(long requestId, String rejectReason, long employeeId)
+  public int updateRejectStatus(Connection oracleConn, long requestId, String rejectReason, long employeeId)
       throws SQLException {
     String sql = "UPDATE order_request SET order_status = ?, reject_reason = ?, " +
         "approval_employee_id = ?, rejected_at = SYSDATE WHERE order_request_id = ?";
 
-    try (Connection conn = DBConnection.getConnection(DBType.ORACLE);
-        PreparedStatement pstmt = conn.prepareStatement(sql)) {
+    try (PreparedStatement pstmt = oracleConn.prepareStatement(sql)) {
 
       pstmt.setString(1, OrderStatus.REJECTED.name());
       pstmt.setString(2, rejectReason);
