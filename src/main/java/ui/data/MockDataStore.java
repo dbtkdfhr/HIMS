@@ -29,6 +29,8 @@ public class MockDataStore {
   private final List<InventoryDTO> inventories = new ArrayList<>();
   private final List<OrderRequestDTO> orders = new ArrayList<>();
   private final List<StoreReceiptDTO> receipts = new ArrayList<>();
+  private final Map<Long, String> externalOrderStatuses = new LinkedHashMap<>();
+  private final Map<Long, String> externalRejectReasons = new LinkedHashMap<>();
   private final Map<String, List<String[]>> masterRecords = new LinkedHashMap<>();
   private long nextOrderId = 1004;
   private long nextReceiptId = 5002;
@@ -223,12 +225,36 @@ public class MockDataStore {
     order.setOrderStatus(OrderStatus.SENT.name());
     order.setExternalOrderId("EXT-" + orderId);
     order.setSentToSupplierAt(LocalDateTime.now());
+    externalOrderStatuses.put(orderId, "RECEIVED");
   }
 
   public void shipOrder(long orderId) {
     OrderRequestDTO order = requireOrder(orderId);
     requireStatus(order, OrderStatus.SENT.name());
+    requireExternalStatus(orderId, "APPROVED");
     order.setOrderStatus(OrderStatus.SENT.name());
+  }
+
+  public void approveExternalOrder(long orderId) {
+    requireOrder(orderId);
+    requireExternalStatus(orderId, "RECEIVED");
+    externalOrderStatuses.put(orderId, "APPROVED");
+    externalRejectReasons.remove(orderId);
+  }
+
+  public void rejectExternalOrder(long orderId, String reason) {
+    requireOrder(orderId);
+    requireExternalStatus(orderId, "RECEIVED");
+    externalOrderStatuses.put(orderId, "REJECTED");
+    externalRejectReasons.put(orderId, reason);
+  }
+
+  public String findExternalOrderStatus(long orderId) {
+    return externalOrderStatuses.getOrDefault(orderId, "-");
+  }
+
+  public String findExternalRejectReason(long orderId) {
+    return externalRejectReasons.getOrDefault(orderId, "");
   }
 
   public StoreReceiptDTO confirmReceipt(long orderId, long employeeId) {
@@ -339,6 +365,12 @@ public class MockDataStore {
     }
   }
 
+  private void requireExternalStatus(long orderId, String status) {
+    if (!status.equals(findExternalOrderStatus(orderId))) {
+      throw new NotReceptableException("외부 발주처 상태가 처리 가능한 상태가 아닙니다.");
+    }
+  }
+
   private int approvedQuantity(OrderRequestDTO order) {
     if (order.getApprovedQuantity() == null) {
       return order.getOrderQuantity();
@@ -398,6 +430,7 @@ public class MockDataStore {
     shipped.setSentToSupplierAt(now.minusHours(10));
     shipped.setExternalOrderId("EXT-1002");
     orders.add(shipped);
+    externalOrderStatuses.put(shipped.getOrderRequestId(), "APPROVED");
   }
 
   private StoreDTO store(long storeId, long branchId, long brandId, String name, String floor,

@@ -1,5 +1,6 @@
 package ui;
 
+import common.type.RoleType;
 import employee.EmployeeDTO;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -10,6 +11,7 @@ public class HimsApplication {
 
   private final JFrame frame;
   private final MockDataStore store;
+  private JFrame externalSupplierFrame;
 
   public HimsApplication() {
     this.store = new MockDataStore();
@@ -25,17 +27,38 @@ public class HimsApplication {
   }
 
   public void showLogin() {
+    closeExternalSupplierFrame();
     setContent(new LoginPanel(store, this::showDashboard));
   }
 
   public void showDashboard(EmployeeDTO user) {
     setContent(new DashboardPanel(store, user, this::showLogin));
+    if (RoleType.fromRoleId(user.getRoleId()) == RoleType.SUPPLIER_MANAGER) {
+      showExternalSupplierFrame();
+    }
   }
 
   private void setContent(JPanel panel) {
     frame.setContentPane(panel);
     frame.revalidate();
     frame.repaint();
+  }
+
+  private void showExternalSupplierFrame() {
+    closeExternalSupplierFrame();
+    externalSupplierFrame = new JFrame("외부 발주처 시스템");
+    externalSupplierFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+    externalSupplierFrame.setSize(980, 700);
+    externalSupplierFrame.setContentPane(new ExternalSupplierDashboardPanel(store));
+    externalSupplierFrame.setLocation(frame.getX() + 60, frame.getY() + 60);
+    externalSupplierFrame.setVisible(true);
+  }
+
+  private void closeExternalSupplierFrame() {
+    if (externalSupplierFrame != null) {
+      externalSupplierFrame.dispose();
+      externalSupplierFrame = null;
+    }
   }
 
   public static void launch() {
