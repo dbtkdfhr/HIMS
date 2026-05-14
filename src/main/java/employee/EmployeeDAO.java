@@ -14,7 +14,7 @@ import java.util.List;
 
 public class EmployeeDAO {
   /* SELECT */
-  public String findEmployeeNameById(long employeeId) throws java.sql.SQLException {
+  public String findEmployeeNameById(long employeeId) throws SQLException {
     String sql = "SELECT employee_name FROM EMPLOYEE WHERE employee_id = ?";
 
     try (Connection conn = DBConnection.getConnection(DBType.ORACLE);
@@ -29,22 +29,6 @@ public class EmployeeDAO {
     }
 
     return "알 수 없음(" + employeeId + ")";
-  }
-
-  public List<String> findAllEmployeeSummaries() throws java.sql.SQLException {
-    List<String> list = new ArrayList<>();
-    String sql = "SELECT employee_id, employee_name, login_id FROM EMPLOYEE ORDER BY employee_id";
-
-    try (Connection conn = DBConnection.getConnection(DBType.ORACLE);
-        PreparedStatement pstmt = conn.prepareStatement(sql);
-        ResultSet rs = pstmt.executeQuery()) {
-      while (rs.next()) {
-        list.add(rs.getLong("EMPLOYEE_ID") + ". " + rs.getString("EMPLOYEE_NAME")
-            + " (" + rs.getString("LOGIN_ID") + ")");
-      }
-    }
-
-    return list;
   }
 
   public boolean existsLoginId(String loginId) throws SQLException {
@@ -87,6 +71,7 @@ public class EmployeeDAO {
             "employee_id, " +
             "role_id, " +
             "store_id, " +
+            "branch_id, " +
             "login_id, " +
             "employee_name, " +
             "phone_number, " +
@@ -121,6 +106,7 @@ public class EmployeeDAO {
             "employee_id, " +
             "role_id, " +
             "store_id, " +
+            "branch_id, " +
             "login_id, " +
             "employee_name, " +
             "phone_number, " +
@@ -205,12 +191,13 @@ public class EmployeeDAO {
         "INSERT INTO EMPLOYEE (" +
             "role_id, " +
             "store_id, " +
+            "branch_id, " +
             "login_id, " +
             "password, " +
             "employee_name, " +
             "phone_number, " +
             "is_active" +
-            ") VALUES (?, ?, ?, ?, ?, ?, ?)";
+            ") VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
     try (
         Connection conn = DBConnection.getConnection(DBType.ORACLE);
@@ -225,15 +212,16 @@ public class EmployeeDAO {
         pstmt.setLong(2, employee.getStoreId());
       }
 
-      pstmt.setString(3, employee.getLoginId());
-      pstmt.setString(4, employee.getPassword());
-      pstmt.setString(5, employee.getEmployeeName());
-      pstmt.setString(6, employee.getPhoneNumber());
+      setNullableLong(pstmt, 3, employee.getBranchId());
+      pstmt.setString(4, employee.getLoginId());
+      pstmt.setString(5, employee.getPassword());
+      pstmt.setString(6, employee.getEmployeeName());
+      pstmt.setString(7, employee.getPhoneNumber());
 
       if (employee.getIsActive() == null) {
-        pstmt.setString(7, "Y");
+        pstmt.setString(8, "Y");
       } else {
-        pstmt.setString(7, employee.getIsActive());
+        pstmt.setString(8, employee.getIsActive());
       }
 
       return pstmt.executeUpdate();
@@ -250,6 +238,7 @@ public class EmployeeDAO {
             "phone_number = ?, " +
             "role_id = ?, " +
             "store_id = ?, " +
+            "branch_id = ?, " +
             "is_active = ?, " +
             "updated_at = SYSDATE " +
             "WHERE employee_id = ?";
@@ -269,8 +258,9 @@ public class EmployeeDAO {
         pstmt.setLong(4, employee.getStoreId());
       }
 
-      pstmt.setString(5, employee.getIsActive());
-      pstmt.setLong(6, employee.getEmployeeId());
+      setNullableLong(pstmt, 5, employee.getBranchId());
+      pstmt.setString(6, employee.getIsActive());
+      pstmt.setLong(7, employee.getEmployeeId());
 
       return pstmt.executeUpdate();
 
@@ -443,6 +433,13 @@ public class EmployeeDAO {
       employeeDTO.setStoreId(storeId);
     }
 
+    long branchId = rs.getLong("BRANCH_ID");
+    if (rs.wasNull()) {
+      employeeDTO.setBranchId(null);
+    } else {
+      employeeDTO.setBranchId(branchId);
+    }
+
     employeeDTO.setLoginId(rs.getString("LOGIN_ID"));
     employeeDTO.setEmployeeName(rs.getString("EMPLOYEE_NAME"));
     employeeDTO.setPhoneNumber(rs.getString("PHONE_NUMBER"));
@@ -460,5 +457,14 @@ public class EmployeeDAO {
     );
 
     return employeeDTO;
+  }
+
+  private void setNullableLong(PreparedStatement pstmt, int parameterIndex, Long value)
+      throws SQLException {
+    if (value == null) {
+      pstmt.setNull(parameterIndex, java.sql.Types.NUMERIC);
+    } else {
+      pstmt.setLong(parameterIndex, value);
+    }
   }
 }
