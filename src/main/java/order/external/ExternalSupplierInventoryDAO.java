@@ -12,7 +12,7 @@ import java.util.List;
 public class ExternalSupplierInventoryDAO {
 
   public void decreaseStock(Connection mariaConn, long productId, int quantity) throws SQLException {
-    String sql = "UPDATE supplier_inventory SET current_quantity = current_quantity - ? WHERE supplier_product_id = ? AND current_quantity >= ?";
+    String sql = "UPDATE SUPPLIER_INVENTORY SET current_quantity = current_quantity - ? WHERE supplier_product_id = ? AND current_quantity >= ?";
 
     try (PreparedStatement pstmt = mariaConn.prepareStatement(sql)) {
       pstmt.setInt(1, quantity);
@@ -28,7 +28,7 @@ public class ExternalSupplierInventoryDAO {
 
   public List<ExternalSupplierInventoryDTO> findAllInventory() throws SQLException {
     List<ExternalSupplierInventoryDTO> inventoryList = new ArrayList<>();
-    String sql = "SELECT supplier_id, supplier_product_id, current_quantity FROM supplier_inventory";
+    String sql = "SELECT supplier_id, supplier_product_id, current_quantity FROM SUPPLIER_INVENTORY";
     try (Connection conn = DBConnection.getConnection(DBType.MARIADB);
         PreparedStatement pstmt = conn.prepareStatement(sql);
         ResultSet rs = pstmt.executeQuery()) {
@@ -45,7 +45,7 @@ public class ExternalSupplierInventoryDAO {
   }
 
   public ExternalSupplierInventoryDTO findInventoryById(Connection mariaConn,long productId) throws SQLException {
-    String sql = "SELECT supplier_id, supplier_product_id, current_quantity FROM supplier_inventory WHERE supplier_product_id = ?";
+    String sql = "SELECT supplier_id, supplier_product_id, current_quantity FROM SUPPLIER_INVENTORY WHERE supplier_product_id = ?";
 
     try (PreparedStatement pstmt = mariaConn.prepareStatement(sql)) {
       pstmt.setLong(1, productId);

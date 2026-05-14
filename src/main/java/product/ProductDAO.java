@@ -14,7 +14,7 @@ public class ProductDAO {
   public List<ProductDTO> findAll() throws SQLException {
     String sql = "SELECT product_id, brand_id, category_id, product_name, price, "
         + "season_type, product_status, created_at, updated_at "
-        + "FROM product ORDER BY product_id";
+        + "FROM PRODUCT ORDER BY product_id";
 
     try (Connection conn = DBConnection.getConnection(DBType.ORACLE);
         PreparedStatement pstmt = conn.prepareStatement(sql);
@@ -42,7 +42,7 @@ public class ProductDAO {
   /* INSERT */
   // 상품 추가
   public int insertProduct(ProductDTO product) throws SQLException {
-    String sql = "INSERT INTO product (" +
+    String sql = "INSERT INTO PRODUCT (" +
         "brand_id, " +
         "category_id, " +
         "product_name, " +
@@ -91,7 +91,7 @@ public class ProductDAO {
 
   /* UPDATE */
   public int updateProductPrice(ProductDTO product) throws SQLException {
-    String sql = "UPDATE product SET " +
+    String sql = "UPDATE PRODUCT SET " +
         "price = ?, " +
         "updated_at = SYSDATE " +
         "WHERE product_id = ?";
@@ -108,7 +108,7 @@ public class ProductDAO {
   }
 
   public int updateProductStatus(ProductDTO product) throws SQLException {
-    String sql = "UPDATE product SET " +
+    String sql = "UPDATE PRODUCT SET " +
         "product_status = ?, " +
         "updated_at = SYSDATE " +
         "WHERE product_id = ?";
@@ -125,7 +125,7 @@ public class ProductDAO {
   }
 
   public int updateProductSeasonType(ProductDTO product) throws SQLException {
-    String sql = "UPDATE product SET " +
+    String sql = "UPDATE PRODUCT SET " +
         "season_type = ?, " +
         "updated_at = SYSDATE " +
         "WHERE product_id = ?";
@@ -148,7 +148,7 @@ public class ProductDAO {
 
   // 상품 basicInfo(가격, 상태, 시즌) 수정
   public int updateProductBasicInfo(ProductDTO product) throws SQLException {
-    String sql = "UPDATE product SET " +
+    String sql = "UPDATE PRODUCT SET " +
         "price = ?, " +
         "product_status = ?, " +
         "season_type = ?, " +

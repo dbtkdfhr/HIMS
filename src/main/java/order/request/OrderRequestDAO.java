@@ -19,7 +19,7 @@ public class OrderRequestDAO {
   public List<OrderRequestDTO> findAll() throws SQLException {
     List<OrderRequestDTO> orderRequestDTOList = new ArrayList<>();
 
-    String sql = "SELECT * FROM order_request ORDER BY requested_at DESC";
+    String sql = "SELECT * FROM ORDER_REQUEST ORDER BY requested_at DESC";
 
     try (Connection conn = DBConnection.getConnection(DBType.ORACLE);
         PreparedStatement pstmt = conn.prepareStatement(sql);
@@ -55,7 +55,7 @@ public class OrderRequestDAO {
 
   public OrderRequestDTO findByOrderRequestId(Connection connection, long orderRequestId)
       throws SQLException {
-    String sql = "SELECT * FROM order_request WHERE order_request_id = ?";
+    String sql = "SELECT * FROM ORDER_REQUEST WHERE order_request_id = ?";
 
     try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
       preparedStatement.setLong(1, orderRequestId);
@@ -146,7 +146,7 @@ public class OrderRequestDAO {
 
   public int updateStatusAndQuantity(Connection oracleConn, long requestId, int approvedQuantity, long employeeId)
       throws SQLException {
-    String sql = "UPDATE order_request SET order_status = ?, approved_quantity = ?, "
+    String sql = "UPDATE ORDER_REQUEST SET order_status = ?, approved_quantity = ?, "
         + "approval_employee_id = ?, approved_at = SYSDATE WHERE order_request_id = ?";
 
     try (PreparedStatement pstmt = oracleConn.prepareStatement(sql)) {
@@ -162,7 +162,7 @@ public class OrderRequestDAO {
 
   public int updateRejectStatus(Connection oracleConn, long requestId, String rejectReason, long employeeId)
       throws SQLException {
-    String sql = "UPDATE order_request SET order_status = ?, reject_reason = ?, "
+    String sql = "UPDATE ORDER_REQUEST SET order_status = ?, reject_reason = ?, "
         + "approval_employee_id = ?, rejected_at = SYSDATE WHERE order_request_id = ?";
 
     try (PreparedStatement pstmt = oracleConn.prepareStatement(sql)) {
@@ -178,7 +178,7 @@ public class OrderRequestDAO {
 
   public int updateCanceledByExternalReject(Connection oracleConn, long requestId, String rejectReason)
       throws SQLException {
-    String sql = "UPDATE order_request SET order_status = ?, reject_reason = ?, rejected_at = SYSDATE "
+    String sql = "UPDATE ORDER_REQUEST SET order_status = ?, reject_reason = ?, rejected_at = SYSDATE "
         + "WHERE order_request_id = ? AND order_status = ?";
 
     try (PreparedStatement pstmt = oracleConn.prepareStatement(sql)) {
@@ -193,7 +193,7 @@ public class OrderRequestDAO {
 
   public int updateReceivedByExternalCompletion(Connection oracleConn, long requestId)
       throws SQLException {
-    String sql = "UPDATE order_request SET order_status = ? "
+    String sql = "UPDATE ORDER_REQUEST SET order_status = ? "
         + "WHERE order_request_id = ? AND order_status = ?";
 
     try (PreparedStatement pstmt = oracleConn.prepareStatement(sql)) {
@@ -278,7 +278,7 @@ public class OrderRequestDAO {
   public int updateStatus(Connection oracleConn, long orderRequestId, OrderStatus orderStatus)
       throws SQLException {
 
-    String sql = "UPDATE order_request "
+    String sql = "UPDATE ORDER_REQUEST "
         + "SET order_status = ? "
         + "WHERE order_request_id = ?";
 

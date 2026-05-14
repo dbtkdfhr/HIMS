@@ -26,7 +26,7 @@ public class CategoryDAO {
   // 카테고리 전체 목록 조회
   public List<CategoryDTO> getAllCategories() throws SQLException {
     String sql = "SELECT " + CATEGORY_COLUMNS +
-        "FROM category " +
+        "FROM CATEGORY " +
         "ORDER BY category_level, parent_category_id NULLS FIRST, category_id";
 
     try (
@@ -42,7 +42,7 @@ public class CategoryDAO {
   // 카테고리 레벨 기준 목록 조회
   public List<CategoryDTO> getCategoriesByLevel(int categoryLevel) throws SQLException {
     String sql = "SELECT " + CATEGORY_COLUMNS +
-        "FROM category " +
+        "FROM CATEGORY " +
         "WHERE category_level = ? " +
         "ORDER BY parent_category_id NULLS FIRST, category_id";
 
@@ -61,7 +61,7 @@ public class CategoryDAO {
   // 상위 카테고리 ID 기준 하위 카테고리 목록 조회
   public List<CategoryDTO> getCategoriesByParentId(Long parentCategoryId) throws SQLException {
     String sql = "SELECT " + CATEGORY_COLUMNS +
-        "FROM category " +
+        "FROM CATEGORY " +
         "WHERE " + (parentCategoryId == null ? "parent_category_id IS NULL " : "parent_category_id = ? ") +
         "ORDER BY category_level, category_id";
 
@@ -82,7 +82,7 @@ public class CategoryDAO {
   /* UPDATE */
   // category_id기준으로 is_active값 변경
   public int updateCategoryActive(CategoryDTO category) throws SQLException {
-    String sql = "UPDATE category SET " +
+    String sql = "UPDATE CATEGORY SET " +
         "is_active = ?, " +
         "updated_at = SYSDATE " +
         "WHERE category_id = ?";

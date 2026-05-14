@@ -25,7 +25,7 @@ public class StoreDAO {
         "operation_status, " +
         "created_at, " +
         "updated_at " +
-        "FROM store " +
+        "FROM STORE " +
         "ORDER BY store_id";
 
     try (
@@ -67,7 +67,7 @@ public class StoreDAO {
         "operation_status, " +
         "created_at, " +
         "updated_at " +
-        "FROM store " +
+        "FROM STORE " +
         "WHERE branch_id = ?";
 
     try (
@@ -103,7 +103,7 @@ public class StoreDAO {
   /* INSERT */
   // 입점 매장 등록
   public int insertStore(StoreDTO store) throws SQLException {
-    String sql = "INSERT INTO store (" +
+    String sql = "INSERT INTO STORE (" +
         "branch_id, " +
         "brand_id, " +
         "store_name, " +
@@ -173,7 +173,7 @@ public class StoreDAO {
   /* UPDATE */
   // 입점매장 위치 수정
   public int updateStoreLocation(StoreDTO store) throws SQLException {
-    String sql = "UPDATE store SET " +
+    String sql = "UPDATE STORE SET " +
         "store_location = ?, " +
         "updated_at = SYSDATE " +
         "WHERE store_id = ?";
@@ -196,7 +196,7 @@ public class StoreDAO {
 
   // 입점매장 층 수정
   public int updateStoreFloorInfo(StoreDTO store) throws SQLException {
-    String sql = "UPDATE store SET " +
+    String sql = "UPDATE STORE SET " +
         "floor_info = ?, " +
         "updated_at = SYSDATE " +
         "WHERE store_id = ?";
@@ -219,7 +219,7 @@ public class StoreDAO {
 
   // 입점매장 운영상태 수정
   public int updateStoreOperationStatus(StoreDTO store) throws SQLException {
-    String sql = "UPDATE store SET " +
+    String sql = "UPDATE STORE SET " +
         "operation_status = ?, " +
         "updated_at = SYSDATE " +
         "WHERE store_id = ?";

@@ -25,7 +25,7 @@ public class BranchDAO {
         "operation_status, " +
         "created_at, " +
         "updated_at " +
-        "FROM branch";
+        "FROM BRANCH";
 
     try (
         Connection conn = DBConnection.getConnection(DBType.ORACLE);

@@ -10,7 +10,7 @@ import java.util.List;
 
 public class ExternalOrderReceiptDAO {
   public void insertExternalReceipt(Connection mariaConn, ExternalOrderReceiptDTO dto) throws SQLException {
-    String sql = "INSERT INTO external_order_receipt "
+    String sql = "INSERT INTO EXTERNAL_ORDER_RECEIPT "
         + "(supplier_id, supplier_product_id, internal_order_request_id, "
         + "request_store_name, request_quantity, approved_quantity, receipt_status) "
         + "VALUES (?, ?, ?, ?, ?, ?, ?)";
@@ -29,7 +29,7 @@ public class ExternalOrderReceiptDAO {
   }
 
   public List<ExternalOrderReceiptDTO> findAll(Connection mariaConn) throws SQLException {
-    String sql = "SELECT * FROM external_order_receipt ORDER BY created_at DESC";
+    String sql = "SELECT * FROM EXTERNAL_ORDER_RECEIPT ORDER BY created_at DESC";
     List<ExternalOrderReceiptDTO> list = new ArrayList<>();
 
     try (PreparedStatement pstmt = mariaConn.prepareStatement(sql);
@@ -44,7 +44,7 @@ public class ExternalOrderReceiptDAO {
 
   public ExternalOrderReceiptDTO findByInternalOrderRequestId(Connection mariaConn,
       long internalOrderRequestId) throws SQLException {
-    String sql = "SELECT * FROM external_order_receipt WHERE internal_order_request_id = ?";
+    String sql = "SELECT * FROM EXTERNAL_ORDER_RECEIPT WHERE internal_order_request_id = ?";
 
     try (PreparedStatement pstmt = mariaConn.prepareStatement(sql)) {
       pstmt.setLong(1, internalOrderRequestId);
@@ -64,7 +64,7 @@ public class ExternalOrderReceiptDAO {
       Connection mariaConn,
       External_OrderStatus status
   ) throws SQLException {
-    String sql = "SELECT * FROM external_order_receipt "
+    String sql = "SELECT * FROM EXTERNAL_ORDER_RECEIPT "
         + "WHERE receipt_status = ? "
         + "ORDER BY created_at DESC";
 
@@ -85,7 +85,7 @@ public class ExternalOrderReceiptDAO {
 
   // 접수증 상태 업데이트
   public int updateStatus(Connection mariaConn, long internalRequestId, External_OrderStatus status) throws SQLException {
-    String sql = "UPDATE external_order_receipt SET receipt_status = ? WHERE internal_order_request_id  = ? AND receipt_status = ?";
+    String sql = "UPDATE EXTERNAL_ORDER_RECEIPT SET receipt_status = ? WHERE internal_order_request_id  = ? AND receipt_status = ?";
     try (PreparedStatement pstmt = mariaConn.prepareStatement(sql)) {
       pstmt.setString(1, status.name());
       pstmt.setLong(2, internalRequestId);

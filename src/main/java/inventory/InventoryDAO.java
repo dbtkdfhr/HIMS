@@ -26,12 +26,12 @@ public class InventoryDAO {
         + "si.store_id, s.store_name, s.floor_info, s.store_location, si.product_id, "
         + "si.current_quantity, si.safety_quantity, si.updated_at, si.is_low_stock, "
         + "p.product_name, p.price, p.season_type, p.product_status, b.brand_name, "
-        + "c.category_name " + "FROM store_inventory si "
-        + "JOIN store s ON si.store_id = s.store_id "
-        + "JOIN branch br ON s.branch_id = br.branch_id "
-        + "JOIN product p ON si.product_id = p.product_id "
-        + "JOIN brand b ON p.brand_id = b.brand_id "
-        + "JOIN category c ON p.category_id = c.category_id " + "WHERE 1 = 1 ");
+        + "c.category_name " + "FROM STORE_INVENTORY si "
+        + "JOIN STORE s ON si.store_id = s.store_id "
+        + "JOIN BRANCH br ON s.branch_id = br.branch_id "
+        + "JOIN PRODUCT p ON si.product_id = p.product_id "
+        + "JOIN BRAND b ON p.brand_id = b.brand_id "
+        + "JOIN CATEGORY c ON p.category_id = c.category_id " + "WHERE 1 = 1 ");
 
     List<Object> params = new ArrayList<>();
 
@@ -87,7 +87,7 @@ public class InventoryDAO {
    */
   public int updateSafetyQuantity(int storeId, int productId, int newSafetyQty)
       throws SQLException {
-    String sql = "UPDATE store_inventory " + "SET safety_quantity = ?, updated_at = SYSDATE "
+    String sql = "UPDATE STORE_INVENTORY " + "SET safety_quantity = ?, updated_at = SYSDATE "
         + "WHERE store_id = ? AND product_id = ?";
 
     try (Connection conn = DBConnection.getConnection(DBType.ORACLE);
@@ -106,7 +106,7 @@ public class InventoryDAO {
    */
   public int updateCurrentQuantity(int storeId, int productId, int newCurrentQty)
       throws SQLException {
-    String sql = "UPDATE store_inventory " + "SET current_quantity = ?, updated_at = SYSDATE "
+    String sql = "UPDATE STORE_INVENTORY " + "SET current_quantity = ?, updated_at = SYSDATE "
         + "WHERE store_id = ? AND product_id = ?";
 
     try (Connection conn = DBConnection.getConnection(DBType.ORACLE);
