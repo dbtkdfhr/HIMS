@@ -157,7 +157,7 @@ public class InventoryDAO {
     }
   }
 
-  public int updateCurrentQuantity(int storeId, int productId, int newCurrentQty) {
+  public int updateCurrentQuantity(int storeId, int productId, int newCurrentQty) throws SQLException {
     String sql = "UPDATE store_inventory " + "SET current_quantity = ?, updated_at = SYSDATE "
         + "WHERE store_id = ? AND product_id = ?";
 
@@ -170,8 +170,6 @@ public class InventoryDAO {
 
       return pstmt.executeUpdate();
 
-    } catch (SQLException e) {
-      throw new RuntimeException("현재재고 변경 중 데이터베이스 오류가 발생했습니다.", e);
     }
   }
 

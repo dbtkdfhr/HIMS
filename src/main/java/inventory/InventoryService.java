@@ -1,5 +1,6 @@
 package inventory;
 
+import java.sql.SQLException;
 import java.util.List;
 import exception.MismatchQuantityException;
 
@@ -78,7 +79,8 @@ public class InventoryService {
   }
 
   // 현재재고 수량 변경
-  public boolean updateCurrentQuantity(int storeId, int productId, int newCurrentQty) {
+  public boolean updateCurrentQuantity(int storeId, int productId, int newCurrentQty)
+      throws SQLException {
     validateInventoryKey(storeId, productId);
     validateNonNegativeQuantity(newCurrentQty, "현재재고 수량");
 
