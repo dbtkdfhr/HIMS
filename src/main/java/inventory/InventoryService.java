@@ -5,7 +5,15 @@ import exception.MismatchQuantityException;
 
 public class InventoryService {
 
-  private final InventoryDAO inventoryDAO = new InventoryDAO();
+  private final InventoryDAO inventoryDAO;
+
+  public InventoryService(){
+    this(new InventoryDAO());
+  }
+
+  public InventoryService(InventoryDAO inventoryDAO) {
+    this.inventoryDAO = inventoryDAO;
+  }
 
   // [INV-01] 내 매장 전체 재고 목록 조회
   public List<InventoryDTO> getInventoryList(int storeId) {
