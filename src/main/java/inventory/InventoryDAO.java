@@ -15,7 +15,7 @@ public class InventoryDAO {
 
   // [INV-01] 내 매장 전체 재고 목록 조회 || [INV-02] 안전재고 미만 상품만 조회 || [INV-03] 재고 검색 (브랜드명 / 카테고리명 / 상품명 키워드)
   public List<InventoryDTO> searchInventory(int storeId, String brandName, String categoryName,
-      String keyword, boolean isLowStockOnly) {
+      String keyword, boolean isLowStockOnly) throws SQLException {
     List<InventoryDTO> list = new ArrayList<>();
 
     StringBuilder sql = new StringBuilder("SELECT br.branch_id, br.branch_name, "
@@ -63,8 +63,6 @@ public class InventoryDAO {
         }
       }
 
-    } catch (SQLException e) {
-      throw new RuntimeException("재고 목록 조회 중 데이터베이스 오류가 발생했습니다.", e);
     }
 
     return list;
@@ -74,7 +72,7 @@ public class InventoryDAO {
   // [BM-INV-02] 지점/브랜드/카테고리/매장/상품명 기준 검색
   // [BM-INV-03] 재고 부족 상품만 조회
   public List<InventoryDTO> searchAllStoreInventory(String branchName, String brandName,
-      String categoryName, String storeName, String productName, boolean isLowStockOnly) {
+      String categoryName, String storeName, String productName, boolean isLowStockOnly) throws SQLException{
     List<InventoryDTO> list = new ArrayList<>();
 
     StringBuilder sql = new StringBuilder("SELECT br.branch_id, br.branch_name, "
@@ -131,8 +129,6 @@ public class InventoryDAO {
         }
       }
 
-    } catch (SQLException e) {
-      throw new RuntimeException("전체 입점매장 재고 목록 조회 중 데이터베이스 오류가 발생했습니다.", e);
     }
 
     return list;

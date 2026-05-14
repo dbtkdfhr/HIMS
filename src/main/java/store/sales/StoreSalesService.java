@@ -1,11 +1,10 @@
 package store.sales;
 
-import common.DBConnection;
+import common.TransactionHelper;
 import common.type.DBType;
 import exception.MismatchQuantityException;
 import inventory.InventoryDTO;
 import inventory.InventoryService;
-import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -14,6 +13,7 @@ import store.StoreDAO;
 import store.inventory.StoreInventoryDAO;
 
 public class StoreSalesService {
+
   private final StoreInventoryDAO storeInventoryDAO = new StoreInventoryDAO();
   private final InventoryService inventoryService = new InventoryService();
   private final StoreDAO storeDAO = new StoreDAO();
@@ -21,7 +21,14 @@ public class StoreSalesService {
 
   public List<String> findSaleTargetSummaries(int storeId) {
     List<String> result = new ArrayList<>();
-    List<InventoryDTO> inventories = inventoryService.getInventoryList(storeId);
+    List<InventoryDTO> inventories;
+
+    try {
+      inventories = inventoryService.getInventoryList(storeId);
+    } catch (SQLException e) {
+      e.printStackTrace();
+      return result;
+    }
 
     for (InventoryDTO inventoryDTO : inventories) {
       String text = "";
@@ -51,27 +58,15 @@ public class StoreSalesService {
       throw new MismatchQuantityException("판매 수량은 1개 이상이어야 합니다.");
     }
 
-    Connection conn = null;
-
-    try {
-      conn = DBConnection.getConnection(DBType.ORACLE);
-      conn.setAutoCommit(false);
-
+    return TransactionHelper.execute(DBType.ORACLE, conn -> {
       int updateCount = storeInventoryDAO.decreaseQuantity(conn, storeId, productId, quantity);
 
       if (updateCount == 0) {
         throw new MismatchQuantityException("판매 가능한 재고가 부족하거나 재고 정보가 없습니다.");
       }
 
-      conn.commit();
-
       return updateCount;
-    } catch (SQLException | RuntimeException e) {
-      rollback(conn);
-      throw e;
-    } finally {
-      DBConnection.close(conn);
-    }
+    });
   }
 
   private String nullable(Object value) {
@@ -82,15 +77,4 @@ public class StoreSalesService {
     return String.valueOf(value);
   }
 
-  private void rollback(Connection conn) {
-    if (conn == null) {
-      return;
-    }
-
-    try {
-      conn.rollback();
-    } catch (SQLException e) {
-      e.printStackTrace();
-    }
-  }
 }
