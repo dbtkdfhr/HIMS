@@ -20,7 +20,7 @@ public class InventoryDAO {
     List<InventoryDTO> list = new ArrayList<>();
 
     StringBuilder sql = new StringBuilder(
-        "SELECT br.branch_id, br.branch_name, " + "si.store_id, s.store_name, si.product_id, "
+        "SELECT br.branch_id, br.branch_name, " + "si.store_id, s.store_name, s.floor_info, s.store_location, si.product_id, "
             + "si.current_quantity, si.safety_quantity, si.updated_at, si.is_low_stock, "
             + "p.product_name, p.price, p.season_type, p.product_status, b.brand_name, "
             + "c.category_name " + "FROM store_inventory si "
@@ -92,6 +92,8 @@ public class InventoryDAO {
     dto.setBranchName(rs.getString("branch_name"));
     dto.setStoreId(GetNullableVariable.getNullableLong(rs, "store_id"));
     dto.setStoreName(rs.getString("store_name"));
+    dto.setFloorInfo(rs.getString("floor_info"));
+    dto.setStoreLocation(rs.getString("store_location"));
     dto.setProductId(GetNullableVariable.getNullableLong(rs, "product_id"));
     dto.setCurrentQuantity(rs.getInt("current_quantity"));
     dto.setSafetyQuantity(rs.getInt("safety_quantity"));

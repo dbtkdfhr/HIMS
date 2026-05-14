@@ -8,27 +8,49 @@ public class BranchInventoryService {
 
   private final BranchInventoryDAO branchInventoryDAO = new BranchInventoryDAO();
 
-  // [BM-INV-01] 지점 관리자 전체 입점매장 재고 목록 조회
+  // [BM-INV-01] 전국 모든 지점/매장 재고 목록 조회
   public List<InventoryDTO> getAllStoreInventoryList() throws SQLException {
-    return branchInventoryDAO.searchAllStoreInventory(null, null, null, null, null, false);
+    return getAllStoreInventoryList(null);
   }
 
-  // [BM-INV-02] 지점/브랜드/카테고리/매장/상품명 기준 검색
-  public List<InventoryDTO> searchAllStoreInventory(String branchName, String brandName,
+  // [BM-INV-01] 특정 지점의 전체 매장 재고 목록 조회
+  public List<InventoryDTO> getAllStoreInventoryList(Long branchId) throws SQLException {
+    return branchInventoryDAO.searchAllStoreInventory(branchId, null, null, null, null, false);
+  }
+
+  // [BM-INV-02] 전국 단위 브랜드/매장/상품명 검색
+  public List<InventoryDTO> searchAllStoreInventory(String brandName, String categoryName,
+      String storeName, String productName) throws SQLException {
+    return searchAllStoreInventory(null, brandName, categoryName, storeName, productName);
+  }
+
+  // [BM-INV-02] 특정 지점 기준 브랜드/매장/상품명 검색
+  public List<InventoryDTO> searchAllStoreInventory(Long branchId, String brandName,
       String categoryName, String storeName, String productName) throws SQLException {
-    return branchInventoryDAO.searchAllStoreInventory(branchName, brandName, categoryName,
+    return branchInventoryDAO.searchAllStoreInventory(branchId, brandName, categoryName,
         storeName, productName, false);
   }
 
-  // [BM-INV-03] 재고 부족 상품만 조회
+  // [BM-INV-03] 전국 단위 재고 부족 상품 조회
   public List<InventoryDTO> getAllStoreLowStockList() throws SQLException {
-    return branchInventoryDAO.searchAllStoreInventory(null, null, null, null, null, true);
+    return getAllStoreLowStockList(null);
   }
 
-  // [BM-INV-03] 검색 조건을 포함한 재고 부족 상품 조회
-  public List<InventoryDTO> searchAllStoreLowStockInventory(String branchName, String brandName,
+  // [BM-INV-03] 특정 지점 내 재고 부족 상품 조회
+  public List<InventoryDTO> getAllStoreLowStockList(Long branchId) throws SQLException {
+    return branchInventoryDAO.searchAllStoreInventory(branchId, null, null, null, null, true);
+  }
+
+  // [BM-INV-03] 전국 단위 재고 부족 상품 검색 (조건 포함)
+  public List<InventoryDTO> searchAllStoreLowStockInventory(String brandName, String categoryName,
+      String storeName, String productName) throws SQLException {
+    return searchAllStoreLowStockInventory(null, brandName, categoryName, storeName, productName);
+  }
+
+  // [BM-INV-03] 특정 지점 내 재고 부족 상품 검색 (조건 포함)
+  public List<InventoryDTO> searchAllStoreLowStockInventory(Long branchId, String brandName,
       String categoryName, String storeName, String productName) throws SQLException {
-    return branchInventoryDAO.searchAllStoreInventory(branchName, brandName, categoryName,
+    return branchInventoryDAO.searchAllStoreInventory(branchId, brandName, categoryName,
         storeName, productName, true);
   }
 }

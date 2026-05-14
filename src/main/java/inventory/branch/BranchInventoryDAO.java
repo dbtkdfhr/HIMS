@@ -17,13 +17,13 @@ public class BranchInventoryDAO {
   // [BM-INV-01] 지점 관리자 전체 입점매장 재고 목록 조회
   // [BM-INV-02] 지점/브랜드/카테고리/매장/상품명 기준 검색
   // [BM-INV-03] 재고 부족 상품만 조회
-  public List<InventoryDTO> searchAllStoreInventory(String branchName, String brandName,
+  public List<InventoryDTO> searchAllStoreInventory(Long branchId, String brandName,
       String categoryName, String storeName, String productName, boolean isLowStockOnly)
       throws SQLException {
     List<InventoryDTO> list = new ArrayList<>();
 
     StringBuilder sql = new StringBuilder(
-        "SELECT br.branch_id, br.branch_name, " + "si.store_id, s.store_name, si.product_id, "
+        "SELECT br.branch_id, br.branch_name, " + "si.store_id, s.store_name, s.floor_info, s.store_location, si.product_id, "
             + "si.current_quantity, si.safety_quantity, si.updated_at, si.is_low_stock, "
             + "p.product_name, p.price, p.season_type, p.product_status, b.brand_name, "
             + "c.category_name " + "FROM store_inventory si "
@@ -38,9 +38,9 @@ public class BranchInventoryDAO {
     if (isLowStockOnly) {
       sql.append("AND si.is_low_stock = 'Y' ");
     }
-    if (isNotBlank(branchName)) {
-      sql.append("AND br.branch_name LIKE ? ");
-      params.add("%" + branchName + "%");
+    if (branchId != null) {
+      sql.append("AND br.branch_id = ? ");
+      params.add(branchId);
     }
     if (isNotBlank(brandName)) {
       sql.append("AND b.brand_name LIKE ? ");
@@ -87,6 +87,8 @@ public class BranchInventoryDAO {
     dto.setBranchName(rs.getString("branch_name"));
     dto.setStoreId(GetNullableVariable.getNullableLong(rs, "store_id"));
     dto.setStoreName(rs.getString("store_name"));
+    dto.setFloorInfo(rs.getString("floor_info"));
+    dto.setStoreLocation(rs.getString("store_location"));
     dto.setProductId(GetNullableVariable.getNullableLong(rs, "product_id"));
     dto.setCurrentQuantity(rs.getInt("current_quantity"));
     dto.setSafetyQuantity(rs.getInt("safety_quantity"));
