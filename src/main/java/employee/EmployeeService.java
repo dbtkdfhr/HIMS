@@ -67,6 +67,32 @@ public class EmployeeService {
     }
   }
 
+  public int resetPassword(long employeeId, String newPassword) throws SQLException {
+    try {
+      validateEmployeeId(employeeId);
+      validateNotBlank(newPassword, "초기화 비밀번호");
+      validatePasswordLength(newPassword);
+
+      EmployeeDTO employee = employeeDAO.findEmployeeById(employeeId);
+      if (employee == null) {
+        throw new NotFoundException("존재하지 않는 직원입니다.");
+      }
+
+      EmployeeDTO updateTarget = new EmployeeDTO();
+      updateTarget.setEmployeeId(employeeId);
+      updateTarget.setPassword(newPassword);
+
+      int result = employeeDAO.updatePassword(updateTarget);
+      if (result == 0) {
+        throw new NotFoundException("존재하지 않는 직원입니다.");
+      }
+
+      return result;
+    } catch (SQLException | RuntimeException e) {
+      throw e;
+    }
+  }
+
   private void validateRequired(EmployeeDTO employee) {
     if (employee == null) {
       throw new IllegalArgumentException("직원 정보는 필수입니다.");
