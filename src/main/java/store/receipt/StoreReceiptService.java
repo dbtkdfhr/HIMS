@@ -1,6 +1,6 @@
 package store.receipt;
 
-import common.DBConnection;
+import common.TransactionHelper;
 import common.type.DBType;
 import common.type.OrderStatus;
 import common.type.ReceiptStatus;
@@ -73,12 +73,7 @@ public class StoreReceiptService {
 
   private int processReceipt(long orderRequestId, long confirmEmployeeId, Integer receivedQuantity,
       String differenceReason, ReceiptStatus receiptStatus) throws SQLException {
-    Connection conn = null;
-
-    try {
-      conn = DBConnection.getConnection(DBType.ORACLE);
-      conn.setAutoCommit(false);
-
+    return TransactionHelper.execute(DBType.ORACLE, conn -> {
       OrderRequestDTO orderRequestDTO = findReceiptableOrderRequest(conn, orderRequestId);
       int expectedQuantity = getExpectedQuantity(orderRequestDTO);
       int actualReceivedQuantity = getActualReceivedQuantity(receiptStatus, receivedQuantity,
@@ -100,15 +95,8 @@ public class StoreReceiptService {
         increaseInventory(conn, orderRequestDTO, actualReceivedQuantity);
       }
 
-      conn.commit();
-
       return insertCount;
-    } catch (SQLException | RuntimeException e) {
-      rollback(conn);
-      throw e;
-    } finally {
-      DBConnection.close(conn);
-    }
+    });
   }
 
   public List<StoreReceiptDTO> findReceiptHistory() throws SQLException {
@@ -155,27 +143,15 @@ public class StoreReceiptService {
       throw new MismatchQuantityException("판매 수량은 1개 이상이어야 합니다.");
     }
 
-    Connection conn = null;
-
-    try {
-      conn = DBConnection.getConnection(DBType.ORACLE);
-      conn.setAutoCommit(false);
-
+    return TransactionHelper.execute(DBType.ORACLE, conn -> {
       int updateCount = storeInventoryDAO.decreaseQuantity(conn, storeId, productId, quantity);
 
       if (updateCount == 0) {
         throw new MismatchQuantityException("판매 가능한 재고가 부족하거나 재고 정보가 없습니다.");
       }
 
-      conn.commit();
-
       return updateCount;
-    } catch (SQLException | RuntimeException e) {
-      rollback(conn);
-      throw e;
-    } finally {
-      DBConnection.close(conn);
-    }
+    });
   }
 
   private OrderRequestDTO findReceiptableOrderRequest(Connection conn, long orderRequestId)
@@ -314,15 +290,4 @@ public class StoreReceiptService {
     }
   }
 
-  private void rollback(Connection conn) {
-    if (conn == null) {
-      return;
-    }
-
-    try {
-      conn.rollback();
-    } catch (SQLException e) {
-      e.printStackTrace();
-    }
-  }
 }
