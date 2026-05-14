@@ -5,16 +5,16 @@ import employee.EmployeeDTO;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
-import ui.data.MockDataStore;
+import ui.data.UiServiceStore;
 
 public class HimsApplication {
 
   private final JFrame frame;
-  private final MockDataStore store;
+  private final UiServiceStore store;
   private JFrame externalSupplierFrame;
 
   public HimsApplication() {
-    this.store = new MockDataStore();
+    this.store = new UiServiceStore();
     this.frame = new JFrame("HIMS 재고 및 입출고 관리 시스템");
     frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     frame.setSize(1240, 820);

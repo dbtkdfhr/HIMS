@@ -162,7 +162,7 @@ public class StoreReceiptService {
       throw new NotFoundException("존재하지 않는 발주 요청입니다.");
     }
 
-    if (!orderRequestDTO.getOrderStatus().equals(OrderStatus.SENT.name())) {
+    if (!orderRequestDTO.getOrderStatus().equals(OrderStatus.RECEIVED.name())) {
       throw new NotReceptableException("입고 처리 가능한 발주 상태가 아닙니다.");
     }
 

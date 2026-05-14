@@ -19,7 +19,7 @@ public class OrderRequestDAO {
   public List<OrderRequestDTO> findAll() throws SQLException {
     List<OrderRequestDTO> orderRequestDTOList = new ArrayList<>();
 
-    String sql = "SELECT * FROM order_request ORDER BY requested_at DESC";
+    String sql = "SELECT * FROM ORDER_REQUEST ORDER BY requested_at DESC";
 
     try (Connection conn = DBConnection.getConnection(DBType.ORACLE);
         PreparedStatement pstmt = conn.prepareStatement(sql);
@@ -55,7 +55,7 @@ public class OrderRequestDAO {
 
   public OrderRequestDTO findByOrderRequestId(Connection connection, long orderRequestId)
       throws SQLException {
-    String sql = "SELECT * FROM order_request WHERE order_request_id = ?";
+    String sql = "SELECT * FROM ORDER_REQUEST WHERE order_request_id = ?";
 
     try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
       preparedStatement.setLong(1, orderRequestId);
@@ -83,7 +83,7 @@ public class OrderRequestDAO {
     sql += "SELECT orq.* ";
     sql += "FROM ORDER_REQUEST orq ";
     sql += "WHERE orq.store_id = ? ";
-    sql += "AND orq.order_status = 'SENT' ";
+    sql += "AND orq.order_status = 'RECEIVED' ";
     sql += "AND NOT EXISTS (";
     sql += "SELECT 1 ";
     sql += "FROM STORE_RECEIPT sr ";
@@ -146,7 +146,7 @@ public class OrderRequestDAO {
 
   public int updateStatusAndQuantity(Connection oracleConn, long requestId, int approvedQuantity, long employeeId)
       throws SQLException {
-    String sql = "UPDATE order_request SET order_status = ?, approved_quantity = ?, "
+    String sql = "UPDATE ORDER_REQUEST SET order_status = ?, approved_quantity = ?, "
         + "approval_employee_id = ?, approved_at = SYSDATE WHERE order_request_id = ?";
 
     try (PreparedStatement pstmt = oracleConn.prepareStatement(sql)) {
@@ -162,7 +162,7 @@ public class OrderRequestDAO {
 
   public int updateRejectStatus(Connection oracleConn, long requestId, String rejectReason, long employeeId)
       throws SQLException {
-    String sql = "UPDATE order_request SET order_status = ?, reject_reason = ?, "
+    String sql = "UPDATE ORDER_REQUEST SET order_status = ?, reject_reason = ?, "
         + "approval_employee_id = ?, rejected_at = SYSDATE WHERE order_request_id = ?";
 
     try (PreparedStatement pstmt = oracleConn.prepareStatement(sql)) {
@@ -171,6 +171,35 @@ public class OrderRequestDAO {
       pstmt.setString(2, rejectReason);
       pstmt.setLong(3, employeeId);
       pstmt.setLong(4, requestId);
+
+      return pstmt.executeUpdate();
+    }
+  }
+
+  public int updateCanceledByExternalReject(Connection oracleConn, long requestId, String rejectReason)
+      throws SQLException {
+    String sql = "UPDATE ORDER_REQUEST SET order_status = ?, reject_reason = ?, rejected_at = SYSDATE "
+        + "WHERE order_request_id = ? AND order_status = ?";
+
+    try (PreparedStatement pstmt = oracleConn.prepareStatement(sql)) {
+      pstmt.setString(1, OrderStatus.CANCELED.name());
+      pstmt.setString(2, rejectReason);
+      pstmt.setLong(3, requestId);
+      pstmt.setString(4, OrderStatus.APPROVED.name());
+
+      return pstmt.executeUpdate();
+    }
+  }
+
+  public int updateReceivedByExternalCompletion(Connection oracleConn, long requestId)
+      throws SQLException {
+    String sql = "UPDATE ORDER_REQUEST SET order_status = ? "
+        + "WHERE order_request_id = ? AND order_status = ?";
+
+    try (PreparedStatement pstmt = oracleConn.prepareStatement(sql)) {
+      pstmt.setString(1, OrderStatus.RECEIVED.name());
+      pstmt.setLong(2, requestId);
+      pstmt.setString(3, OrderStatus.APPROVED.name());
 
       return pstmt.executeUpdate();
     }
@@ -244,5 +273,20 @@ public class OrderRequestDAO {
       }
     }
     return null;
+  }
+
+  public int updateStatus(Connection oracleConn, long orderRequestId, OrderStatus orderStatus)
+      throws SQLException {
+
+    String sql = "UPDATE ORDER_REQUEST "
+        + "SET order_status = ? "
+        + "WHERE order_request_id = ?";
+
+    try (PreparedStatement pstmt = oracleConn.prepareStatement(sql)) {
+      pstmt.setString(1, orderStatus.name());
+      pstmt.setLong(2, orderRequestId);
+
+      return pstmt.executeUpdate();
+    }
   }
 }

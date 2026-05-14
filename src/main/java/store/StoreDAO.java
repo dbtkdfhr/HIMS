@@ -14,6 +14,47 @@ import java.util.List;
 
 public class StoreDAO {
   /* SELECT */
+  public List<StoreDTO> findAll() throws SQLException {
+    String sql = "SELECT " +
+        "store_id, " +
+        "branch_id, " +
+        "brand_id, " +
+        "store_name, " +
+        "floor_info, " +
+        "store_location, " +
+        "operation_status, " +
+        "created_at, " +
+        "updated_at " +
+        "FROM STORE " +
+        "ORDER BY store_id";
+
+    try (
+        Connection conn = DBConnection.getConnection(DBType.ORACLE);
+        PreparedStatement pstmt = conn.prepareStatement(sql);
+        ResultSet rs = pstmt.executeQuery()
+    ) {
+      List<StoreDTO> stores = new ArrayList<>();
+
+      while (rs.next()) {
+        StoreDTO storeDTO = new StoreDTO();
+
+        storeDTO.setStoreId(rs.getLong("store_id"));
+        storeDTO.setBranchId(rs.getLong("branch_id"));
+        storeDTO.setBrandId(rs.getLong("brand_id"));
+        storeDTO.setStoreName(rs.getString("store_name"));
+        storeDTO.setFloorInfo(rs.getString("floor_info"));
+        storeDTO.setStoreLocation(rs.getString("store_location"));
+        storeDTO.setOperationStatus(rs.getString("operation_status"));
+        storeDTO.setCreatedAt(getNullableLocalDateTime(rs, "created_at"));
+        storeDTO.setUpdatedAt(getNullableLocalDateTime(rs, "updated_at"));
+
+        stores.add(storeDTO);
+      }
+
+      return stores;
+    }
+  }
+
   // 지점 id로 하위 매장 리스트 조회
   public List<StoreDTO> getStoresByBranchId(long branchId) throws SQLException {
     String sql = "SELECT " +
@@ -26,7 +67,7 @@ public class StoreDAO {
         "operation_status, " +
         "created_at, " +
         "updated_at " +
-        "FROM store " +
+        "FROM STORE " +
         "WHERE branch_id = ?";
 
     try (
@@ -62,7 +103,7 @@ public class StoreDAO {
   /* INSERT */
   // 입점 매장 등록
   public int insertStore(StoreDTO store) throws SQLException {
-    String sql = "INSERT INTO store (" +
+    String sql = "INSERT INTO STORE (" +
         "branch_id, " +
         "brand_id, " +
         "store_name, " +
@@ -132,7 +173,7 @@ public class StoreDAO {
   /* UPDATE */
   // 입점매장 위치 수정
   public int updateStoreLocation(StoreDTO store) throws SQLException {
-    String sql = "UPDATE store SET " +
+    String sql = "UPDATE STORE SET " +
         "store_location = ?, " +
         "updated_at = SYSDATE " +
         "WHERE store_id = ?";
@@ -155,7 +196,7 @@ public class StoreDAO {
 
   // 입점매장 층 수정
   public int updateStoreFloorInfo(StoreDTO store) throws SQLException {
-    String sql = "UPDATE store SET " +
+    String sql = "UPDATE STORE SET " +
         "floor_info = ?, " +
         "updated_at = SYSDATE " +
         "WHERE store_id = ?";
@@ -178,7 +219,7 @@ public class StoreDAO {
 
   // 입점매장 운영상태 수정
   public int updateStoreOperationStatus(StoreDTO store) throws SQLException {
-    String sql = "UPDATE store SET " +
+    String sql = "UPDATE STORE SET " +
         "operation_status = ?, " +
         "updated_at = SYSDATE " +
         "WHERE store_id = ?";

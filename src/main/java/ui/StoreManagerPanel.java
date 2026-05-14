@@ -23,8 +23,9 @@ import javax.swing.table.DefaultTableModel;
 import order.request.OrderRequestDTO;
 import store.receipt.StoreReceiptDTO;
 import ui.common.UiConstants;
+import ui.common.UiExceptionHandler;
 import ui.common.UiTableFactory;
-import ui.data.MockDataStore;
+import ui.data.UiServiceStore;
 
 public class StoreManagerPanel {
 
@@ -40,11 +41,11 @@ public class StoreManagerPanel {
       "판매 처리"
   };
 
-  private final MockDataStore store;
+  private final UiServiceStore store;
   private final EmployeeDTO user;
   private final Consumer<String> logger;
 
-  public StoreManagerPanel(MockDataStore store, EmployeeDTO user, Consumer<String> logger) {
+  public StoreManagerPanel(UiServiceStore store, EmployeeDTO user, Consumer<String> logger) {
     this.store = store;
     this.user = user;
     this.logger = logger;
@@ -70,10 +71,10 @@ public class StoreManagerPanel {
     JTable table = UiTableFactory.table(model);
     UiTableFactory.applyRowHighlight(table, row -> Boolean.TRUE.equals(model.getValueAt(row, 8)));
     JButton refresh = new JButton("새로고침");
-    refresh.addActionListener(event -> fillInventory(model, lowOnly));
+    refresh.addActionListener(event -> UiExceptionHandler.run(logger, () -> fillInventory(model, lowOnly)));
     panel.add(toolbar(refresh), BorderLayout.NORTH);
     panel.add(UiTableFactory.scroll(table), BorderLayout.CENTER);
-    fillInventory(model, lowOnly);
+    UiExceptionHandler.run(logger, () -> fillInventory(model, lowOnly));
     return panel;
   }
 
@@ -85,9 +86,11 @@ public class StoreManagerPanel {
     JButton create = new JButton("발주 요청 생성");
     JPanel form = formPanel();
 
-    for (InventoryDTO inventory : store.findInventoriesByStore(storeId())) {
-      productBox.addItem(inventory);
-    }
+    UiExceptionHandler.run(logger, () -> {
+      for (InventoryDTO inventory : store.findInventoriesByStore(storeId())) {
+        productBox.addItem(inventory);
+      }
+    });
     productBox.setRenderer((list, value, index, isSelected, cellHasFocus) -> {
       JLabel label = new JLabel(value == null ? "" : value.getProductName() + " | 현재 "
           + value.getCurrentQuantity() + " | 안전 " + value.getSafetyQuantity());
@@ -106,8 +109,7 @@ public class StoreManagerPanel {
     form.add(new JLabel());
     form.add(create);
 
-    create.addActionListener(event -> {
-      try {
+    create.addActionListener(event -> UiExceptionHandler.run(logger, () -> {
         InventoryDTO selected = (InventoryDTO) productBox.getSelectedItem();
         if (selected == null) {
           throw new InputException("상품을 선택해 주세요.");
@@ -117,10 +119,7 @@ public class StoreManagerPanel {
         OrderRequestDTO order = store.createOrderRequest(storeId(), selected.getProductId(),
             user.getEmployeeId(), quantity, reason);
         logger.accept("발주 요청 생성 완료: " + order.getOrderRequestId());
-      } catch (RuntimeException e) {
-        showError(panel, e);
-      }
-    });
+    }));
 
     panel.add(form, BorderLayout.NORTH);
     return panel;
@@ -131,10 +130,11 @@ public class StoreManagerPanel {
     DefaultTableModel model = orderModel();
     JTable table = UiTableFactory.table(model);
     JButton refresh = new JButton("새로고침");
-    refresh.addActionListener(event -> fillOrders(model, OrderStatus.SENT.name(), "APPROVED"));
+    refresh.addActionListener(event -> UiExceptionHandler.run(logger,
+        () -> fillOrders(model, OrderStatus.RECEIVED.name())));
     panel.add(toolbar(refresh), BorderLayout.NORTH);
     panel.add(UiTableFactory.scroll(table), BorderLayout.CENTER);
-    fillOrders(model, OrderStatus.SENT.name(), "APPROVED");
+    UiExceptionHandler.run(logger, () -> fillOrders(model, OrderStatus.RECEIVED.name()));
     return panel;
   }
 
@@ -160,8 +160,7 @@ public class StoreManagerPanel {
     controls.add(process);
     controls.add(refresh);
 
-    process.addActionListener(event -> {
-      try {
+    process.addActionListener(event -> UiExceptionHandler.run(logger, () -> {
         long orderId = selectedOrderId(table);
         if ("정상 입고 처리".equals(title)) {
           store.confirmReceipt(orderId, user.getEmployeeId());
@@ -172,17 +171,15 @@ public class StoreManagerPanel {
         } else {
           store.rejectReceipt(orderId, user.getEmployeeId(), required(reasonField.getText(), "반려사유"));
         }
-        fillOrders(model, OrderStatus.SENT.name(), "APPROVED");
+        fillOrders(model, OrderStatus.RECEIVED.name());
         logger.accept(title + " 완료: 발주요청 " + orderId);
-      } catch (RuntimeException e) {
-        showError(panel, e);
-      }
-    });
-    refresh.addActionListener(event -> fillOrders(model, OrderStatus.SENT.name(), "APPROVED"));
+    }));
+    refresh.addActionListener(event -> UiExceptionHandler.run(logger,
+        () -> fillOrders(model, OrderStatus.RECEIVED.name())));
 
     panel.add(controls, BorderLayout.NORTH);
     panel.add(UiTableFactory.scroll(table), BorderLayout.CENTER);
-    fillOrders(model, OrderStatus.SENT.name(), "APPROVED");
+    UiExceptionHandler.run(logger, () -> fillOrders(model, OrderStatus.RECEIVED.name()));
     return panel;
   }
 
@@ -192,10 +189,10 @@ public class StoreManagerPanel {
         "상태", "사유");
     JTable table = UiTableFactory.table(model);
     JButton refresh = new JButton("새로고침");
-    refresh.addActionListener(event -> fillReceipts(model));
+    refresh.addActionListener(event -> UiExceptionHandler.run(logger, () -> fillReceipts(model)));
     panel.add(toolbar(refresh), BorderLayout.NORTH);
     panel.add(UiTableFactory.scroll(table), BorderLayout.CENTER);
-    fillReceipts(model);
+    UiExceptionHandler.run(logger, () -> fillReceipts(model));
     return panel;
   }
 
@@ -206,9 +203,11 @@ public class StoreManagerPanel {
     JButton process = new JButton("판매 처리");
     JPanel form = formPanel();
 
-    for (InventoryDTO inventory : store.findInventoriesByStore(storeId())) {
-      productBox.addItem(inventory);
-    }
+    UiExceptionHandler.run(logger, () -> {
+      for (InventoryDTO inventory : store.findInventoriesByStore(storeId())) {
+        productBox.addItem(inventory);
+      }
+    });
     productBox.setRenderer((list, value, index, isSelected, cellHasFocus) -> {
       JLabel label = new JLabel(value == null ? "" : value.getProductName() + " | 현재 "
           + value.getCurrentQuantity());
@@ -225,8 +224,7 @@ public class StoreManagerPanel {
     form.add(new JLabel());
     form.add(process);
 
-    process.addActionListener(event -> {
-      try {
+    process.addActionListener(event -> UiExceptionHandler.run(logger, () -> {
         InventoryDTO selected = (InventoryDTO) productBox.getSelectedItem();
         if (selected == null) {
           throw new InputException("상품을 선택해 주세요.");
@@ -235,10 +233,7 @@ public class StoreManagerPanel {
         store.processSale(storeId(), selected.getProductId(), quantity);
         productBox.repaint();
         logger.accept("판매 처리 완료: " + selected.getProductName() + " " + quantity + "개");
-      } catch (RuntimeException e) {
-        showError(panel, e);
-      }
-    });
+    }));
 
     panel.add(form, BorderLayout.NORTH);
     return panel;
@@ -254,7 +249,7 @@ public class StoreManagerPanel {
         "요청사유", "반려사유");
   }
 
-  private void fillInventory(DefaultTableModel model, boolean lowOnly) {
+  private void fillInventory(DefaultTableModel model, boolean lowOnly) throws Exception {
     model.setRowCount(0);
     List<InventoryDTO> list = lowOnly ? store.findLowStockByStore(storeId())
         : store.findInventoriesByStore(storeId());
@@ -273,11 +268,12 @@ public class StoreManagerPanel {
     }
   }
 
-  private void fillOrders(DefaultTableModel model, String status) {
+  private void fillOrders(DefaultTableModel model, String status) throws Exception {
     fillOrders(model, status, null);
   }
 
-  private void fillOrders(DefaultTableModel model, String status, String externalStatus) {
+  private void fillOrders(DefaultTableModel model, String status, String externalStatus)
+      throws Exception {
     model.setRowCount(0);
     for (OrderRequestDTO order : store.findOrdersByStore(storeId())) {
       if (!status.equals(order.getOrderStatus())) {
@@ -301,7 +297,7 @@ public class StoreManagerPanel {
     }
   }
 
-  private void fillReceipts(DefaultTableModel model) {
+  private void fillReceipts(DefaultTableModel model) throws Exception {
     model.setRowCount(0);
     for (StoreReceiptDTO receipt : store.findReceiptsByStore(storeId())) {
       OrderRequestDTO order = store.findOrder(receipt.getOrderRequestId());
@@ -376,7 +372,4 @@ public class StoreManagerPanel {
     return value == null ? "" : value;
   }
 
-  private void showError(JPanel panel, RuntimeException e) {
-    logger.accept("오류: " + e.getMessage());
-  }
 }

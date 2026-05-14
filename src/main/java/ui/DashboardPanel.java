@@ -16,11 +16,11 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import ui.common.UiConstants;
-import ui.data.MockDataStore;
+import ui.data.UiServiceStore;
 
 public class DashboardPanel extends JPanel {
 
-  private final MockDataStore store;
+  private final UiServiceStore store;
   private final EmployeeDTO user;
   private final Runnable onLogout;
   private final CardLayout cardLayout = new CardLayout();
@@ -28,7 +28,7 @@ public class DashboardPanel extends JPanel {
   private final JTextArea logArea = new JTextArea(5, 20);
   private final Map<String, JPanel> views = new LinkedHashMap<>();
 
-  public DashboardPanel(MockDataStore store, EmployeeDTO user, Runnable onLogout) {
+  public DashboardPanel(UiServiceStore store, EmployeeDTO user, Runnable onLogout) {
     this.store = store;
     this.user = user;
     this.onLogout = onLogout;

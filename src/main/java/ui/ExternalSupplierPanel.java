@@ -14,8 +14,9 @@ import javax.swing.JTextField;
 import javax.swing.table.DefaultTableModel;
 import order.request.OrderRequestDTO;
 import ui.common.UiConstants;
+import ui.common.UiExceptionHandler;
 import ui.common.UiTableFactory;
-import ui.data.MockDataStore;
+import ui.data.UiServiceStore;
 
 public class ExternalSupplierPanel {
 
@@ -25,13 +26,13 @@ public class ExternalSupplierPanel {
   };
 
   private static final String RECEIVED_STATUS = "RECEIVED";
-  private static final String APPROVED_STATUS = "APPROVED";
+  private static final String SHIPPED_STATUS = "SHIPPED";
   private static final String REJECTED_STATUS = "REJECTED";
 
-  private final MockDataStore store;
+  private final UiServiceStore store;
   private final Consumer<String> logger;
 
-  public ExternalSupplierPanel(MockDataStore store, Consumer<String> logger) {
+  public ExternalSupplierPanel(UiServiceStore store, Consumer<String> logger) {
     this.store = store;
     this.logger = logger;
   }
@@ -48,10 +49,10 @@ public class ExternalSupplierPanel {
     DefaultTableModel model = orderModel();
     JTable table = UiTableFactory.table(model);
     JButton refresh = new JButton("새로고침");
-    refresh.addActionListener(event -> fillExternalOrders(model, false));
+    refresh.addActionListener(event -> UiExceptionHandler.run(logger, () -> fillExternalOrders(model, false)));
     panel.add(toolbar(refresh), BorderLayout.NORTH);
     panel.add(UiTableFactory.scroll(table), BorderLayout.CENTER);
-    fillExternalOrders(model, false);
+    UiExceptionHandler.run(logger, () -> fillExternalOrders(model, false));
     return panel;
   }
 
@@ -70,32 +71,24 @@ public class ExternalSupplierPanel {
     controls.add(reject);
     controls.add(refresh);
 
-    approve.addActionListener(event -> {
-      try {
+    approve.addActionListener(event -> UiExceptionHandler.run(logger, () -> {
         long orderId = selectedOrderId(table);
         store.approveExternalOrder(orderId);
         fillExternalOrders(model, true);
         logger.accept("외부 발주처 승인 완료: " + orderId);
-      } catch (RuntimeException e) {
-        showError(e);
-      }
-    });
-    reject.addActionListener(event -> {
-      try {
+    }));
+    reject.addActionListener(event -> UiExceptionHandler.run(logger, () -> {
         long orderId = selectedOrderId(table);
         store.rejectExternalOrder(orderId, required(reasonField.getText(), "거절사유"));
         reasonField.setText("");
         fillExternalOrders(model, true);
         logger.accept("외부 발주처 거절 완료: " + orderId);
-      } catch (RuntimeException e) {
-        showError(e);
-      }
-    });
-    refresh.addActionListener(event -> fillExternalOrders(model, true));
+    }));
+    refresh.addActionListener(event -> UiExceptionHandler.run(logger, () -> fillExternalOrders(model, true)));
 
     panel.add(controls, BorderLayout.NORTH);
     panel.add(UiTableFactory.scroll(table), BorderLayout.CENTER);
-    fillExternalOrders(model, true);
+    UiExceptionHandler.run(logger, () -> fillExternalOrders(model, true));
     return panel;
   }
 
@@ -104,7 +97,7 @@ public class ExternalSupplierPanel {
         "외부상태", "사유");
   }
 
-  private void fillExternalOrders(DefaultTableModel model, boolean onlyReceived) {
+  private void fillExternalOrders(DefaultTableModel model, boolean onlyReceived) throws Exception {
     model.setRowCount(0);
     for (OrderRequestDTO order : store.orders()) {
       if (isExternalOrder(order, onlyReceived)) {
@@ -113,17 +106,17 @@ public class ExternalSupplierPanel {
     }
   }
 
-  private boolean isExternalOrder(OrderRequestDTO order, boolean onlyReceived) {
+  private boolean isExternalOrder(OrderRequestDTO order, boolean onlyReceived) throws Exception {
     String externalStatus = store.findExternalOrderStatus(order.getOrderRequestId());
     if (onlyReceived) {
       return RECEIVED_STATUS.equals(externalStatus);
     }
     return RECEIVED_STATUS.equals(externalStatus)
-        || APPROVED_STATUS.equals(externalStatus)
+        || SHIPPED_STATUS.equals(externalStatus)
         || REJECTED_STATUS.equals(externalStatus);
   }
 
-  private Object[] row(OrderRequestDTO order) {
+  private Object[] row(OrderRequestDTO order) throws Exception {
     return new Object[]{
         order.getOrderRequestId(),
         store.findStoreName(order.getStoreId()),
@@ -167,7 +160,4 @@ public class ExternalSupplierPanel {
     return text;
   }
 
-  private void showError(RuntimeException e) {
-    logger.accept("오류: " + e.getMessage());
-  }
 }

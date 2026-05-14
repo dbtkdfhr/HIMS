@@ -17,8 +17,9 @@ import javax.swing.JTextField;
 import javax.swing.table.DefaultTableModel;
 import order.request.OrderRequestDTO;
 import ui.common.UiConstants;
+import ui.common.UiExceptionHandler;
 import ui.common.UiTableFactory;
-import ui.data.MockDataStore;
+import ui.data.UiServiceStore;
 
 public class VendorManagerPanel {
 
@@ -28,16 +29,15 @@ public class VendorManagerPanel {
       "발주 승인",
       "발주 반려",
       "승인 발주 외부 전송",
-      "외부 출고 처리",
       "발주 상태별 필터링",
       "발주 승인/반려 이력 조회"
   };
 
-  private final MockDataStore store;
+  private final UiServiceStore store;
   private final EmployeeDTO user;
   private final Consumer<String> logger;
 
-  public VendorManagerPanel(MockDataStore store, EmployeeDTO user, Consumer<String> logger) {
+  public VendorManagerPanel(UiServiceStore store, EmployeeDTO user, Consumer<String> logger) {
     this.store = store;
     this.user = user;
     this.logger = logger;
@@ -49,10 +49,9 @@ public class VendorManagerPanel {
     views.put(MENUS[1], detailPanel());
     views.put(MENUS[2], approvePanel());
     views.put(MENUS[3], rejectPanel());
-    views.put(MENUS[4], transitionPanel("승인 발주 외부 전송", OrderStatus.APPROVED.name(), "-"));
-    views.put(MENUS[5], transitionPanel("외부 출고 처리", OrderStatus.APPROVED.name(), OrderStatus.APPROVED.name()));
-    views.put(MENUS[6], filterPanel());
-    views.put(MENUS[7], historyPanel());
+    views.put(MENUS[4], transitionPanel("승인 발주 외부 전송", OrderStatus.APPROVED.name()));
+    views.put(MENUS[5], filterPanel());
+    views.put(MENUS[6], historyPanel());
     return views;
   }
 
@@ -61,10 +60,10 @@ public class VendorManagerPanel {
     DefaultTableModel model = orderModel();
     JTable table = UiTableFactory.table(model);
     JButton refresh = new JButton("새로고침");
-    refresh.addActionListener(event -> fillOrders(model, status));
+    refresh.addActionListener(event -> UiExceptionHandler.run(logger, () -> fillOrders(model, status)));
     panel.add(toolbar(refresh), BorderLayout.NORTH);
     panel.add(UiTableFactory.scroll(table), BorderLayout.CENTER);
-    fillOrders(model, status);
+    UiExceptionHandler.run(logger, () -> fillOrders(model, status));
     return panel;
   }
 
@@ -76,17 +75,19 @@ public class VendorManagerPanel {
     table.getSelectionModel().addListSelectionListener(event -> {
       if (!event.getValueIsAdjusting() && table.getSelectedRow() >= 0) {
         long orderId = ((Number) table.getValueAt(table.getSelectedRow(), 0)).longValue();
-        OrderRequestDTO order = store.findOrder(orderId);
-        if (order != null) {
-          detail.setText("발주ID " + orderId + " | 매장 " + store.findStoreName(order.getStoreId())
-              + " | 상품 " + store.findProductName(order.getProductId()) + " | 상태 "
-              + order.getOrderStatus());
-        }
+        UiExceptionHandler.run(logger, () -> {
+          OrderRequestDTO order = store.findOrder(orderId);
+          if (order != null) {
+            detail.setText("발주ID " + orderId + " | 매장 " + store.findStoreName(order.getStoreId())
+                + " | 상품 " + store.findProductName(order.getProductId()) + " | 상태 "
+                + order.getOrderStatus());
+          }
+        });
       }
     });
     panel.add(detail, BorderLayout.NORTH);
     panel.add(UiTableFactory.scroll(table), BorderLayout.CENTER);
-    fillOrders(model, null);
+    UiExceptionHandler.run(logger, () -> fillOrders(model, null));
     return panel;
   }
 
@@ -103,22 +104,19 @@ public class VendorManagerPanel {
     controls.add(approve);
     controls.add(refresh);
 
-    approve.addActionListener(event -> {
-      try {
+    approve.addActionListener(event -> UiExceptionHandler.run(logger, () -> {
         long orderId = selectedOrderId(table);
         int quantity = parsePositive(quantityField.getText(), "승인수량");
         store.approveOrder(orderId, user.getEmployeeId(), quantity);
         fillOrders(model, OrderStatus.REQUESTED.name());
         logger.accept("발주 승인 완료: " + orderId);
-      } catch (RuntimeException e) {
-        showError(panel, e);
-      }
-    });
-    refresh.addActionListener(event -> fillOrders(model, OrderStatus.REQUESTED.name()));
+    }));
+    refresh.addActionListener(event -> UiExceptionHandler.run(logger,
+        () -> fillOrders(model, OrderStatus.REQUESTED.name())));
 
     panel.add(controls, BorderLayout.NORTH);
     panel.add(UiTableFactory.scroll(table), BorderLayout.CENTER);
-    fillOrders(model, OrderStatus.REQUESTED.name());
+    UiExceptionHandler.run(logger, () -> fillOrders(model, OrderStatus.REQUESTED.name()));
     return panel;
   }
 
@@ -135,29 +133,22 @@ public class VendorManagerPanel {
     controls.add(reject);
     controls.add(refresh);
 
-    reject.addActionListener(event -> {
-      try {
+    reject.addActionListener(event -> UiExceptionHandler.run(logger, () -> {
         long orderId = selectedOrderId(table);
         store.rejectOrder(orderId, user.getEmployeeId(), required(reasonField.getText(), "반려사유"));
         fillOrders(model, OrderStatus.REQUESTED.name());
         logger.accept("발주 반려 완료: " + orderId);
-      } catch (RuntimeException e) {
-        showError(panel, e);
-      }
-    });
-    refresh.addActionListener(event -> fillOrders(model, OrderStatus.REQUESTED.name()));
+    }));
+    refresh.addActionListener(event -> UiExceptionHandler.run(logger,
+        () -> fillOrders(model, OrderStatus.REQUESTED.name())));
 
     panel.add(controls, BorderLayout.NORTH);
     panel.add(UiTableFactory.scroll(table), BorderLayout.CENTER);
-    fillOrders(model, OrderStatus.REQUESTED.name());
+    UiExceptionHandler.run(logger, () -> fillOrders(model, OrderStatus.REQUESTED.name()));
     return panel;
   }
 
   private JPanel transitionPanel(String title, String status) {
-    return transitionPanel(title, status, null);
-  }
-
-  private JPanel transitionPanel(String title, String status, String externalStatus) {
     JPanel panel = page(title);
     DefaultTableModel model = orderModel();
     JTable table = UiTableFactory.table(model);
@@ -167,25 +158,18 @@ public class VendorManagerPanel {
     controls.add(process);
     controls.add(refresh);
 
-    process.addActionListener(event -> {
-      try {
+    process.addActionListener(event -> UiExceptionHandler.run(logger, () -> {
         long orderId = selectedOrderId(table);
-        if ("-".equals(externalStatus)) {
-          store.sendOrderToVendor(orderId);
-        } else {
-          store.shipOrder(orderId);
-        }
-        fillOrders(model, status, externalStatus);
+        store.sendOrderToVendor(orderId);
+        fillOrders(model, status, "RECEIVED");
         logger.accept(title + " 완료: " + orderId);
-      } catch (RuntimeException e) {
-        showError(panel, e);
-      }
-    });
-    refresh.addActionListener(event -> fillOrders(model, status, externalStatus));
+    }));
+    refresh.addActionListener(event -> UiExceptionHandler.run(logger,
+        () -> fillOrders(model, status, "RECEIVED")));
 
     panel.add(controls, BorderLayout.NORTH);
     panel.add(UiTableFactory.scroll(table), BorderLayout.CENTER);
-    fillOrders(model, status, externalStatus);
+    UiExceptionHandler.run(logger, () -> fillOrders(model, status, "RECEIVED"));
     return panel;
   }
 
@@ -195,8 +179,8 @@ public class VendorManagerPanel {
     JTable table = UiTableFactory.table(model);
     JComboBox<String> statusBox = new JComboBox<>(new String[]{
         "전체", OrderStatus.REQUESTED.name(), OrderStatus.APPROVED.name(),
-        OrderStatus.REJECTED.name(), OrderStatus.SENT.name(), OrderStatus.RECEIVED.name(),
-        OrderStatus.CANCELED.name()
+        OrderStatus.REJECTED.name(), OrderStatus.RECEIVED.name(), OrderStatus.CANCELED.name(),
+        OrderStatus.DONE.name()
     });
     JButton search = new JButton("조회");
     JPanel controls = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -206,11 +190,11 @@ public class VendorManagerPanel {
     search.addActionListener(event -> {
       String status = "전체".equals(statusBox.getSelectedItem()) ? null
           : String.valueOf(statusBox.getSelectedItem());
-      fillOrders(model, status);
+      UiExceptionHandler.run(logger, () -> fillOrders(model, status));
     });
     panel.add(controls, BorderLayout.NORTH);
     panel.add(UiTableFactory.scroll(table), BorderLayout.CENTER);
-    fillOrders(model, null);
+    UiExceptionHandler.run(logger, () -> fillOrders(model, null));
     return panel;
   }
 
@@ -219,10 +203,10 @@ public class VendorManagerPanel {
     DefaultTableModel model = orderModel();
     JTable table = UiTableFactory.table(model);
     JButton refresh = new JButton("새로고침");
-    refresh.addActionListener(event -> fillHistory(model));
+    refresh.addActionListener(event -> UiExceptionHandler.run(logger, () -> fillHistory(model)));
     panel.add(toolbar(refresh), BorderLayout.NORTH);
     panel.add(UiTableFactory.scroll(table), BorderLayout.CENTER);
-    fillHistory(model);
+    UiExceptionHandler.run(logger, () -> fillHistory(model));
     return panel;
   }
 
@@ -231,11 +215,12 @@ public class VendorManagerPanel {
         "요청사유", "반려사유");
   }
 
-  private void fillOrders(DefaultTableModel model, String status) {
+  private void fillOrders(DefaultTableModel model, String status) throws Exception {
     fillOrders(model, status, null);
   }
 
-  private void fillOrders(DefaultTableModel model, String status, String externalStatus) {
+  private void fillOrders(DefaultTableModel model, String status, String externalStatus)
+      throws Exception {
     model.setRowCount(0);
     for (OrderRequestDTO order : store.findOrdersByStatus(status)) {
       if (externalStatus == null || externalStatus.equals(store.findExternalOrderStatus(order.getOrderRequestId()))) {
@@ -244,7 +229,7 @@ public class VendorManagerPanel {
     }
   }
 
-  private void fillHistory(DefaultTableModel model) {
+  private void fillHistory(DefaultTableModel model) throws Exception {
     model.setRowCount(0);
     for (OrderRequestDTO order : store.orders()) {
       if (OrderStatus.APPROVED.name().equals(order.getOrderStatus())
@@ -255,7 +240,7 @@ public class VendorManagerPanel {
     }
   }
 
-  private Object[] row(OrderRequestDTO order) {
+  private Object[] row(OrderRequestDTO order) throws Exception {
     return new Object[]{
         order.getOrderRequestId(),
         store.findStoreName(order.getStoreId()),
@@ -315,7 +300,4 @@ public class VendorManagerPanel {
     return value == null ? "" : value;
   }
 
-  private void showError(JPanel panel, RuntimeException e) {
-    logger.accept("오류: " + e.getMessage());
-  }
 }

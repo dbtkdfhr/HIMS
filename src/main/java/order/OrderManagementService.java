@@ -8,6 +8,8 @@ import java.sql.Connection;
 import lombok.RequiredArgsConstructor;
 import order.approval.OrderApprovalDAO;
 import order.approval.OrderApprovalDTO;
+import order.external.ExternalOrderReceiptDAO;
+import order.external.ExternalOrderReceiptDTO;
 import order.external.ExternalSupplierInventoryDAO;
 import order.request.OrderRequestDAO;
 import order.request.OrderRequestDTO;
@@ -18,8 +20,12 @@ import java.util.List;
 @RequiredArgsConstructor
 public class OrderManagementService {
   private final OrderRequestDAO orderRequestDAO;
-  private final ExternalSupplierInventoryDAO externalSupplierDAO;
+  private final ExternalOrderReceiptDAO externalOrderReceiptDAO;
   private final OrderApprovalDAO orderApprovalDAO;
+
+  public OrderManagementService() {
+    this(new OrderRequestDAO(), new ExternalOrderReceiptDAO(), new OrderApprovalDAO());
+  }
 
   // 발주 요청 전체 목록 조회하기
   public List<OrderRequestDTO> getAllOrderRequests() throws SQLException {
@@ -38,6 +44,20 @@ public class OrderManagementService {
   2. 외부 시스템(MariaDB): 공급사 시스템에 접수증 삽입
   */
   public void approveOrder(long orderRequestId, int approvedQuantity, long employeeId) throws SQLException {
+    OrderRequestDTO requestedOrder = orderRequestDAO.findByOrderRequestId(orderRequestId);
+    if (requestedOrder == null) {
+      throw new InputException("발주 요청을 찾을 수 없습니다.");
+    }
+    if (!OrderStatus.REQUESTED.name().equals(requestedOrder.getOrderStatus())) {
+      throw new InputException("요청 상태의 발주만 승인할 수 있습니다.");
+    }
+    if (approvedQuantity <= 0) {
+      throw new InputException("승인 수량은 1개 이상이어야 합니다.");
+    }
+    if (approvedQuantity > requestedOrder.getOrderQuantity()) {
+      throw new InputException("승인수량은 요청수량을 초과할 수 없습니다.");
+    }
+
     try (
         Connection oracleConn = DBConnection.getConnection(DBType.ORACLE);
         Connection mariaConn = DBConnection.getConnection(DBType.MARIADB)
@@ -64,7 +84,18 @@ public class OrderManagementService {
         orderApprovalDAO.insertApprovalHistory(oracleConn, approvalDTO);
 
         // 3. MariaDB 외부 공급사 접수증 생성
-        externalSupplierDAO.insertExternalReceipt(mariaConn, orderRequestId);
+        OrderRequestDTO orderRequest = orderRequestDAO.findByOrderRequestId(oracleConn, orderRequestId);
+
+        ExternalOrderReceiptDTO receiptDTO = new ExternalOrderReceiptDTO();
+        receiptDTO.setSupplierId(orderRequest.getSupplierIntegrationId());
+        receiptDTO.setSupplierProductId(orderRequest.getProductId());
+        receiptDTO.setInternalOrderRequestId(orderRequest.getOrderRequestId());
+        receiptDTO.setRequestStoreName("매장ID: " + orderRequest.getStoreId());
+        receiptDTO.setRequestQuantity(orderRequest.getOrderQuantity());
+        receiptDTO.setApprovedQuantity(approvedQuantity);
+        receiptDTO.setReceiptStatus("RECEIVED");
+
+        externalOrderReceiptDAO.insertExternalReceipt(mariaConn, receiptDTO);
 
         // 4. 두 DB 작업 모두 성공하면 commit
         oracleConn.commit();
@@ -86,6 +117,14 @@ public class OrderManagementService {
   public void rejectOrder(long orderRequestId, String rejectReason, long employeeId) throws SQLException {
     if(rejectReason == null || rejectReason.trim().isEmpty())
       throw new InputException("반려 사유를 반드시 입력해야 합니다.");
+
+    OrderRequestDTO requestedOrder = orderRequestDAO.findByOrderRequestId(orderRequestId);
+    if (requestedOrder == null) {
+      throw new InputException("발주 요청을 찾을 수 없습니다.");
+    }
+    if (!OrderStatus.REQUESTED.name().equals(requestedOrder.getOrderStatus())) {
+      throw new InputException("요청 상태의 발주만 반려할 수 있습니다.");
+    }
 
     try(Connection oracleConn = DBConnection.getConnection(DBType.ORACLE);){
       oracleConn.setAutoCommit(false);
