@@ -337,7 +337,6 @@ public class EmployeeDAO {
     if (updateStore) {
       sql.append("store_id = ?, ");
     }
-    sql.append("updated_at = SYSDATE ");
     sql.append("WHERE employee_id = ?");
 
     try (
@@ -361,8 +360,7 @@ public class EmployeeDAO {
   public int updateLoginId(EmployeeDTO employee) throws SQLException {
     String sql =
         "UPDATE EMPLOYEE SET " +
-            "login_id = ?, " +
-            "updated_at = SYSDATE " +
+            "login_id = ? " +
             "WHERE employee_id = ?";
 
     try (
@@ -382,8 +380,7 @@ public class EmployeeDAO {
   public int updatePassword(EmployeeDTO employee) throws SQLException {
     String sql =
         "UPDATE EMPLOYEE SET " +
-            "password = ?, " +
-            "updated_at = SYSDATE " +
+            "password = ? " +
             "WHERE employee_id = ?";
 
     try (
@@ -403,8 +400,7 @@ public class EmployeeDAO {
   public int disableEmployee(EmployeeDTO employee) throws SQLException {
     String sql =
         "UPDATE EMPLOYEE SET " +
-            "is_active = 'N', " +
-            "updated_at = SYSDATE " +
+            "is_active = 'N' " +
             "WHERE employee_id = ?";
 
     try (
@@ -423,8 +419,7 @@ public class EmployeeDAO {
   public int activateEmployee(EmployeeDTO employee) throws SQLException {
     String sql =
         "UPDATE EMPLOYEE SET " +
-            "is_active = 'Y', " +
-            "updated_at = SYSDATE " +
+            "is_active = 'Y' " +
             "WHERE employee_id = ?";
 
     try (
