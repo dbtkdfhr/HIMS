@@ -24,5 +24,6 @@ public class LoginResponseDTO {
   private RoleType roleType;
 
   private Long storeId;
+  private Long branchId;
   private String isActive;
 }
