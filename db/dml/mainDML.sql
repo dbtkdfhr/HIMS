@@ -736,9 +736,11 @@ VALUES ((SELECT BRAND_ID FROM BRAND WHERE BRAND_NAME = 'THE CASHMERE'),
    7. EMPLOYEE - 직원
    주의:
    - Excel에는 발주처ID 컬럼이 있지만 현재 EMPLOYEE DDL에는 해당 컬럼이 없으므로 제외
-   - STORE_ID가 없는 발주처담당자/관리자는 NULL 처리
+   - 관리자/시스템담당자는 BRANCH_ID, STORE_ID를 NULL 처리
+   - STORE_ID가 없는 발주처담당자는 STORE_ID만 NULL 처리
 ========================================================= */
 INSERT INTO EMPLOYEE (ROLE_ID,
+                      BRANCH_ID,
                       STORE_ID,
                       LOGIN_ID,
                       PASSWORD,
@@ -747,6 +749,7 @@ INSERT INTO EMPLOYEE (ROLE_ID,
                       IS_ACTIVE)
 VALUES ((SELECT ROLE_ID FROM ROLE WHERE ROLE_NAME = '관리자'),
         NULL,
+        NULL,
         'admin01',
         'pass1234',
         '정관리',
@@ -754,6 +757,7 @@ VALUES ((SELECT ROLE_ID FROM ROLE WHERE ROLE_NAME = '관리자'),
         'Y');
 
 INSERT INTO EMPLOYEE (ROLE_ID,
+                      BRANCH_ID,
                       STORE_ID,
                       LOGIN_ID,
                       PASSWORD,
@@ -761,6 +765,7 @@ INSERT INTO EMPLOYEE (ROLE_ID,
                       PHONE_NUMBER,
                       IS_ACTIVE)
 VALUES ((SELECT ROLE_ID FROM ROLE WHERE ROLE_NAME = '발주처담당자'),
+        (SELECT BRANCH_ID FROM BRANCH WHERE BRANCH_NAME = '현대백화점 판교점'),
         NULL,
         'logi_time',
         'pass1234',
@@ -769,6 +774,7 @@ VALUES ((SELECT ROLE_ID FROM ROLE WHERE ROLE_NAME = '발주처담당자'),
         'Y');
 
 INSERT INTO EMPLOYEE (ROLE_ID,
+                      BRANCH_ID,
                       STORE_ID,
                       LOGIN_ID,
                       PASSWORD,
@@ -776,6 +782,7 @@ INSERT INTO EMPLOYEE (ROLE_ID,
                       PHONE_NUMBER,
                       IS_ACTIVE)
 VALUES ((SELECT ROLE_ID FROM ROLE WHERE ROLE_NAME = '발주처담당자'),
+        (SELECT BRANCH_ID FROM BRANCH WHERE BRANCH_NAME = '현대백화점 무역센터점'),
         NULL,
         'logi_system',
         'pass1234',
@@ -784,6 +791,7 @@ VALUES ((SELECT ROLE_ID FROM ROLE WHERE ROLE_NAME = '발주처담당자'),
         'Y');
 
 INSERT INTO EMPLOYEE (ROLE_ID,
+                      BRANCH_ID,
                       STORE_ID,
                       LOGIN_ID,
                       PASSWORD,
@@ -791,6 +799,7 @@ INSERT INTO EMPLOYEE (ROLE_ID,
                       PHONE_NUMBER,
                       IS_ACTIVE)
 VALUES ((SELECT ROLE_ID FROM ROLE WHERE ROLE_NAME = '발주처담당자'),
+        (SELECT BRANCH_ID FROM BRANCH WHERE BRANCH_NAME = '더현대서울'),
         NULL,
         'logi_mine',
         'pass1234',
@@ -799,6 +808,7 @@ VALUES ((SELECT ROLE_ID FROM ROLE WHERE ROLE_NAME = '발주처담당자'),
         'Y');
 
 INSERT INTO EMPLOYEE (ROLE_ID,
+                      BRANCH_ID,
                       STORE_ID,
                       LOGIN_ID,
                       PASSWORD,
@@ -806,6 +816,7 @@ INSERT INTO EMPLOYEE (ROLE_ID,
                       PHONE_NUMBER,
                       IS_ACTIVE)
 VALUES ((SELECT ROLE_ID FROM ROLE WHERE ROLE_NAME = '발주처담당자'),
+        (SELECT BRANCH_ID FROM BRANCH WHERE BRANCH_NAME = '더현대서울'),
         NULL,
         'logi_cashmere',
         'pass1234',
@@ -814,6 +825,7 @@ VALUES ((SELECT ROLE_ID FROM ROLE WHERE ROLE_NAME = '발주처담당자'),
         'Y');
 
 INSERT INTO EMPLOYEE (ROLE_ID,
+                      BRANCH_ID,
                       STORE_ID,
                       LOGIN_ID,
                       PASSWORD,
@@ -821,6 +833,7 @@ INSERT INTO EMPLOYEE (ROLE_ID,
                       PHONE_NUMBER,
                       IS_ACTIVE)
 VALUES ((SELECT ROLE_ID FROM ROLE WHERE ROLE_NAME = '입점매장담당자'),
+        (SELECT BRANCH_ID FROM BRANCH WHERE BRANCH_NAME = '더현대서울'),
         (SELECT STORE_ID FROM STORE WHERE STORE_NAME = 'THE CASHMERE 더현대서울점'),
         'store_cashmere',
         'pass1234',
@@ -829,6 +842,7 @@ VALUES ((SELECT ROLE_ID FROM ROLE WHERE ROLE_NAME = '입점매장담당자'),
         'Y');
 
 INSERT INTO EMPLOYEE (ROLE_ID,
+                      BRANCH_ID,
                       STORE_ID,
                       LOGIN_ID,
                       PASSWORD,
@@ -836,6 +850,7 @@ INSERT INTO EMPLOYEE (ROLE_ID,
                       PHONE_NUMBER,
                       IS_ACTIVE)
 VALUES ((SELECT ROLE_ID FROM ROLE WHERE ROLE_NAME = '입점매장담당자'),
+        (SELECT BRANCH_ID FROM BRANCH WHERE BRANCH_NAME = '현대백화점 판교점'),
         (SELECT STORE_ID FROM STORE WHERE STORE_NAME = 'TIME 판교점'),
         'store_time',
         'pass1234',
@@ -844,6 +859,7 @@ VALUES ((SELECT ROLE_ID FROM ROLE WHERE ROLE_NAME = '입점매장담당자'),
         'Y');
 
 INSERT INTO EMPLOYEE (ROLE_ID,
+                      BRANCH_ID,
                       STORE_ID,
                       LOGIN_ID,
                       PASSWORD,
@@ -851,6 +867,7 @@ INSERT INTO EMPLOYEE (ROLE_ID,
                       PHONE_NUMBER,
                       IS_ACTIVE)
 VALUES ((SELECT ROLE_ID FROM ROLE WHERE ROLE_NAME = '입점매장담당자'),
+        (SELECT BRANCH_ID FROM BRANCH WHERE BRANCH_NAME = '현대백화점 무역센터점'),
         (SELECT STORE_ID FROM STORE WHERE STORE_NAME = 'SYSTEM 무역센터점'),
         'store_system',
         'pass1234',
@@ -859,6 +876,7 @@ VALUES ((SELECT ROLE_ID FROM ROLE WHERE ROLE_NAME = '입점매장담당자'),
         'Y');
 
 INSERT INTO EMPLOYEE (ROLE_ID,
+                      BRANCH_ID,
                       STORE_ID,
                       LOGIN_ID,
                       PASSWORD,
@@ -866,6 +884,7 @@ INSERT INTO EMPLOYEE (ROLE_ID,
                       PHONE_NUMBER,
                       IS_ACTIVE)
 VALUES ((SELECT ROLE_ID FROM ROLE WHERE ROLE_NAME = '입점매장담당자'),
+        (SELECT BRANCH_ID FROM BRANCH WHERE BRANCH_NAME = '더현대서울'),
         (SELECT STORE_ID FROM STORE WHERE STORE_NAME = 'MINE 더현대서울점'),
         'store_mine',
         'pass1234',
@@ -874,6 +893,7 @@ VALUES ((SELECT ROLE_ID FROM ROLE WHERE ROLE_NAME = '입점매장담당자'),
         'Y');
 
 INSERT INTO EMPLOYEE (ROLE_ID,
+                      BRANCH_ID,
                       STORE_ID,
                       LOGIN_ID,
                       PASSWORD,
@@ -881,7 +901,8 @@ INSERT INTO EMPLOYEE (ROLE_ID,
                       PHONE_NUMBER,
                       IS_ACTIVE)
 VALUES ((SELECT ROLE_ID FROM ROLE WHERE ROLE_NAME = '시스템담당자'),
-        (SELECT STORE_ID FROM STORE WHERE STORE_NAME = 'MINE 더현대서울점'),
+        NULL,
+        NULL,
         'system_mine',
         'pass1234',
         '시담당',
