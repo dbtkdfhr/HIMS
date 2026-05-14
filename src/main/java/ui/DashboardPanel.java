@@ -6,7 +6,6 @@ import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -99,6 +98,8 @@ public class DashboardPanel extends JPanel {
     } else if (role == RoleType.SUPPLIER_MANAGER) {
       VendorManagerPanel panel = new VendorManagerPanel(store, user, this::writeLog);
       views.putAll(panel.views());
+      ExternalSupplierPanel externalPanel = new ExternalSupplierPanel(store, this::writeLog);
+      views.putAll(externalPanel.views());
     } else if (role == RoleType.BRANCH_MANAGER) {
       BranchManagerPanel panel = new BranchManagerPanel(store, this::writeLog);
       views.putAll(panel.views());
@@ -128,7 +129,7 @@ public class DashboardPanel extends JPanel {
       return StoreManagerPanel.MENUS;
     }
     if (role == RoleType.SUPPLIER_MANAGER) {
-      return VendorManagerPanel.MENUS;
+      return supplierManagerMenus();
     }
     if (role == RoleType.BRANCH_MANAGER) {
       return BranchManagerPanel.MENUS;
@@ -137,5 +138,14 @@ public class DashboardPanel extends JPanel {
       return SystemManagerPanel.MENUS;
     }
     return new String[0];
+  }
+
+  private String[] supplierManagerMenus() {
+    String[] menus = new String[VendorManagerPanel.MENUS.length
+        + ExternalSupplierPanel.MENUS.length];
+    System.arraycopy(VendorManagerPanel.MENUS, 0, menus, 0, VendorManagerPanel.MENUS.length);
+    System.arraycopy(ExternalSupplierPanel.MENUS, 0, menus, VendorManagerPanel.MENUS.length,
+        ExternalSupplierPanel.MENUS.length);
+    return menus;
   }
 }
