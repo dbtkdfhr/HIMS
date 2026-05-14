@@ -50,7 +50,7 @@ public class VendorManagerPanel {
     views.put(MENUS[2], approvePanel());
     views.put(MENUS[3], rejectPanel());
     views.put(MENUS[4], transitionPanel("승인 발주 외부 전송", "APPROVED"));
-    views.put(MENUS[5], transitionPanel("외부 출고 처리", "SENT_TO_VENDOR"));
+    views.put(MENUS[5], transitionPanel("외부 출고 처리", "SENT_TO_VENDOR", "APPROVED"));
     views.put(MENUS[6], filterPanel());
     views.put(MENUS[7], historyPanel());
     return views;
@@ -154,6 +154,10 @@ public class VendorManagerPanel {
   }
 
   private JPanel transitionPanel(String title, String status) {
+    return transitionPanel(title, status, null);
+  }
+
+  private JPanel transitionPanel(String title, String status, String externalStatus) {
     JPanel panel = page(title);
     DefaultTableModel model = orderModel();
     JTable table = UiTableFactory.table(model);
@@ -171,17 +175,17 @@ public class VendorManagerPanel {
         } else {
           store.shipOrder(orderId);
         }
-        fillOrders(model, status);
+        fillOrders(model, status, externalStatus);
         logger.accept(title + " 완료: " + orderId);
       } catch (RuntimeException e) {
         showError(panel, e);
       }
     });
-    refresh.addActionListener(event -> fillOrders(model, status));
+    refresh.addActionListener(event -> fillOrders(model, status, externalStatus));
 
     panel.add(controls, BorderLayout.NORTH);
     panel.add(UiTableFactory.scroll(table), BorderLayout.CENTER);
-    fillOrders(model, status);
+    fillOrders(model, status, externalStatus);
     return panel;
   }
 
@@ -221,14 +225,20 @@ public class VendorManagerPanel {
   }
 
   private DefaultTableModel orderModel() {
-    return UiTableFactory.model("발주ID", "매장", "상품", "요청수량", "승인수량", "상태", "요청사유",
-        "반려사유");
+    return UiTableFactory.model("발주ID", "매장", "상품", "요청수량", "승인수량", "상태", "외부상태",
+        "요청사유", "반려사유");
   }
 
   private void fillOrders(DefaultTableModel model, String status) {
+    fillOrders(model, status, null);
+  }
+
+  private void fillOrders(DefaultTableModel model, String status, String externalStatus) {
     model.setRowCount(0);
     for (OrderRequestDTO order : store.findOrdersByStatus(status)) {
-      model.addRow(row(order));
+      if (externalStatus == null || externalStatus.equals(store.findExternalOrderStatus(order.getOrderRequestId()))) {
+        model.addRow(row(order));
+      }
     }
   }
 
@@ -250,6 +260,7 @@ public class VendorManagerPanel {
         order.getOrderQuantity(),
         order.getApprovedQuantity() == null ? "-" : order.getApprovedQuantity(),
         order.getOrderStatus(),
+        store.findExternalOrderStatus(order.getOrderRequestId()),
         nullToBlank(order.getRequestReason()),
         nullToBlank(order.getRejectReason())
     };
