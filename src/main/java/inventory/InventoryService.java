@@ -8,8 +8,15 @@ import java.sql.SQLException;
 import java.util.List;
 
 public class InventoryService {
+  private final InventoryDAO inventoryDAO;
 
-  private final InventoryDAO inventoryDAO = new InventoryDAO();
+  public InventoryService() {
+    this(new InventoryDAO());
+  }
+
+  public InventoryService(InventoryDAO inventoryDAO) {
+    this.inventoryDAO = inventoryDAO;
+  }
 
   /**
    * 사용자의 권한에 따른 재고 목록 조회
@@ -59,6 +66,7 @@ public class InventoryService {
 
   /**
    * 안전재고 수량 변경 (매장 관리자 전용)
+        
    */
   public boolean updateSafetyQuantity(EmployeeDTO loginUser, int storeId, int productId,
       int newSafetyQty) throws SQLException {
