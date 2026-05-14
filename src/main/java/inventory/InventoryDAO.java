@@ -15,7 +15,7 @@ public class InventoryDAO {
 
   // [INV-01] 내 매장 전체 재고 목록 조회 || [INV-02] 안전재고 미만 상품만 조회 || [INV-03] 재고 검색 (브랜드명 / 카테고리명 / 상품명 키워드)
   public List<InventoryDTO> searchInventory(int storeId, String brandName, String categoryName,
-      String keyword, boolean isLowStockOnly) {
+      String keyword, boolean isLowStockOnly) throws SQLException {
     List<InventoryDTO> list = new ArrayList<>();
 
     StringBuilder sql = new StringBuilder("SELECT si.store_id, si.product_id, "
@@ -60,15 +60,14 @@ public class InventoryDAO {
         }
       }
 
-    } catch (SQLException e) {
-      throw new RuntimeException("재고 목록 조회 중 데이터베이스 오류가 발생했습니다.", e);
     }
 
     return list;
   }
 
   // [INV-04] 안전재고 수량 변경
-  public int updateSafetyQuantity(int storeId, int productId, int newSafetyQty) {
+  public int updateSafetyQuantity(int storeId, int productId, int newSafetyQty)
+      throws SQLException {
     String sql = "UPDATE store_inventory " + "SET safety_quantity = ?, updated_at = SYSDATE "
         + "WHERE store_id = ? AND product_id = ?";
 
@@ -81,8 +80,6 @@ public class InventoryDAO {
 
       return pstmt.executeUpdate(); // 1: 성공, 0: 실패
 
-    } catch (SQLException e) {
-      throw new RuntimeException("안전재고 변경 중 데이터베이스 오류가 발생했습니다.", e);
     }
   }
 
