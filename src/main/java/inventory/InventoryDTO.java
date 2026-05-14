@@ -14,6 +14,8 @@ public class InventoryDTO {
   private String branchName; // 지점명
   private Long storeId; // 매장 ID
   private String storeName; // 매장명
+  private String floorInfo; // 층 정보
+  private String storeLocation; // 매장 위치
   private Long productId; // 상품 ID
   private int currentQuantity; // 현재 재고 수량
   private int safetyQuantity; // 안전 재고 수량
