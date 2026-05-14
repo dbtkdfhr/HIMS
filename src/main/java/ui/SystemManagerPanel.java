@@ -18,6 +18,7 @@ import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.table.DefaultTableModel;
 import ui.common.UiConstants;
+import ui.common.UiExceptionHandler;
 import ui.common.UiTableFactory;
 import ui.data.MockDataStore;
 
@@ -52,10 +53,10 @@ public class SystemManagerPanel {
     DefaultTableModel model = employeeModel();
     JTable table = UiTableFactory.table(model);
     JButton refresh = new JButton("새로고침");
-    refresh.addActionListener(event -> fillEmployees(model));
+    refresh.addActionListener(event -> UiExceptionHandler.run(logger, () -> fillEmployees(model)));
     panel.add(toolbar(refresh), BorderLayout.NORTH);
     panel.add(UiTableFactory.scroll(table), BorderLayout.CENTER);
-    fillEmployees(model);
+    UiExceptionHandler.run(logger, () -> fillEmployees(model));
     return panel;
   }
 
@@ -79,18 +80,14 @@ public class SystemManagerPanel {
     form.add(new JLabel());
     form.add(create);
 
-    create.addActionListener(event -> {
-      try {
+    create.addActionListener(event -> UiExceptionHandler.run(logger, () -> {
         RoleType role = (RoleType) roleBox.getSelectedItem();
         Long storeId = storeIdField.getText().trim().isEmpty() ? null
             : parseLong(storeIdField.getText(), "매장ID");
         EmployeeDTO employee = store.createEmployee(required(loginIdField.getText(), "로그인ID"),
             required(nameField.getText(), "직원명"), role, storeId);
         logger.accept("직원 계정 생성 완료: " + employee.getEmployeeName());
-      } catch (RuntimeException e) {
-        showError(panel, e);
-      }
-    });
+    }));
 
     panel.add(form, BorderLayout.NORTH);
     return panel;
@@ -109,8 +106,7 @@ public class SystemManagerPanel {
     controls.add(change);
     controls.add(refresh);
 
-    change.addActionListener(event -> {
-      try {
+    change.addActionListener(event -> UiExceptionHandler.run(logger, () -> {
         long employeeId = selectedEmployeeId(table);
         RoleType role = (RoleType) roleBox.getSelectedItem();
         for (EmployeeDTO employee : store.employees()) {
@@ -122,15 +118,12 @@ public class SystemManagerPanel {
           }
         }
         throw new NotFoundException("직원을 찾을 수 없습니다.");
-      } catch (RuntimeException e) {
-        showError(panel, e);
-      }
-    });
-    refresh.addActionListener(event -> fillEmployees(model));
+    }));
+    refresh.addActionListener(event -> UiExceptionHandler.run(logger, () -> fillEmployees(model)));
 
     panel.add(controls, BorderLayout.NORTH);
     panel.add(UiTableFactory.scroll(table), BorderLayout.CENTER);
-    fillEmployees(model);
+    UiExceptionHandler.run(logger, () -> fillEmployees(model));
     return panel;
   }
 
@@ -144,21 +137,17 @@ public class SystemManagerPanel {
     controls.add(deactivate);
     controls.add(refresh);
 
-    deactivate.addActionListener(event -> {
-      try {
+    deactivate.addActionListener(event -> UiExceptionHandler.run(logger, () -> {
         long employeeId = selectedEmployeeId(table);
         store.deactivateEmployee(employeeId);
         fillEmployees(model);
         logger.accept("직원 계정 정지 완료: " + employeeId);
-      } catch (RuntimeException e) {
-        showError(panel, e);
-      }
-    });
-    refresh.addActionListener(event -> fillEmployees(model));
+    }));
+    refresh.addActionListener(event -> UiExceptionHandler.run(logger, () -> fillEmployees(model)));
 
     panel.add(controls, BorderLayout.NORTH);
     panel.add(UiTableFactory.scroll(table), BorderLayout.CENTER);
-    fillEmployees(model);
+    UiExceptionHandler.run(logger, () -> fillEmployees(model));
     return panel;
   }
 
@@ -238,7 +227,4 @@ public class SystemManagerPanel {
     return text;
   }
 
-  private void showError(JPanel panel, RuntimeException e) {
-    logger.accept("오류: " + e.getMessage());
-  }
 }
