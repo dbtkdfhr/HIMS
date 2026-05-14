@@ -227,25 +227,29 @@ public class MockDataStore {
     externalOrderStatuses.put(orderId, "RECEIVED");
   }
 
-  public void shipOrder(long orderId) {
+  public void approveExternalOrder(long orderId) {
     OrderRequestDTO order = requireOrder(orderId);
     requireStatus(order, OrderStatus.APPROVED.name());
-    requireExternalStatus(orderId, "APPROVED");
-    order.setOrderStatus(OrderStatus.SENT.name());
-  }
-
-  public void approveExternalOrder(long orderId) {
-    requireOrder(orderId);
     requireExternalStatus(orderId, "RECEIVED");
     externalOrderStatuses.put(orderId, "APPROVED");
     externalRejectReasons.remove(orderId);
   }
 
   public void rejectExternalOrder(long orderId, String reason) {
-    requireOrder(orderId);
+    OrderRequestDTO order = requireOrder(orderId);
+    requireStatus(order, OrderStatus.APPROVED.name());
     requireExternalStatus(orderId, "RECEIVED");
     externalOrderStatuses.put(orderId, "REJECTED");
     externalRejectReasons.put(orderId, reason);
+    order.setOrderStatus(OrderStatus.CANCELED.name());
+  }
+
+  public void completeExternalOrder(long orderId) {
+    OrderRequestDTO order = requireOrder(orderId);
+    requireStatus(order, OrderStatus.APPROVED.name());
+    requireExternalStatus(orderId, "APPROVED");
+    externalOrderStatuses.put(orderId, "RECEIVED");
+    order.setOrderStatus(OrderStatus.RECEIVED.name());
   }
 
   public String findExternalOrderStatus(long orderId) {
@@ -258,8 +262,8 @@ public class MockDataStore {
 
   public StoreReceiptDTO confirmReceipt(long orderId, long employeeId) {
     OrderRequestDTO order = requireOrder(orderId);
-    requireStatus(order, OrderStatus.SENT.name());
-    requireExternalStatus(orderId, "APPROVED");
+    requireStatus(order, OrderStatus.RECEIVED.name());
+    requireExternalStatus(orderId, "RECEIVED");
     int quantity = approvedQuantity(order);
     StoreReceiptDTO receipt = createReceipt(orderId, employeeId, quantity, 0, "",
         ReceiptStatus.RECEIVED.getLabel());
@@ -269,15 +273,15 @@ public class MockDataStore {
       inventory.setUpdatedAt(LocalDateTime.now());
       inventory.setLowStock(inventory.getCurrentQuantity() <= inventory.getSafetyQuantity());
     }
-    order.setOrderStatus(OrderStatus.RECEIVED.name());
+    order.setOrderStatus(OrderStatus.DONE.name());
     return receipt;
   }
 
   public StoreReceiptDTO markReceiptDifference(long orderId, long employeeId, int receivedQuantity,
       String reason) {
     OrderRequestDTO order = requireOrder(orderId);
-    requireStatus(order, OrderStatus.SENT.name());
-    requireExternalStatus(orderId, "APPROVED");
+    requireStatus(order, OrderStatus.RECEIVED.name());
+    requireExternalStatus(orderId, "RECEIVED");
     int approvedQuantity = approvedQuantity(order);
     if (receivedQuantity >= approvedQuantity) {
       throw new MismatchQuantityException("수량 차이 입고는 승인수량보다 적은 수량만 입력할 수 있습니다.");
@@ -285,17 +289,17 @@ public class MockDataStore {
     int difference = approvedQuantity - receivedQuantity;
     StoreReceiptDTO receipt = createReceipt(orderId, employeeId, receivedQuantity, difference,
         reason, ReceiptStatus.PARTIAL_RECEIVED.getLabel());
-    order.setOrderStatus(OrderStatus.RECEIVED.name());
+    order.setOrderStatus(OrderStatus.DONE.name());
     return receipt;
   }
 
   public StoreReceiptDTO rejectReceipt(long orderId, long employeeId, String reason) {
     OrderRequestDTO order = requireOrder(orderId);
-    requireStatus(order, OrderStatus.SENT.name());
-    requireExternalStatus(orderId, "APPROVED");
+    requireStatus(order, OrderStatus.RECEIVED.name());
+    requireExternalStatus(orderId, "RECEIVED");
     StoreReceiptDTO receipt = createReceipt(orderId, employeeId, 0, approvedQuantity(order), reason,
         ReceiptStatus.CANCELED.getLabel());
-    order.setOrderStatus(OrderStatus.CANCELED.name());
+    order.setOrderStatus(OrderStatus.DONE.name());
     return receipt;
   }
 
@@ -417,23 +421,23 @@ public class MockDataStore {
     requested.setRequestedAt(now);
     orders.add(requested);
 
-    OrderRequestDTO shipped = new OrderRequestDTO();
-    shipped.setOrderRequestId(1002);
-    shipped.setStoreId(101);
-    shipped.setSupplierIntegrationId(301);
-    shipped.setProductId(1002);
-    shipped.setRequestEmployeeId(9003);
-    shipped.setApprovalEmployeeId(9002L);
-    shipped.setOrderQuantity(10);
-    shipped.setApprovedQuantity(10);
-    shipped.setRequestReason("판매량 증가");
-    shipped.setOrderStatus(OrderStatus.SENT.name());
-    shipped.setRequestedAt(now.minusDays(2));
-    shipped.setApprovedAt(now.minusDays(1));
-    shipped.setSentToSupplierAt(now.minusHours(10));
-    shipped.setExternalOrderId("EXT-1002");
-    orders.add(shipped);
-    externalOrderStatuses.put(shipped.getOrderRequestId(), "APPROVED");
+    OrderRequestDTO received = new OrderRequestDTO();
+    received.setOrderRequestId(1002);
+    received.setStoreId(101);
+    received.setSupplierIntegrationId(301);
+    received.setProductId(1002);
+    received.setRequestEmployeeId(9003);
+    received.setApprovalEmployeeId(9002L);
+    received.setOrderQuantity(10);
+    received.setApprovedQuantity(10);
+    received.setRequestReason("판매량 증가");
+    received.setOrderStatus(OrderStatus.RECEIVED.name());
+    received.setRequestedAt(now.minusDays(2));
+    received.setApprovedAt(now.minusDays(1));
+    received.setSentToSupplierAt(now.minusHours(10));
+    received.setExternalOrderId("EXT-1002");
+    orders.add(received);
+    externalOrderStatuses.put(received.getOrderRequestId(), "RECEIVED");
   }
 
   private StoreDTO store(long storeId, long branchId, long brandId, String name, String floor,
