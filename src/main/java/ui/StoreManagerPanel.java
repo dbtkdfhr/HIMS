@@ -131,10 +131,10 @@ public class StoreManagerPanel {
     DefaultTableModel model = orderModel();
     JTable table = UiTableFactory.table(model);
     JButton refresh = new JButton("새로고침");
-    refresh.addActionListener(event -> fillOrders(model, OrderStatus.SENT.name(), "APPROVED"));
+    refresh.addActionListener(event -> fillOrders(model, OrderStatus.RECEIVED.name(), "RECEIVED"));
     panel.add(toolbar(refresh), BorderLayout.NORTH);
     panel.add(UiTableFactory.scroll(table), BorderLayout.CENTER);
-    fillOrders(model, OrderStatus.SENT.name(), "APPROVED");
+    fillOrders(model, OrderStatus.RECEIVED.name(), "RECEIVED");
     return panel;
   }
 
@@ -172,17 +172,17 @@ public class StoreManagerPanel {
         } else {
           store.rejectReceipt(orderId, user.getEmployeeId(), required(reasonField.getText(), "반려사유"));
         }
-        fillOrders(model, OrderStatus.SENT.name(), "APPROVED");
+        fillOrders(model, OrderStatus.RECEIVED.name(), "RECEIVED");
         logger.accept(title + " 완료: 발주요청 " + orderId);
       } catch (RuntimeException e) {
         showError(panel, e);
       }
     });
-    refresh.addActionListener(event -> fillOrders(model, OrderStatus.SENT.name(), "APPROVED"));
+    refresh.addActionListener(event -> fillOrders(model, OrderStatus.RECEIVED.name(), "RECEIVED"));
 
     panel.add(controls, BorderLayout.NORTH);
     panel.add(UiTableFactory.scroll(table), BorderLayout.CENTER);
-    fillOrders(model, OrderStatus.SENT.name(), "APPROVED");
+    fillOrders(model, OrderStatus.RECEIVED.name(), "RECEIVED");
     return panel;
   }
 
