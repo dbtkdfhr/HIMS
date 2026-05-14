@@ -4,7 +4,7 @@ import common.TransactionHelper;
 import common.type.DBType;
 import exception.MismatchQuantityException;
 import inventory.InventoryDTO;
-import inventory.store.InventoryService;
+import inventory.InventoryDAO;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,7 +15,7 @@ import store.inventory.StoreInventoryDAO;
 public class StoreSalesService {
 
   private final StoreInventoryDAO storeInventoryDAO = new StoreInventoryDAO();
-  private final InventoryService inventoryService = new InventoryService();
+  private final InventoryDAO inventoryDAO = new InventoryDAO();
   private final StoreDAO storeDAO = new StoreDAO();
   private final ProductDAO productDAO = new ProductDAO();
 
@@ -24,7 +24,7 @@ public class StoreSalesService {
     List<InventoryDTO> inventories;
 
     try {
-      inventories = inventoryService.getInventoryList(storeId);
+      inventories = inventoryDAO.searchInventory(null, storeId, null, null, null, null, false);
     } catch (SQLException e) {
       e.printStackTrace();
       return result;
