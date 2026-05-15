@@ -33,6 +33,7 @@ public class StoreManagerPanel {
       "내 매장 재고 조회",
       "안전재고 부족 상품 조회",
       "발주 요청 생성",
+      "내 발주 요청 현황",
       "입고 검수 대상 조회",
       "정상 입고 처리",
       "입고 수량 차이 처리",
@@ -56,12 +57,13 @@ public class StoreManagerPanel {
     views.put(MENUS[0], inventoryPanel(false));
     views.put(MENUS[1], inventoryPanel(true));
     views.put(MENUS[2], orderCreatePanel());
-    views.put(MENUS[3], receiptTargetPanel());
-    views.put(MENUS[4], receiptActionPanel("정상 입고 처리"));
-    views.put(MENUS[5], receiptActionPanel("입고 수량 차이 처리"));
-    views.put(MENUS[6], receiptActionPanel("입고 반려 처리"));
-    views.put(MENUS[7], receiptHistoryPanel());
-    views.put(MENUS[8], salePanel());
+    views.put(MENUS[3], orderStatusPanel());
+    views.put(MENUS[4], receiptTargetPanel());
+    views.put(MENUS[5], receiptActionPanel("정상 입고 처리"));
+    views.put(MENUS[6], receiptActionPanel("입고 수량 차이 처리"));
+    views.put(MENUS[7], receiptActionPanel("입고 반려 처리"));
+    views.put(MENUS[8], receiptHistoryPanel());
+    views.put(MENUS[9], salePanel());
     return views;
   }
 
@@ -122,6 +124,18 @@ public class StoreManagerPanel {
     }));
 
     panel.add(form, BorderLayout.NORTH);
+    return panel;
+  }
+
+  private JPanel orderStatusPanel() {
+    JPanel panel = page("내 발주 요청 현황");
+    DefaultTableModel model = orderModel();
+    JTable table = UiTableFactory.table(model);
+    JButton refresh = new JButton("새로고침");
+    refresh.addActionListener(event -> UiExceptionHandler.run(logger, () -> fillAllOrders(model)));
+    panel.add(toolbar(refresh), BorderLayout.NORTH);
+    panel.add(UiTableFactory.scroll(table), BorderLayout.CENTER);
+    UiExceptionHandler.run(logger, () -> fillAllOrders(model));
     return panel;
   }
 
@@ -264,6 +278,23 @@ public class StoreManagerPanel {
           inventory.getSafetyQuantity(),
           inventory.getProductStatus().getDisplayName(),
           inventory.getCurrentQuantity() <= inventory.getSafetyQuantity()
+      });
+    }
+  }
+
+  private void fillAllOrders(DefaultTableModel model) throws Exception {
+    model.setRowCount(0);
+    for (OrderRequestDTO order : store.findOrdersByStore(storeId())) {
+      model.addRow(new Object[]{
+          order.getOrderRequestId(),
+          store.findStoreName(order.getStoreId()),
+          store.findProductName(order.getProductId()),
+          order.getOrderQuantity(),
+          order.getApprovedQuantity() == null ? "-" : order.getApprovedQuantity(),
+          order.getOrderStatus(),
+          store.findExternalOrderStatus(order.getOrderRequestId()),
+          nullToBlank(order.getRequestReason()),
+          nullToBlank(order.getRejectReason())
       });
     }
   }
