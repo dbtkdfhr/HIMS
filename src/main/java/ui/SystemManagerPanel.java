@@ -1,6 +1,7 @@
 package ui;
 
 import common.type.RoleType;
+import branch.BranchDTO;
 import employee.EmployeeDTO;
 import exception.InputException;
 import exception.NotFoundException;
@@ -78,8 +79,9 @@ public class SystemManagerPanel {
     JPanel panel = page("직원 계정 생성 폼");
     JTextField loginIdField = new JTextField(14);
     JTextField nameField = new JTextField(14);
-    JTextField storeIdField = new JTextField(8);
-    JComboBox<RoleType> roleBox = roleBox();
+    JComboBox<BranchDTO> branchBox = branchBox();
+    JComboBox<StoreDTO> storeBox = emptyStoreBox();
+    JComboBox<RoleType> roleBox = createRoleBox();
     JButton create = new JButton("직원 생성");
     JPanel form = formPanel();
 
@@ -89,17 +91,29 @@ public class SystemManagerPanel {
     form.add(nameField);
     form.add(new JLabel("권한"));
     form.add(roleBox);
-    form.add(new JLabel("매장ID"));
-    form.add(storeIdField);
+    form.add(new JLabel("지점"));
+    form.add(branchBox);
+    form.add(new JLabel("매장"));
+    form.add(storeBox);
     form.add(new JLabel());
     form.add(create);
 
+    branchBox.addActionListener(event -> UiExceptionHandler.run(logger, () ->
+        fillStoreOptionsByBranch(storeBox, (BranchDTO) branchBox.getSelectedItem())));
+    UiExceptionHandler.run(logger, () ->
+        fillStoreOptionsByBranch(storeBox, (BranchDTO) branchBox.getSelectedItem()));
+
     create.addActionListener(event -> UiExceptionHandler.run(logger, () -> {
         RoleType role = (RoleType) roleBox.getSelectedItem();
-        Long storeId = storeIdField.getText().trim().isEmpty() ? null
-            : parseLong(storeIdField.getText(), "매장ID");
+        if (role == RoleType.SYSTEM_MANAGER) {
+          throw new InputException("시스템 관리자는 생성할 수 없습니다.");
+        }
+        BranchDTO branch = (BranchDTO) branchBox.getSelectedItem();
+        Long branchId = requiresBranch(role) ? selectedBranchId(branch) : null;
+        Long storeId = requiresStore(role) ? selectedStoreId((StoreDTO) storeBox.getSelectedItem())
+            : null;
         EmployeeDTO employee = store.createEmployee(required(loginIdField.getText(), "로그인ID"),
-            required(nameField.getText(), "직원명"), role, storeId);
+            required(nameField.getText(), "직원명"), role, branchId, storeId);
         showCreatedEmployeeDialog(panel, employee);
         logger.accept("직원 계정 생성 완료: " + employee.getEmployeeName());
     }));
@@ -260,6 +274,9 @@ public class SystemManagerPanel {
   private void fillEmployees(DefaultTableModel model) throws Exception {
     model.setRowCount(0);
     for (EmployeeDTO employee : store.employees()) {
+      if (employee.getRoleId() == RoleType.SYSTEM_MANAGER.getRoleId()) {
+        continue;
+      }
       addEmployeeRow(model, employee);
     }
   }
@@ -369,8 +386,71 @@ public class SystemManagerPanel {
     return roleBox;
   }
 
+  private JComboBox<RoleType> createRoleBox() {
+    JComboBox<RoleType> roleBox = new JComboBox<RoleType>(new RoleType[]{
+        RoleType.BRANCH_MANAGER,
+        RoleType.SUPPLIER_MANAGER,
+        RoleType.STORE_MANAGER,
+        RoleType.STAFF
+    });
+    roleBox.setRenderer(new DefaultListCellRenderer() {
+      @Override
+      public Component getListCellRendererComponent(JList<?> list, Object value, int index,
+          boolean isSelected, boolean cellHasFocus) {
+        super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+        if (value instanceof RoleType) {
+          RoleType roleType = (RoleType) value;
+          setText(roleType.getRoleName());
+        }
+        return this;
+      }
+    });
+    return roleBox;
+  }
+
+  private JComboBox<BranchDTO> branchBox() {
+    final JComboBox<BranchDTO> branchBox = new JComboBox<BranchDTO>();
+    branchBox.setRenderer(new DefaultListCellRenderer() {
+      @Override
+      public Component getListCellRendererComponent(JList<?> list, Object value, int index,
+          boolean isSelected, boolean cellHasFocus) {
+        super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+        if (value instanceof BranchDTO) {
+          BranchDTO branchDTO = (BranchDTO) value;
+          setText(branchDTO.getBranchId() + ". " + branchDTO.getBranchName());
+        }
+        return this;
+      }
+    });
+    UiExceptionHandler.run(logger, new UiExceptionHandler.UiAction() {
+      @Override
+      public void run() throws Exception {
+        fillBranchOptions(branchBox);
+      }
+    });
+    return branchBox;
+  }
+
+  private void fillBranchOptions(JComboBox<BranchDTO> branchBox) throws Exception {
+    branchBox.removeAllItems();
+    for (BranchDTO branchDTO : store.branches()) {
+      branchBox.addItem(branchDTO);
+    }
+  }
+
   private JComboBox<StoreDTO> storeBox() {
-    final JComboBox<StoreDTO> storeBox = new JComboBox<StoreDTO>();
+    final JComboBox<StoreDTO> storeBox = emptyStoreBox();
+    UiExceptionHandler.run(logger, new UiExceptionHandler.UiAction() {
+      @Override
+      public void run() throws Exception {
+        fillStoreOptions(storeBox);
+      }
+    });
+    return storeBox;
+  }
+
+  private JComboBox<StoreDTO> emptyStoreBox() {
+    JComboBox<StoreDTO> storeBox = new JComboBox<StoreDTO>();
     storeBox.setRenderer(new DefaultListCellRenderer() {
       @Override
       public Component getListCellRendererComponent(JList<?> list, Object value, int index,
@@ -383,12 +463,6 @@ public class SystemManagerPanel {
         return this;
       }
     });
-    UiExceptionHandler.run(logger, new UiExceptionHandler.UiAction() {
-      @Override
-      public void run() throws Exception {
-        fillStoreOptions(storeBox);
-      }
-    });
     return storeBox;
   }
 
@@ -396,6 +470,19 @@ public class SystemManagerPanel {
     storeBox.removeAllItems();
     for (StoreDTO storeDTO : store.stores()) {
       storeBox.addItem(storeDTO);
+    }
+  }
+
+  private void fillStoreOptionsByBranch(JComboBox<StoreDTO> storeBox, BranchDTO branch)
+      throws Exception {
+    storeBox.removeAllItems();
+    if (branch == null) {
+      return;
+    }
+    for (StoreDTO storeDTO : store.stores()) {
+      if (storeDTO.getBranchId() == branch.getBranchId()) {
+        storeBox.addItem(storeDTO);
+      }
     }
   }
 
@@ -448,6 +535,30 @@ public class SystemManagerPanel {
     } catch (NumberFormatException e) {
       throw new InputException(label + "은 1 이상의 숫자여야 합니다.");
     }
+  }
+
+  private boolean requiresBranch(RoleType role) {
+    return role == RoleType.STAFF
+        || role == RoleType.BRANCH_MANAGER
+        || role == RoleType.STORE_MANAGER;
+  }
+
+  private boolean requiresStore(RoleType role) {
+    return role == RoleType.STORE_MANAGER;
+  }
+
+  private Long selectedBranchId(BranchDTO branch) {
+    if (branch == null) {
+      throw new InputException("지점을 선택해 주세요.");
+    }
+    return branch.getBranchId();
+  }
+
+  private Long selectedStoreId(StoreDTO storeDTO) {
+    if (storeDTO == null) {
+      throw new InputException("매장을 선택해 주세요.");
+    }
+    return storeDTO.getStoreId();
   }
 
   private String required(String value, String label) {
