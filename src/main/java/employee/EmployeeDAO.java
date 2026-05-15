@@ -151,7 +151,19 @@ public class EmployeeDAO {
             "FROM EMPLOYEE E " +
             "LEFT JOIN STORE S " +
             "ON E.store_id = S.store_id " +
-            "ORDER BY E.employee_id ";
+            "GROUP BY " +
+            "E.role_id, " +
+            "E.employee_id, " +
+            "E.store_id, " +
+            "S.store_name, " +
+            "E.branch_id, " +
+            "E.login_id, " +
+            "E.employee_name, " +
+            "E.phone_number, " +
+            "E.is_active, " +
+            "E.created_at, " +
+            "E.updated_at " +
+            "ORDER BY E.role_id, E.employee_id ";
 
     try (
         Connection conn = DBConnection.getConnection(DBType.ORACLE);
