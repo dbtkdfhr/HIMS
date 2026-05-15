@@ -26,12 +26,8 @@ public class VendorManagerPanel {
 
   public static final String[] MENUS = {
       "발주 요청 목록 조회",
-      "발주 요청 상세 확인",
       "발주 승인",
-      "발주 반려",
-      "승인 발주 외부 전송",
-      "발주 상태별 필터링",
-      "발주 승인/반려 이력 조회"
+      "발주 반려"
   };
 
   private final UiServiceStore store;
@@ -47,12 +43,8 @@ public class VendorManagerPanel {
   public Map<String, Supplier<JPanel>> views() {
     Map<String, Supplier<JPanel>> views = new LinkedHashMap<>();
     views.put(MENUS[0], () -> orderListPanel(null));
-    views.put(MENUS[1], this::detailPanel);
-    views.put(MENUS[2], this::approvePanel);
-    views.put(MENUS[3], this::rejectPanel);
-    views.put(MENUS[4], () -> transitionPanel("승인 발주 외부 전송", OrderStatus.APPROVED.name()));
-    views.put(MENUS[5], this::filterPanel);
-    views.put(MENUS[6], this::historyPanel);
+    views.put(MENUS[1], this::approvePanel);
+    views.put(MENUS[2], this::rejectPanel);
     return views;
   }
 
@@ -60,19 +52,19 @@ public class VendorManagerPanel {
     JPanel panel = page("발주 요청 목록 조회");
     DefaultTableModel model = orderModel();
     JTable table = UiTableFactory.table(model);
-    JButton refresh = new JButton("새로고침");
-    refresh.addActionListener(event -> UiExceptionHandler.run(logger, () -> fillOrders(model, status)));
-    panel.add(toolbar(refresh), BorderLayout.NORTH);
-    panel.add(UiTableFactory.scroll(table), BorderLayout.CENTER);
-    UiExceptionHandler.run(logger, () -> fillOrders(model, status));
-    return panel;
-  }
-
-  private JPanel detailPanel() {
-    JPanel panel = page("발주 요청 상세 확인");
-    DefaultTableModel model = orderModel();
-    JTable table = UiTableFactory.table(model);
     JLabel detail = new JLabel("발주 요청을 선택하면 상세 정보가 표시됩니다.");
+    JComboBox<String> statusBox = new JComboBox<>(orderStatusOptions());
+    statusBox.setSelectedItem(status == null ? "전체" : status);
+    JButton refresh = new JButton("새로고침");
+    refresh.addActionListener(event -> UiExceptionHandler.run(logger, () -> {
+      detail.setText("발주 요청을 선택하면 상세 정보가 표시됩니다.");
+      fillOrders(model, selectedStatus(statusBox));
+    }));
+    statusBox.addActionListener(event -> UiExceptionHandler.run(logger, () -> {
+      detail.setText("발주 요청을 선택하면 상세 정보가 표시됩니다.");
+      fillOrders(model, selectedStatus(statusBox));
+    }));
+
     table.getSelectionModel().addListSelectionListener(event -> {
       if (!event.getValueIsAdjusting() && table.getSelectedRow() >= 0) {
         long orderId = ((Number) table.getValueAt(table.getSelectedRow(), 0)).longValue();
@@ -86,9 +78,15 @@ public class VendorManagerPanel {
         });
       }
     });
-    panel.add(detail, BorderLayout.NORTH);
+
+    JPanel top = new JPanel(new BorderLayout());
+    top.setOpaque(false);
+    top.add(orderListToolbar(statusBox, refresh), BorderLayout.NORTH);
+    top.add(detail, BorderLayout.SOUTH);
+
+    panel.add(top, BorderLayout.NORTH);
     panel.add(UiTableFactory.scroll(table), BorderLayout.CENTER);
-    UiExceptionHandler.run(logger, () -> fillOrders(model, null));
+    UiExceptionHandler.run(logger, () -> fillOrders(model, status));
     return panel;
   }
 
@@ -149,95 +147,14 @@ public class VendorManagerPanel {
     return panel;
   }
 
-  private JPanel transitionPanel(String title, String status) {
-    JPanel panel = page(title);
-    DefaultTableModel model = orderModel();
-    JTable table = UiTableFactory.table(model);
-    JButton process = new JButton(title);
-    JButton refresh = new JButton("대상 조회");
-    JPanel controls = new JPanel(new FlowLayout(FlowLayout.LEFT));
-    controls.add(process);
-    controls.add(refresh);
-
-    process.addActionListener(event -> UiExceptionHandler.run(logger, () -> {
-        long orderId = selectedOrderId(table);
-        store.sendOrderToVendor(orderId);
-        fillOrders(model, status, "RECEIVED");
-        logger.accept(title + " 완료: " + orderId);
-    }));
-    refresh.addActionListener(event -> UiExceptionHandler.run(logger,
-        () -> fillOrders(model, status, "RECEIVED")));
-
-    panel.add(controls, BorderLayout.NORTH);
-    panel.add(UiTableFactory.scroll(table), BorderLayout.CENTER);
-    UiExceptionHandler.run(logger, () -> fillOrders(model, status, "RECEIVED"));
-    return panel;
-  }
-
-  private JPanel filterPanel() {
-    JPanel panel = page("발주 상태별 필터링");
-    DefaultTableModel model = orderModel();
-    JTable table = UiTableFactory.table(model);
-    JComboBox<String> statusBox = new JComboBox<>(new String[]{
-        "전체", OrderStatus.REQUESTED.name(), OrderStatus.APPROVED.name(),
-        OrderStatus.REJECTED.name(), OrderStatus.RECEIVED.name(), OrderStatus.CANCELED.name(),
-        OrderStatus.DONE.name()
-    });
-    JButton search = new JButton("조회");
-    JPanel controls = new JPanel(new FlowLayout(FlowLayout.LEFT));
-    controls.add(new JLabel("상태"));
-    controls.add(statusBox);
-    controls.add(search);
-    search.addActionListener(event -> {
-      String status = "전체".equals(statusBox.getSelectedItem()) ? null
-          : String.valueOf(statusBox.getSelectedItem());
-      UiExceptionHandler.run(logger, () -> fillOrders(model, status));
-    });
-    panel.add(controls, BorderLayout.NORTH);
-    panel.add(UiTableFactory.scroll(table), BorderLayout.CENTER);
-    UiExceptionHandler.run(logger, () -> fillOrders(model, null));
-    return panel;
-  }
-
-  private JPanel historyPanel() {
-    JPanel panel = page("발주 승인/반려 이력 조회");
-    DefaultTableModel model = orderModel();
-    JTable table = UiTableFactory.table(model);
-    JButton refresh = new JButton("새로고침");
-    refresh.addActionListener(event -> UiExceptionHandler.run(logger, () -> fillHistory(model)));
-    panel.add(toolbar(refresh), BorderLayout.NORTH);
-    panel.add(UiTableFactory.scroll(table), BorderLayout.CENTER);
-    UiExceptionHandler.run(logger, () -> fillHistory(model));
-    return panel;
-  }
-
   private DefaultTableModel orderModel() {
-    return UiTableFactory.model("발주ID", "매장", "상품", "요청수량", "승인수량", "상태", "외부상태",
-        "요청사유", "반려사유");
+    return UiTableFactory.model("발주ID", "매장", "상품", "요청수량", "승인수량", "상태", "요청사유", "반려사유");
   }
 
   private void fillOrders(DefaultTableModel model, String status) throws Exception {
-    fillOrders(model, status, null);
-  }
-
-  private void fillOrders(DefaultTableModel model, String status, String externalStatus)
-      throws Exception {
     model.setRowCount(0);
     for (OrderRequestDTO order : store.findOrdersByStatus(status)) {
-      if (externalStatus == null || externalStatus.equals(store.findExternalOrderStatus(order.getOrderRequestId()))) {
-        model.addRow(row(order));
-      }
-    }
-  }
-
-  private void fillHistory(DefaultTableModel model) throws Exception {
-    model.setRowCount(0);
-    for (OrderRequestDTO order : store.orders()) {
-      if (OrderStatus.APPROVED.name().equals(order.getOrderStatus())
-          || OrderStatus.REJECTED.name().equals(order.getOrderStatus())
-          || order.getApprovalEmployeeId() != null) {
-        model.addRow(row(order));
-      }
+      model.addRow(row(order));
     }
   }
 
@@ -249,7 +166,6 @@ public class VendorManagerPanel {
         order.getOrderQuantity(),
         order.getApprovedQuantity() == null ? "-" : order.getApprovedQuantity(),
         order.getOrderStatus(),
-        store.findExternalOrderStatus(order.getOrderRequestId()),
         nullToBlank(order.getRequestReason()),
         nullToBlank(order.getRejectReason())
     };
@@ -267,6 +183,28 @@ public class VendorManagerPanel {
     panel.setOpaque(false);
     panel.add(button);
     return panel;
+  }
+
+  private JPanel orderListToolbar(JComboBox<String> statusBox, JButton refresh) {
+    JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+    panel.setOpaque(false);
+    panel.add(new JLabel("상태"));
+    panel.add(statusBox);
+    panel.add(refresh);
+    return panel;
+  }
+
+  private String[] orderStatusOptions() {
+    return new String[]{
+        "전체", OrderStatus.REQUESTED.name(), OrderStatus.APPROVED.name(),
+        OrderStatus.REJECTED.name(), OrderStatus.RECEIVED.name(), OrderStatus.CANCELED.name(),
+        OrderStatus.DONE.name()
+    };
+  }
+
+  private String selectedStatus(JComboBox<String> statusBox) {
+    Object selected = statusBox.getSelectedItem();
+    return "전체".equals(selected) ? null : String.valueOf(selected);
   }
 
   private long selectedOrderId(JTable table) {
