@@ -86,11 +86,12 @@ public class OrderManagementService {
         // 3. MariaDB 외부 공급사 접수증 생성
         OrderRequestDTO orderRequest = orderRequestDAO.findByOrderRequestId(oracleConn, orderRequestId);
 
+        String storeName = orderRequestDAO.findStoreNameByStoreId(orderRequest.getStoreId());
         ExternalOrderReceiptDTO receiptDTO = new ExternalOrderReceiptDTO();
         receiptDTO.setSupplierId(orderRequest.getSupplierIntegrationId());
         receiptDTO.setSupplierProductId(orderRequest.getProductId());
         receiptDTO.setInternalOrderRequestId(orderRequest.getOrderRequestId());
-        receiptDTO.setRequestStoreName("매장ID: " + orderRequest.getStoreId());
+        receiptDTO.setRequestStoreName(storeName);
         receiptDTO.setRequestQuantity(orderRequest.getOrderQuantity());
         receiptDTO.setApprovedQuantity(approvedQuantity);
         receiptDTO.setReceiptStatus("RECEIVED");
