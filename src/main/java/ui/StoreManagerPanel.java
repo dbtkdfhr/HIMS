@@ -244,11 +244,8 @@ public class StoreManagerPanel {
     JButton process = new JButton("판매 처리");
     JPanel form = formPanel();
 
-    UiExceptionHandler.run(logger, () -> {
-      for (InventoryDTO inventory : store.findInventoriesByStore(storeId())) {
-        productBox.addItem(inventory);
-      }
-    });
+    fillSaleProducts(productBox);
+
     productBox.setRenderer((list, value, index, isSelected, cellHasFocus) -> {
       JLabel label = new JLabel(
           value == null ? "" : value.getProductName() + " | 현재 " + value.getCurrentQuantity());
@@ -272,7 +269,7 @@ public class StoreManagerPanel {
       }
       int quantity = parsePositive(quantityField.getText(), "판매수량");
       store.processSale(storeId(), selected.getProductId(), quantity);
-      productBox.repaint();
+      fillSaleProducts(productBox);
       logger.accept("판매 처리 완료: " + selected.getProductName() + " " + quantity + "개");
       javax.swing.JOptionPane.showMessageDialog(panel, "판매 처리가 완료되었습니다.", "성공",
           javax.swing.JOptionPane.INFORMATION_MESSAGE);
@@ -536,5 +533,13 @@ public class StoreManagerPanel {
     // 헤더(제목)도 가운데 정렬
     ((javax.swing.table.DefaultTableCellRenderer) table.getTableHeader().getDefaultRenderer())
         .setHorizontalAlignment(javax.swing.JLabel.CENTER);
+  }
+  private void fillSaleProducts(JComboBox<InventoryDTO> box) {
+    box.removeAllItems();
+    UiExceptionHandler.run(logger, () -> {
+      for (InventoryDTO inventory : store.findInventoriesByStore(storeId())) {
+        box.addItem(inventory);
+      }
+    });
   }
 }
