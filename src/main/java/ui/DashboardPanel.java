@@ -129,7 +129,7 @@ public class DashboardPanel extends JPanel {
       VendorManagerPanel panel = new VendorManagerPanel(store, user, this::writeLog);
       views.putAll(panel.views());
     } else if (role == RoleType.BRANCH_MANAGER) {
-      BranchManagerPanel panel = new BranchManagerPanel(store, this::writeLog);
+      BranchManagerPanel panel = new BranchManagerPanel(store, user, this::writeLog);
       views.putAll(panel.views());
     } else if (role == RoleType.SYSTEM_MANAGER) {
       SystemManagerPanel panel = new SystemManagerPanel(store, this::writeLog);
