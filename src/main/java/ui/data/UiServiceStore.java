@@ -229,10 +229,13 @@ public class UiServiceStore {
     return employeeDTO;
   }
 
-  public void changeEmployeeRole(long employeeId, RoleType roleType) throws SQLException {
+  public void changeEmployeeRole(long employeeId, RoleType roleType, Long branchId, Long storeId)
+      throws SQLException {
     EmployeeDTO employeeDTO = new EmployeeDTO();
     employeeDTO.setEmployeeId(employeeId);
     employeeDTO.setRoleId(roleType.getRoleId());
+    employeeDTO.setBranchId(branchId);
+    employeeDTO.setStoreId(storeId);
     employeeService.updateRoleAndStore(employeeDTO);
   }
 
@@ -241,6 +244,7 @@ public class UiServiceStore {
     employeeDTO.setEmployeeId(employeeId);
     employeeDTO.setRoleId(RoleType.STORE_MANAGER.getRoleId());
     employeeDTO.setStoreId(storeId);
+    employeeDTO.setBranchId(findBranchIdByStoreId(storeId));
     employeeService.updateRoleAndStore(employeeDTO);
   }
 

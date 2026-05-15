@@ -103,7 +103,19 @@ public class EmployeeService {
   public int updateRoleAndStore(EmployeeDTO employee) throws SQLException {
     try {
       validateEmployeeId(employee);
-      RoleType.fromRoleId(employee.getRoleId());
+      RoleType roleType = RoleType.fromRoleId(employee.getRoleId());
+
+      if (requiresBranch(roleType)) {
+        validateBranchId(employee.getBranchId());
+      } else {
+        employee.setBranchId(null);
+      }
+
+      if (roleType == RoleType.STORE_MANAGER) {
+        validateStoreId(employee.getStoreId());
+      } else {
+        employee.setStoreId(null);
+      }
 
       int result = employeeDAO.updateRoleAndStore(employee);
       if (result == 0) {
@@ -177,6 +189,19 @@ public class EmployeeService {
     if (storeId == null) {
       throw new IllegalArgumentException("입점매장담당자는 storeId가 필수입니다.");
     }
+  }
+
+  private void validateBranchId(Long branchId) {
+    if (branchId == null) {
+      throw new IllegalArgumentException("지점 ID는 필수입니다.");
+    }
+  }
+
+  private boolean requiresBranch(RoleType roleType) {
+    return roleType == RoleType.STAFF
+        || roleType == RoleType.BRANCH_MANAGER
+        || roleType == RoleType.SUPPLIER_MANAGER
+        || roleType == RoleType.STORE_MANAGER;
   }
 
   private void validateDuplicateLoginId(String loginId) throws SQLException {

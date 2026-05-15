@@ -352,24 +352,21 @@ public class EmployeeDAO {
 
   // 권한 수정 및 소속 매장
   public int updateRoleAndStore(EmployeeDTO employee) throws SQLException {
-    StringBuilder sql = new StringBuilder("UPDATE EMPLOYEE SET role_id = ?");
-    boolean updateStore = employee.getStoreId() != null;
-    if (updateStore) {
-      sql.append(", store_id = ?");
-    }
-    sql.append(" WHERE employee_id = ?");
+    String sql =
+        "UPDATE EMPLOYEE SET " +
+            "role_id = ?, " +
+            "branch_id = ?, " +
+            "store_id = ? " +
+            "WHERE employee_id = ?";
 
     try (
         Connection conn = DBConnection.getConnection(DBType.ORACLE);
-        PreparedStatement pstmt = conn.prepareStatement(sql.toString())
+        PreparedStatement pstmt = conn.prepareStatement(sql)
     ) {
       pstmt.setInt(1, employee.getRoleId());
-
-      int index = 2;
-      if (updateStore) {
-        pstmt.setLong(index++, employee.getStoreId());
-      }
-      pstmt.setLong(index, employee.getEmployeeId());
+      setNullableLong(pstmt, 2, employee.getBranchId());
+      setNullableLong(pstmt, 3, employee.getStoreId());
+      pstmt.setLong(4, employee.getEmployeeId());
 
       return pstmt.executeUpdate();
 

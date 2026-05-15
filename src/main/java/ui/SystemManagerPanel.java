@@ -82,6 +82,7 @@ public class SystemManagerPanel {
     JComboBox<BranchDTO> branchBox = branchBox();
     JComboBox<StoreDTO> storeBox = emptyStoreBox();
     JComboBox<RoleType> roleBox = createRoleBox();
+    JLabel storeLabel = new JLabel("매장");
     JButton create = new JButton("직원 생성");
     JPanel form = formPanel();
 
@@ -93,15 +94,20 @@ public class SystemManagerPanel {
     form.add(roleBox);
     form.add(new JLabel("지점"));
     form.add(branchBox);
-    form.add(new JLabel("매장"));
+    form.add(storeLabel);
     form.add(storeBox);
     form.add(new JLabel());
     form.add(create);
 
     branchBox.addActionListener(event -> UiExceptionHandler.run(logger, () ->
         fillStoreOptionsByBranch(storeBox, (BranchDTO) branchBox.getSelectedItem())));
+    roleBox.addActionListener(event -> UiExceptionHandler.run(logger, () -> {
+      updateStoreSelectorVisibility((RoleType) roleBox.getSelectedItem(), storeLabel, storeBox);
+      fillStoreOptionsByBranch(storeBox, (BranchDTO) branchBox.getSelectedItem());
+    }));
     UiExceptionHandler.run(logger, () ->
         fillStoreOptionsByBranch(storeBox, (BranchDTO) branchBox.getSelectedItem()));
+    updateStoreSelectorVisibility((RoleType) roleBox.getSelectedItem(), storeLabel, storeBox);
 
     create.addActionListener(event -> UiExceptionHandler.run(logger, () -> {
         RoleType role = (RoleType) roleBox.getSelectedItem();
@@ -126,18 +132,39 @@ public class SystemManagerPanel {
     JPanel panel = page("직원 권한 변경 폼");
     DefaultTableModel model = employeeModel();
     JTable table = UiTableFactory.table(model);
-    JComboBox<RoleType> roleBox = roleBox();
+    JComboBox<RoleType> roleBox = createRoleBox();
+    JComboBox<BranchDTO> branchBox = branchBox();
+    JComboBox<StoreDTO> storeBox = emptyStoreBox();
+    JLabel storeLabel = new JLabel("매장");
     JButton change = new JButton("권한 변경");
     JButton refresh = new JButton("새로고침");
     JPanel controls = new JPanel(new FlowLayout(FlowLayout.LEFT));
     controls.add(new JLabel("변경 권한"));
     controls.add(roleBox);
+    controls.add(new JLabel("지점"));
+    controls.add(branchBox);
+    controls.add(storeLabel);
+    controls.add(storeBox);
     controls.add(change);
     controls.add(refresh);
+
+    branchBox.addActionListener(event -> UiExceptionHandler.run(logger, () ->
+        fillStoreOptionsByBranch(storeBox, (BranchDTO) branchBox.getSelectedItem())));
+    roleBox.addActionListener(event -> UiExceptionHandler.run(logger, () -> {
+      updateStoreSelectorVisibility((RoleType) roleBox.getSelectedItem(), storeLabel, storeBox);
+      fillStoreOptionsByBranch(storeBox, (BranchDTO) branchBox.getSelectedItem());
+    }));
+    UiExceptionHandler.run(logger, () ->
+        fillStoreOptionsByBranch(storeBox, (BranchDTO) branchBox.getSelectedItem()));
+    updateStoreSelectorVisibility((RoleType) roleBox.getSelectedItem(), storeLabel, storeBox);
 
     change.addActionListener(event -> UiExceptionHandler.run(logger, () -> {
         long employeeId = selectedEmployeeId(table);
         RoleType role = (RoleType) roleBox.getSelectedItem();
+        BranchDTO branch = (BranchDTO) branchBox.getSelectedItem();
+        Long branchId = requiresBranch(role) ? selectedBranchId(branch) : null;
+        Long storeId = requiresStore(role) ? selectedStoreId((StoreDTO) storeBox.getSelectedItem())
+            : null;
         EmployeeDTO target = null;
         for (EmployeeDTO employee : store.employees()) {
           if (employee.getEmployeeId() == employeeId) {
@@ -148,15 +175,19 @@ public class SystemManagerPanel {
         if (target == null) {
           throw new NotFoundException("직원을 찾을 수 없습니다.");
         }
-        store.changeEmployeeRole(employeeId, role);
-        fillEmployees(model);
+        store.changeEmployeeRole(employeeId, role, branchId, storeId);
+        fillStaffEmployees(model);
         logger.accept("직원 권한 변경 완료: " + target.getEmployeeName());
     }));
-    refresh.addActionListener(event -> UiExceptionHandler.run(logger, () -> fillEmployees(model)));
+    refresh.addActionListener(event -> UiExceptionHandler.run(logger, () -> {
+      fillBranchOptions(branchBox);
+      fillStoreOptionsByBranch(storeBox, (BranchDTO) branchBox.getSelectedItem());
+      fillStaffEmployees(model);
+    }));
 
     panel.add(controls, BorderLayout.NORTH);
     panel.add(UiTableFactory.scroll(table), BorderLayout.CENTER);
-    UiExceptionHandler.run(logger, () -> fillEmployees(model));
+    UiExceptionHandler.run(logger, () -> fillStaffEmployees(model));
     return panel;
   }
 
@@ -213,17 +244,26 @@ public class SystemManagerPanel {
     JPanel panel = page("매장담당자 부서변경");
     DefaultTableModel model = employeeModel();
     JTable table = UiTableFactory.table(model);
-    JComboBox<StoreDTO> storeBox = storeBox();
+    JComboBox<BranchDTO> branchBox = branchBox();
+    JComboBox<StoreDTO> storeBox = emptyStoreBox();
     JButton change = new JButton("소속 매장 변경");
     JButton refresh = new JButton("새로고침");
     JPanel controls = new JPanel(new FlowLayout(FlowLayout.LEFT));
+    controls.add(new JLabel("변경 지점"));
+    controls.add(branchBox);
     controls.add(new JLabel("변경 매장"));
     controls.add(storeBox);
     controls.add(change);
     controls.add(refresh);
 
+    branchBox.addActionListener(event -> UiExceptionHandler.run(logger, () ->
+        fillStoreOptionsByBranch(storeBox, (BranchDTO) branchBox.getSelectedItem())));
+    UiExceptionHandler.run(logger, () ->
+        fillStoreOptionsByBranch(storeBox, (BranchDTO) branchBox.getSelectedItem()));
+
     change.addActionListener(event -> UiExceptionHandler.run(logger, () -> {
       long employeeId = selectedEmployeeId(table);
+      selectedBranchId((BranchDTO) branchBox.getSelectedItem());
       StoreDTO selectedStore = (StoreDTO) storeBox.getSelectedItem();
       if (selectedStore == null) {
         throw new InputException("변경할 매장을 선택해 주세요.");
@@ -234,7 +274,8 @@ public class SystemManagerPanel {
           + selectedStore.getStoreName());
     }));
     refresh.addActionListener(event -> UiExceptionHandler.run(logger, () -> {
-      fillStoreOptions(storeBox);
+      fillBranchOptions(branchBox);
+      fillStoreOptionsByBranch(storeBox, (BranchDTO) branchBox.getSelectedItem());
       fillStoreManagers(model);
     }));
 
@@ -285,6 +326,15 @@ public class SystemManagerPanel {
     model.setRowCount(0);
     for (EmployeeDTO employee : store.employees()) {
       if (employee.getRoleId() == RoleType.STORE_MANAGER.getRoleId()) {
+        addEmployeeRow(model, employee);
+      }
+    }
+  }
+
+  private void fillStaffEmployees(DefaultTableModel model) throws Exception {
+    model.setRowCount(0);
+    for (EmployeeDTO employee : store.employees()) {
+      if (employee.getRoleId() == RoleType.STAFF.getRoleId()) {
         addEmployeeRow(model, employee);
       }
     }
@@ -486,6 +536,13 @@ public class SystemManagerPanel {
     }
   }
 
+  private void updateStoreSelectorVisibility(RoleType role, JLabel storeLabel,
+      JComboBox<StoreDTO> storeBox) {
+    boolean visible = requiresStore(role);
+    storeLabel.setVisible(visible);
+    storeBox.setVisible(visible);
+  }
+
   private JPanel page(String title) {
     JPanel panel = new JPanel(new BorderLayout(10, 10));
     panel.setBackground(UiConstants.PANEL_BACKGROUND);
@@ -540,6 +597,7 @@ public class SystemManagerPanel {
   private boolean requiresBranch(RoleType role) {
     return role == RoleType.STAFF
         || role == RoleType.BRANCH_MANAGER
+        || role == RoleType.SUPPLIER_MANAGER
         || role == RoleType.STORE_MANAGER;
   }
 
