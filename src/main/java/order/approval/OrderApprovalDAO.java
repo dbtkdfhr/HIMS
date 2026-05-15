@@ -9,17 +9,16 @@ import java.sql.SQLException;
 public class OrderApprovalDAO {
 
   public void insertApprovalHistory(Connection oracleConn, OrderApprovalDTO dto) throws SQLException {
-    String sql = "INSERT INTO ORDER_APPROVAL (order_approval_id, approval_employee_id, " +
+    String sql = "INSERT INTO ORDER_APPROVAL (approval_employee_id, " +
         "order_request_id, approved_quantity, approval_status, approval_comment, created_at) " +
-        "VALUES ( ?, ?, ?, ?, ?,?, SYSDATE)";
+        "VALUES ( ?, ?, ?, ?,?, SYSDATE)";
 
     try (PreparedStatement pstmt = oracleConn.prepareStatement(sql)) {
-      pstmt.setLong(1, dto.getOrderApprovalId());
-      pstmt.setLong(2, dto.getApprovalEmployeeId());
-      pstmt.setLong(3, dto.getOrderRequestId());
-      pstmt.setInt(4, dto.getApprovedQuantity());
-      pstmt.setString(5, dto.getApprovalStatus());
-      pstmt.setString(6, dto.getApprovalComment());
+      pstmt.setLong(1, dto.getApprovalEmployeeId());
+      pstmt.setLong(2, dto.getOrderRequestId());
+      pstmt.setInt(3, dto.getApprovedQuantity());
+      pstmt.setString(4, dto.getApprovalStatus());
+      pstmt.setString(5, dto.getApprovalComment());
 
       pstmt.executeUpdate();
     }
