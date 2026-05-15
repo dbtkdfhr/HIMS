@@ -6,9 +6,10 @@ import inventory.InventoryDTO;
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
-import java.util.List;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Consumer;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -19,6 +20,7 @@ import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 import product.ProductDTO;
 import store.StoreDTO;
+import ui.common.CategorySelector;
 import ui.common.UiConstants;
 import ui.common.UiExceptionHandler;
 import ui.common.SelectOption;
@@ -65,19 +67,29 @@ public class BranchManagerPanel {
     JButton search = new JButton("조회");
     JPanel controls = new JPanel(new FlowLayout(FlowLayout.LEFT));
     JComboBox<SelectOption> optionBox = new JComboBox<>();
+    CategorySelector categorySelector = new CategorySelector(controls, search);
     controls.add(new JLabel(filterType + " 조건"));
     if ("전체".equals(filterType)) {
       search.setText("새로고침");
+    } else if ("카테고리".equals(filterType)) {
+      UiExceptionHandler.run(logger, () -> categorySelector.load(store.categories()));
     } else {
       controls.add(optionBox);
       UiExceptionHandler.run(logger, () -> fillOptionBox(optionBox, filterType));
     }
-    controls.add(search);
-    search.addActionListener(event -> UiExceptionHandler.run(logger,
-        () -> fillInventory(model, filterType, selectedOption(optionBox, filterType))));
+    if (!"카테고리".equals(filterType)) {
+      controls.add(search);
+    }
+    search.addActionListener(event -> UiExceptionHandler.run(logger, () -> {
+      if ("카테고리".equals(filterType)) {
+        fillInventory(model, filterType, null, categorySelector.selectedCategoryIds());
+        return;
+      }
+      fillInventory(model, filterType, selectedOption(optionBox, filterType), null);
+    }));
     panel.add(controls, BorderLayout.NORTH);
     panel.add(UiTableFactory.scroll(table), BorderLayout.CENTER);
-    UiExceptionHandler.run(logger, () -> fillInventory(model, filterType, null));
+    UiExceptionHandler.run(logger, () -> fillInventory(model, filterType, null, null));
     return panel;
   }
 
@@ -200,11 +212,11 @@ public class BranchManagerPanel {
     return panel;
   }
 
-  private void fillInventory(DefaultTableModel model, String filterType, SelectOption option)
-      throws Exception {
+  private void fillInventory(DefaultTableModel model, String filterType, SelectOption option,
+      Set<Long> categoryIds) throws Exception {
     model.setRowCount(0);
     for (InventoryDTO inventory : branchInventories()) {
-      if (!matches(inventory, filterType, option)) {
+      if (!matches(inventory, filterType, option, categoryIds)) {
         continue;
       }
       model.addRow(new Object[]{
@@ -220,16 +232,19 @@ public class BranchManagerPanel {
     }
   }
 
-  private boolean matches(InventoryDTO inventory, String filterType, SelectOption option)
+  private boolean matches(InventoryDTO inventory, String filterType, SelectOption option,
+      Set<Long> categoryIds)
       throws Exception {
     if (option == null || "전체".equals(filterType)) {
-      return true;
+      return categoryIds == null || categoryIds.isEmpty()
+          || categoryIds.contains(inventory.getCategoryId());
     }
     if ("브랜드".equals(filterType)) {
       return inventory.getBrandId() != null && option.getId() == inventory.getBrandId();
     }
     if ("카테고리".equals(filterType)) {
-      return inventory.getCategoryId() != null && option.getId() == inventory.getCategoryId();
+      return inventory.getCategoryId() != null && categoryIds != null
+          && categoryIds.contains(inventory.getCategoryId());
     }
     return true;
   }
