@@ -179,11 +179,12 @@ public class ExternalOrderService {
       throw new SQLException("발주 요청을 찾을 수 없습니다.");
     }
 
+    String StoreName = orderRequestDAO.findStoreNameByStoreId(orderRequest.getStoreId());
     ExternalOrderReceiptDTO receiptDTO = new ExternalOrderReceiptDTO();
     receiptDTO.setSupplierId(orderRequest.getSupplierIntegrationId());
     receiptDTO.setSupplierProductId(orderRequest.getProductId());
     receiptDTO.setInternalOrderRequestId(orderRequest.getOrderRequestId());
-    receiptDTO.setRequestStoreName("매장ID: " + orderRequest.getStoreId());
+    receiptDTO.setRequestStoreName(StoreName);
     receiptDTO.setRequestQuantity(orderRequest.getOrderQuantity());
     receiptDTO.setApprovedQuantity(approvedQuantity);
     receiptDTO.setReceiptStatus(External_OrderStatus.RECEIVED.name());

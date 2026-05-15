@@ -12,8 +12,9 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTable;
 import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableModel;
-import order.request.OrderRequestDTO;
+import order.external.ExternalOrderReceiptDTO;
 import ui.common.UiConstants;
 import ui.common.UiExceptionHandler;
 import ui.common.UiTableFactory;
@@ -64,70 +65,101 @@ public class ExternalSupplierPanel {
     JTextField reasonField = new JTextField(24);
     JButton approve = new JButton("승인");
     JButton reject = new JButton("거절");
-    JButton refresh = new JButton("접수 요청 조회");
+    JButton refresh = new JButton("새로고침");
     JPanel controls = new JPanel(new FlowLayout(FlowLayout.LEFT));
+    controls.setOpaque(false);
     controls.add(approve);
-    controls.add(new JLabel("거절사유"));
-    controls.add(reasonField);
     controls.add(reject);
     controls.add(refresh);
 
+    JPanel rejectReasonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+    rejectReasonPanel.setOpaque(false);
+    rejectReasonPanel.add(new JLabel("거절 사유"));
+    rejectReasonPanel.add(reasonField);
+    JButton rejectConfirm = new JButton("거절 확정");
+    JButton cancelReject = new JButton("취소");
+    rejectReasonPanel.add(rejectConfirm);
+    rejectReasonPanel.add(cancelReject);
+    rejectReasonPanel.setVisible(false);
+
+    JPanel north = new JPanel(new BorderLayout());
+    north.setOpaque(false);
+    north.add(controls, BorderLayout.NORTH);
+    north.add(rejectReasonPanel, BorderLayout.CENTER);
+
     approve.addActionListener(event -> UiExceptionHandler.run(logger, () -> {
-        long orderId = selectedOrderId(table);
-        store.approveExternalOrder(orderId);
-        fillExternalOrders(model, true);
-        logger.accept("외부 발주처 승인 완료: " + orderId);
+      long orderId = selectedOrderId(table);
+      store.approveExternalOrder(orderId);
+      fillExternalOrders(model, true);
+      logger.accept("외부 발주처 승인 완료 : "  + orderId);
     }));
-    reject.addActionListener(event -> UiExceptionHandler.run(logger, () -> {
-        long orderId = selectedOrderId(table);
-        store.rejectExternalOrder(orderId, required(reasonField.getText(), "거절사유"));
-        reasonField.setText("");
-        fillExternalOrders(model, true);
-        logger.accept("외부 발주처 거절 완료: " + orderId);
+    reject.addActionListener(event -> {
+      rejectReasonPanel.setVisible(true);
+      SwingUtilities.invokeLater(reasonField::requestFocusInWindow);
+    });
+    rejectConfirm.addActionListener(event -> UiExceptionHandler.run(logger, () -> {
+      long orderId = selectedOrderId(table);
+      store.rejectExternalOrder(orderId, required(reasonField.getText(), "거절사유"));
+      reasonField.setText("");
+      rejectReasonPanel.setVisible(false);
+      fillExternalOrders(model, true);
+      logger.accept("외부 발주처 거절 완료 : " + orderId);
     }));
+    cancelReject.addActionListener(event -> {
+      reasonField.setText("");
+      rejectReasonPanel.setVisible(false);
+    });
     refresh.addActionListener(event -> UiExceptionHandler.run(logger, () -> fillExternalOrders(model, true)));
 
-    panel.add(controls, BorderLayout.NORTH);
+    panel.add(north, BorderLayout.NORTH);
     panel.add(UiTableFactory.scroll(table), BorderLayout.CENTER);
     UiExceptionHandler.run(logger, () -> fillExternalOrders(model, true));
     return panel;
   }
 
   private DefaultTableModel orderModel() {
-    return UiTableFactory.model("발주ID", "매장", "상품", "요청수량", "승인수량", "외부접수ID", "내부상태",
-        "외부상태", "사유");
+    return UiTableFactory.model("발주ID", "매장", "상품", "요청수량", "승인수량", "외부접수ID", "상태");
   }
 
   private void fillExternalOrders(DefaultTableModel model, boolean onlyReceived) throws Exception {
     model.setRowCount(0);
-    for (OrderRequestDTO order : store.orders()) {
-      if (isExternalOrder(order, onlyReceived)) {
-        model.addRow(row(order));
+    for (ExternalOrderReceiptDTO receipt : store.externalOrderReceipts()) {
+      if (isExternalOrder(receipt, onlyReceived)) {
+        model.addRow(row(receipt));
       }
     }
   }
 
-  private boolean isExternalOrder(OrderRequestDTO order, boolean onlyReceived) throws Exception {
-    String externalStatus = store.findExternalOrderStatus(order.getOrderRequestId());
+  private boolean isExternalOrder(ExternalOrderReceiptDTO receipt, boolean onlyReceived) {
+    String externalStatus = receipt.getReceiptStatus();
     if (onlyReceived) {
-      return RECEIVED_STATUS.equals(externalStatus);
+      return "RECEIVED".equals(externalStatus);
     }
-    return RECEIVED_STATUS.equals(externalStatus)
-        || SHIPPED_STATUS.equals(externalStatus)
-        || REJECTED_STATUS.equals(externalStatus);
+    return "RECEIVED".equals(externalStatus)
+        || "SHIPPED".equals(externalStatus)
+        || "REJECTED".equals(externalStatus);
   }
 
-  private Object[] row(OrderRequestDTO order) throws Exception {
+  private Object[] row(ExternalOrderReceiptDTO receipt) throws Exception {
+    Long approvedQuantity =
+        "REJECTED".equals(receipt.getReceiptStatus()) ? null : (long) receipt.getApprovedQuantity();
+
+    String storeName = receipt.getRequestStoreName();
+    String productName;
+    try {
+      productName = store.findProductName(receipt.getSupplierProductId());
+    } catch (Exception ignored) {
+      productName = String.valueOf(receipt.getSupplierProductId());
+    }
+
     return new Object[]{
-        order.getOrderRequestId(),
-        store.findStoreName(order.getStoreId()),
-        store.findProductName(order.getProductId()),
-        order.getOrderQuantity(),
-        order.getApprovedQuantity() == null ? "-" : order.getApprovedQuantity(),
-        order.getExternalOrderId() == null ? "-" : order.getExternalOrderId(),
-        order.getOrderStatus(),
-        store.findExternalOrderStatus(order.getOrderRequestId()),
-        store.findExternalRejectReason(order.getOrderRequestId())
+        receipt.getInternalOrderRequestId(), // 0. 발주ID
+        storeName,                           // 1. 매장
+        productName,                         // 2. 상품
+        receipt.getRequestQuantity(),        // 3. 요청수량
+        approvedQuantity == null ? "-" : approvedQuantity, // 4. 승인수량
+        receipt.getExternalOrderReceiptId(), // 5. 외부접수ID
+        store.findExternalOrderStatus(receipt.getInternalOrderRequestId()) // 6. 외부상태
     };
   }
 
@@ -160,5 +192,4 @@ public class ExternalSupplierPanel {
     }
     return text;
   }
-
 }

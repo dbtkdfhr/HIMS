@@ -7,6 +7,7 @@ import static common.GetNullableVariable.getNullableLong;
 import common.DBConnection;
 import common.type.DBType;
 import common.type.OrderStatus;
+import exception.NotFoundException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -288,5 +289,23 @@ public class OrderRequestDAO {
 
       return pstmt.executeUpdate();
     }
+  }
+
+  public String findStoreNameByStoreId(long storeId) throws SQLException {
+    // STORE ID로 STORE_NAME을 가져오는 쿼리
+    String sql = "SELECT STORE_NAME FROM STORE WHERE STORE_ID = ?";
+
+    try (Connection conn = DBConnection.getConnection(DBType.ORACLE);
+        PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+      pstmt.setLong(1, storeId);
+
+      try (ResultSet rs = pstmt.executeQuery()) {
+        if (rs.next()) {
+          return rs.getString("STORE_NAME");
+        }
+      }
+    }
+    throw new NotFoundException("해당 ID의 매장을 찾을 수 없습니다: " + storeId);
   }
 }
