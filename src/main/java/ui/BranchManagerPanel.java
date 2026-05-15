@@ -1,10 +1,12 @@
 package ui;
 
 import exception.InputException;
+import employee.EmployeeDTO;
 import inventory.InventoryDTO;
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
+import java.util.List;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -19,14 +21,14 @@ import product.ProductDTO;
 import store.StoreDTO;
 import ui.common.UiConstants;
 import ui.common.UiExceptionHandler;
+import ui.common.SelectOption;
 import ui.common.UiTableFactory;
 import ui.data.UiServiceStore;
 
 public class BranchManagerPanel {
 
   public static final String[] MENUS = {
-      "전체 재고 현황 조회",
-      "지점별 재고 조회",
+      "내 지점 재고 현황 조회",
       "브랜드별 재고 조회",
       "카테고리별 재고 조회",
       "입점매장 정보 조회",
@@ -35,22 +37,23 @@ public class BranchManagerPanel {
   };
 
   private final UiServiceStore store;
+  private final EmployeeDTO user;
   private final Consumer<String> logger;
 
-  public BranchManagerPanel(UiServiceStore store, Consumer<String> logger) {
+  public BranchManagerPanel(UiServiceStore store, EmployeeDTO user, Consumer<String> logger) {
     this.store = store;
+    this.user = user;
     this.logger = logger;
   }
 
   public Map<String, JPanel> views() {
     Map<String, JPanel> views = new LinkedHashMap<>();
-    views.put(MENUS[0], inventoryPanel("전체 재고 현황 조회", "전체"));
-    views.put(MENUS[1], inventoryPanel("지점별 재고 조회", "지점"));
-    views.put(MENUS[2], inventoryPanel("브랜드별 재고 조회", "브랜드"));
-    views.put(MENUS[3], inventoryPanel("카테고리별 재고 조회", "카테고리"));
-    views.put(MENUS[4], storeInfoPanel());
-    views.put(MENUS[5], storeCreatePanel());
-    views.put(MENUS[6], productCreatePanel());
+    views.put(MENUS[0], inventoryPanel("내 지점 재고 현황 조회", "전체"));
+    views.put(MENUS[1], inventoryPanel("브랜드별 재고 조회", "브랜드"));
+    views.put(MENUS[2], inventoryPanel("카테고리별 재고 조회", "카테고리"));
+    views.put(MENUS[3], storeInfoPanel());
+    views.put(MENUS[4], storeCreatePanel());
+    views.put(MENUS[5], productCreatePanel());
     return views;
   }
 
@@ -59,17 +62,22 @@ public class BranchManagerPanel {
     DefaultTableModel model = UiTableFactory.model("매장", "상품ID", "상품명", "브랜드", "카테고리",
         "현재수량", "안전재고", "부족여부");
     JTable table = UiTableFactory.table(model);
-    JTextField keywordField = new JTextField(16);
     JButton search = new JButton("조회");
     JPanel controls = new JPanel(new FlowLayout(FlowLayout.LEFT));
+    JComboBox<SelectOption> optionBox = new JComboBox<>();
     controls.add(new JLabel(filterType + " 조건"));
-    controls.add(keywordField);
+    if ("전체".equals(filterType)) {
+      search.setText("새로고침");
+    } else {
+      controls.add(optionBox);
+      UiExceptionHandler.run(logger, () -> fillOptionBox(optionBox, filterType));
+    }
     controls.add(search);
     search.addActionListener(event -> UiExceptionHandler.run(logger,
-        () -> fillInventory(model, filterType, keywordField.getText())));
+        () -> fillInventory(model, filterType, selectedOption(optionBox, filterType))));
     panel.add(controls, BorderLayout.NORTH);
     panel.add(UiTableFactory.scroll(table), BorderLayout.CENTER);
-    UiExceptionHandler.run(logger, () -> fillInventory(model, filterType, ""));
+    UiExceptionHandler.run(logger, () -> fillInventory(model, filterType, null));
     return panel;
   }
 
@@ -90,7 +98,7 @@ public class BranchManagerPanel {
     JPanel panel = page("입점매장 등록 폼");
     JTextField nameField = new JTextField(18);
     JTextField branchField = new JTextField(8);
-    JTextField brandField = new JTextField(8);
+    JComboBox<SelectOption> brandBox = new JComboBox<>();
     JTextField floorField = new JTextField(8);
     JTextField locationField = new JTextField(18);
     JComboBox<String> statusBox = new JComboBox<>(new String[]{"운영중", "운영중지"});
@@ -103,8 +111,8 @@ public class BranchManagerPanel {
     form.add(nameField);
     form.add(new JLabel("지점ID"));
     form.add(branchField);
-    form.add(new JLabel("브랜드ID"));
-    form.add(brandField);
+    form.add(new JLabel("브랜드"));
+    form.add(brandBox);
     form.add(new JLabel("층 정보"));
     form.add(floorField);
     form.add(new JLabel("매장 위치"));
@@ -114,10 +122,12 @@ public class BranchManagerPanel {
     form.add(new JLabel());
     form.add(create);
 
+    UiExceptionHandler.run(logger, () -> fillOptionBox(brandBox, "브랜드"));
+
     create.addActionListener(event -> UiExceptionHandler.run(logger, () -> {
         String name = required(nameField.getText(), "매장명");
         long branchId = parseLong(branchField.getText(), "지점ID");
-        long brandId = parseLong(brandField.getText(), "브랜드ID");
+        long brandId = selectedRequired(brandBox, "브랜드").getId();
         String floor = required(floorField.getText(), "층 정보");
         String location = required(locationField.getText(), "매장 위치");
         StoreDTO dto = new StoreDTO();
@@ -141,8 +151,8 @@ public class BranchManagerPanel {
   private JPanel productCreatePanel() {
     JPanel panel = page("상품 등록 폼");
     JTextField nameField = new JTextField(18);
-    JTextField brandField = new JTextField(8);
-    JTextField categoryField = new JTextField(8);
+    JComboBox<SelectOption> brandBox = new JComboBox<>();
+    JComboBox<SelectOption> categoryBox = new JComboBox<>();
     JTextField priceField = new JTextField(8);
     JComboBox<String> seasonBox = new JComboBox<>(new String[]{"봄/여름", "가을/겨울", "상시"});
     JComboBox<String> statusBox = new JComboBox<>(new String[]{"ON_SALE", "STOPPED", "DISCONTINUED"});
@@ -153,10 +163,10 @@ public class BranchManagerPanel {
 
     form.add(new JLabel("상품명"));
     form.add(nameField);
-    form.add(new JLabel("브랜드ID"));
-    form.add(brandField);
-    form.add(new JLabel("카테고리ID"));
-    form.add(categoryField);
+    form.add(new JLabel("브랜드"));
+    form.add(brandBox);
+    form.add(new JLabel("카테고리"));
+    form.add(categoryBox);
     form.add(new JLabel("판매가"));
     form.add(priceField);
     form.add(new JLabel("시즌구분"));
@@ -166,11 +176,16 @@ public class BranchManagerPanel {
     form.add(new JLabel());
     form.add(create);
 
+    UiExceptionHandler.run(logger, () -> {
+      fillOptionBox(brandBox, "브랜드");
+      fillOptionBox(categoryBox, "카테고리");
+    });
+
     create.addActionListener(event -> UiExceptionHandler.run(logger, () -> {
         ProductDTO dto = new ProductDTO();
         dto.setProductName(required(nameField.getText(), "상품명"));
-        dto.setBrandId(parseLong(brandField.getText(), "브랜드ID"));
-        dto.setCategoryId(parseLong(categoryField.getText(), "카테고리ID"));
+        dto.setBrandId(selectedRequired(brandBox, "브랜드").getId());
+        dto.setCategoryId(selectedRequired(categoryBox, "카테고리").getId());
         dto.setPrice((int) parseLong(priceField.getText(), "판매가"));
         dto.setSeasonType(String.valueOf(seasonBox.getSelectedItem()));
         dto.setProductStatus(String.valueOf(statusBox.getSelectedItem()));
@@ -185,12 +200,11 @@ public class BranchManagerPanel {
     return panel;
   }
 
-  private void fillInventory(DefaultTableModel model, String filterType, String keyword)
+  private void fillInventory(DefaultTableModel model, String filterType, SelectOption option)
       throws Exception {
     model.setRowCount(0);
-    String normalized = keyword == null ? "" : keyword.trim();
-    for (InventoryDTO inventory : store.inventories()) {
-      if (!matches(inventory, filterType, normalized)) {
+    for (InventoryDTO inventory : branchInventories()) {
+      if (!matches(inventory, filterType, option)) {
         continue;
       }
       model.addRow(new Object[]{
@@ -206,21 +220,55 @@ public class BranchManagerPanel {
     }
   }
 
-  private boolean matches(InventoryDTO inventory, String filterType, String keyword)
+  private boolean matches(InventoryDTO inventory, String filterType, SelectOption option)
       throws Exception {
-    if (keyword.isEmpty() || "전체".equals(filterType)) {
+    if (option == null || "전체".equals(filterType)) {
       return true;
     }
-    if ("지점".equals(filterType)) {
-      return store.findStoreName(inventory.getStoreId()).contains(keyword);
-    }
     if ("브랜드".equals(filterType)) {
-      return inventory.getBrandName().contains(keyword);
+      return inventory.getBrandId() != null && option.getId() == inventory.getBrandId();
     }
     if ("카테고리".equals(filterType)) {
-      return inventory.getCategoryName().contains(keyword);
+      return inventory.getCategoryId() != null && option.getId() == inventory.getCategoryId();
     }
     return true;
+  }
+
+  private List<InventoryDTO> branchInventories() throws Exception {
+    if (user.getBranchId() == null || user.getBranchId() <= 0) {
+      throw new InputException("로그인한 지점관리자의 지점 정보가 올바르지 않습니다.");
+    }
+    return store.findInventoriesByBranch(user.getBranchId());
+  }
+
+  private void fillOptionBox(JComboBox<SelectOption> box, String type) throws Exception {
+    box.removeAllItems();
+    if ("브랜드".equals(type)) {
+      for (brand.BrandDTO brand : store.brands()) {
+        box.addItem(new SelectOption(brand.getBrandId(), brand.getBrandName()));
+      }
+      return;
+    }
+    if ("카테고리".equals(type)) {
+      for (category.CategoryDTO category : store.categories()) {
+        box.addItem(new SelectOption(category.getCategoryId(), category.getCategoryName()));
+      }
+    }
+  }
+
+  private SelectOption selectedOption(JComboBox<SelectOption> box, String filterType) {
+    if ("전체".equals(filterType)) {
+      return null;
+    }
+    return selectedRequired(box, filterType);
+  }
+
+  private SelectOption selectedRequired(JComboBox<SelectOption> box, String label) {
+    SelectOption selected = (SelectOption) box.getSelectedItem();
+    if (selected == null) {
+      throw new InputException(label + "을 선택해 주세요.");
+    }
+    return selected;
   }
 
   private void fillStores(DefaultTableModel model) throws Exception {
