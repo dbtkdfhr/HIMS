@@ -14,6 +14,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -53,15 +54,15 @@ public class SystemManagerPanel {
     this.logger = logger;
   }
 
-  public Map<String, JPanel> views() {
-    Map<String, JPanel> views = new LinkedHashMap<>();
-    views.put(MENUS[0], employeeListPanel());
-    views.put(MENUS[1], employeeCreatePanel());
-    views.put(MENUS[2], roleChangePanel());
-    views.put(MENUS[3], storeManagerTransferPanel());
-    views.put(MENUS[4], deactivatePanel());
-    views.put(MENUS[5], passwordResetPanel());
-    views.put(MENUS[6], inventoryPanel("전체 재고 현황 조회", "전체"));
+  public Map<String, Supplier<JPanel>> views() {
+    Map<String, Supplier<JPanel>> views = new LinkedHashMap<>();
+    views.put(MENUS[0], this::employeeListPanel);
+    views.put(MENUS[1], this::employeeCreatePanel);
+    views.put(MENUS[2], this::roleChangePanel);
+    views.put(MENUS[3], this::storeManagerTransferPanel);
+    views.put(MENUS[4], this::deactivatePanel);
+    views.put(MENUS[5], this::passwordResetPanel);
+    views.put(MENUS[6], () -> inventoryPanel("전체 재고 현황 조회", "전체"));
     return views;
   }
 

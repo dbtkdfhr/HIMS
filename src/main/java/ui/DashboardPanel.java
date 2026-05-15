@@ -9,6 +9,7 @@ import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.function.Supplier;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JLabel;
@@ -26,7 +27,8 @@ public class DashboardPanel extends JPanel {
   private final CardLayout cardLayout = new CardLayout();
   private final JPanel contentPanel = new JPanel(cardLayout);
   private final javax.swing.JTextPane logArea = new javax.swing.JTextPane();
-  private final Map<String, JPanel> views = new LinkedHashMap<>();
+  private final Map<String, Supplier<JPanel>> viewFactories = new LinkedHashMap<>();
+  private final Map<String, JPanel> loadedViews = new LinkedHashMap<>();
 
   public DashboardPanel(UiServiceStore store, EmployeeDTO user, Runnable onLogout) {
     this.store = store;
@@ -137,31 +139,34 @@ public class DashboardPanel extends JPanel {
     RoleType role = RoleType.fromRoleId(user.getRoleId());
     if (role == RoleType.STORE_MANAGER) {
       StoreManagerPanel panel = new StoreManagerPanel(store, user, this::writeLog);
-      views.putAll(panel.views());
+      viewFactories.putAll(panel.views());
     } else if (role == RoleType.SUPPLIER_MANAGER) {
       VendorManagerPanel panel = new VendorManagerPanel(store, user, this::writeLog);
-      views.putAll(panel.views());
+      viewFactories.putAll(panel.views());
     } else if (role == RoleType.BRANCH_MANAGER) {
       BranchManagerPanel panel = new BranchManagerPanel(store, user, this::writeLog);
-      views.putAll(panel.views());
+      viewFactories.putAll(panel.views());
     } else if (role == RoleType.SYSTEM_MANAGER) {
       SystemManagerPanel panel = new SystemManagerPanel(store, this::writeLog);
-      views.putAll(panel.views());
+      viewFactories.putAll(panel.views());
     }
 
-    for (Map.Entry<String, JPanel> entry : views.entrySet()) {
-      contentPanel.add(entry.getValue(), entry.getKey());
-    }
-    if (!views.isEmpty()) {
-      show(views.keySet().iterator().next());
+    if (!viewFactories.isEmpty()) {
+      show(viewFactories.keySet().iterator().next());
     }
   }
 
   private void show(String name) {
-    if (views.containsKey(name)) {
-      cardLayout.show(contentPanel, name);
-      writeLog("메뉴 이동: " + name);
+    if (!viewFactories.containsKey(name)) {
+      return;
     }
+    if (!loadedViews.containsKey(name)) {
+      JPanel view = viewFactories.get(name).get();
+      loadedViews.put(name, view);
+      contentPanel.add(view, name);
+    }
+    cardLayout.show(contentPanel, name);
+    writeLog("메뉴 이동: " + name);
   }
 
   private String[] menuNames() {

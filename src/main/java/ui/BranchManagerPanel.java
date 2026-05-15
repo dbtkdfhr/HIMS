@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -52,14 +53,14 @@ public class BranchManagerPanel {
     this.logger = logger;
   }
 
-  public Map<String, JPanel> views() {
-    Map<String, JPanel> views = new LinkedHashMap<>();
-    views.put(MENUS[0], inventoryPanel("내 지점 재고 현황 조회", "전체"));
-    views.put(MENUS[1], inventoryPanel("브랜드별 재고 조회", "브랜드"));
-    views.put(MENUS[2], inventoryPanel("카테고리별 재고 조회", "카테고리"));
-    views.put(MENUS[3], storeInfoPanel());
-    views.put(MENUS[4], storeCreatePanel());
-    views.put(MENUS[5], productCreatePanel());
+  public Map<String, Supplier<JPanel>> views() {
+    Map<String, Supplier<JPanel>> views = new LinkedHashMap<>();
+    views.put(MENUS[0], () -> inventoryPanel("내 지점 재고 현황 조회", "전체"));
+    views.put(MENUS[1], () -> inventoryPanel("브랜드별 재고 조회", "브랜드"));
+    views.put(MENUS[2], () -> inventoryPanel("카테고리별 재고 조회", "카테고리"));
+    views.put(MENUS[3], this::storeInfoPanel);
+    views.put(MENUS[4], this::storeCreatePanel);
+    views.put(MENUS[5], this::productCreatePanel);
     return views;
   }
 

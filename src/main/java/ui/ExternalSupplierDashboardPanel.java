@@ -7,6 +7,7 @@ import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.function.Supplier;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JLabel;
@@ -21,7 +22,8 @@ public class ExternalSupplierDashboardPanel extends JPanel {
   private final CardLayout cardLayout = new CardLayout();
   private final JPanel contentPanel = new JPanel(cardLayout);
   private final JTextArea logArea = new JTextArea(5, 20);
-  private final Map<String, JPanel> views = new LinkedHashMap<>();
+  private final Map<String, Supplier<JPanel>> viewFactories = new LinkedHashMap<>();
+  private final Map<String, JPanel> loadedViews = new LinkedHashMap<>();
 
   public ExternalSupplierDashboardPanel(UiServiceStore store) {
     setLayout(new BorderLayout());
@@ -31,7 +33,7 @@ public class ExternalSupplierDashboardPanel extends JPanel {
     add(contentPanel, BorderLayout.CENTER);
     add(log(), BorderLayout.SOUTH);
     ExternalSupplierPanel panel = new ExternalSupplierPanel(store, this::writeLog);
-    views.putAll(panel.views());
+    viewFactories.putAll(panel.views());
     installViews();
   }
 
@@ -72,19 +74,22 @@ public class ExternalSupplierDashboardPanel extends JPanel {
   }
 
   private void installViews() {
-    for (Map.Entry<String, JPanel> entry : views.entrySet()) {
-      contentPanel.add(entry.getValue(), entry.getKey());
-    }
-    if (!views.isEmpty()) {
-      show(views.keySet().iterator().next());
+    if (!viewFactories.isEmpty()) {
+      show(viewFactories.keySet().iterator().next());
     }
   }
 
   private void show(String name) {
-    if (views.containsKey(name)) {
-      cardLayout.show(contentPanel, name);
-      writeLog("메뉴 이동: " + name);
+    if (!viewFactories.containsKey(name)) {
+      return;
     }
+    if (!loadedViews.containsKey(name)) {
+      JPanel view = viewFactories.get(name).get();
+      loadedViews.put(name, view);
+      contentPanel.add(view, name);
+    }
+    cardLayout.show(contentPanel, name);
+    writeLog("메뉴 이동: " + name);
   }
 
   private void writeLog(String text) {
