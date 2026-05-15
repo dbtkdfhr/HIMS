@@ -6,6 +6,7 @@ import java.awt.FlowLayout;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -37,10 +38,10 @@ public class ExternalSupplierPanel {
     this.logger = logger;
   }
 
-  public Map<String, JPanel> views() {
-    Map<String, JPanel> views = new LinkedHashMap<>();
-    views.put(MENUS[0], receiptListPanel());
-    views.put(MENUS[1], decisionPanel());
+  public Map<String, Supplier<JPanel>> views() {
+    Map<String, Supplier<JPanel>> views = new LinkedHashMap<>();
+    views.put(MENUS[0], this::receiptListPanel);
+    views.put(MENUS[1], this::decisionPanel);
     return views;
   }
 

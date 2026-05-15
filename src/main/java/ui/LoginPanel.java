@@ -24,6 +24,7 @@ public class LoginPanel extends JPanel {
   private final Consumer<EmployeeDTO> onLogin;
   private final JTextField loginIdField = new JTextField(18);
   private final JPasswordField passwordField = new JPasswordField(18);
+  private final JButton loginButton = new JButton("로그인");
 
   public LoginPanel(UiServiceStore store, Consumer<EmployeeDTO> onLogin) {
     this.store = store;
@@ -32,6 +33,8 @@ public class LoginPanel extends JPanel {
     setBackground(UiConstants.BACKGROUND);
     add(title(), BorderLayout.NORTH);
     add(form(), BorderLayout.CENTER);
+    javax.swing.SwingUtilities.invokeLater(
+        () -> getRootPane().setDefaultButton(loginButton));
   }
 
   private JPanel title() {
@@ -53,12 +56,11 @@ public class LoginPanel extends JPanel {
     addRow(panel, c, 0, "로그인 ID", loginIdField);
     addRow(panel, c, 1, "비밀번호", passwordField);
 
-    JButton button = new JButton("로그인");
-    button.addActionListener(event -> login());
+    loginButton.addActionListener(event -> login());
     c.gridx = 1;
     c.gridy = 2;
     c.fill = GridBagConstraints.HORIZONTAL;
-    panel.add(button, c);
+    panel.add(loginButton, c);
 
     return panel;
   }

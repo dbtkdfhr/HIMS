@@ -8,6 +8,7 @@ import java.awt.FlowLayout;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
@@ -43,15 +44,15 @@ public class VendorManagerPanel {
     this.logger = logger;
   }
 
-  public Map<String, JPanel> views() {
-    Map<String, JPanel> views = new LinkedHashMap<>();
-    views.put(MENUS[0], orderListPanel(null));
-    views.put(MENUS[1], detailPanel());
-    views.put(MENUS[2], approvePanel());
-    views.put(MENUS[3], rejectPanel());
-    views.put(MENUS[4], transitionPanel("승인 발주 외부 전송", OrderStatus.APPROVED.name()));
-    views.put(MENUS[5], filterPanel());
-    views.put(MENUS[6], historyPanel());
+  public Map<String, Supplier<JPanel>> views() {
+    Map<String, Supplier<JPanel>> views = new LinkedHashMap<>();
+    views.put(MENUS[0], () -> orderListPanel(null));
+    views.put(MENUS[1], this::detailPanel);
+    views.put(MENUS[2], this::approvePanel);
+    views.put(MENUS[3], this::rejectPanel);
+    views.put(MENUS[4], () -> transitionPanel("승인 발주 외부 전송", OrderStatus.APPROVED.name()));
+    views.put(MENUS[5], this::filterPanel);
+    views.put(MENUS[6], this::historyPanel);
     return views;
   }
 

@@ -12,6 +12,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
@@ -44,14 +45,14 @@ public class StoreManagerPanel {
     this.logger = logger;
   }
 
-  public Map<String, JPanel> views() {
-    Map<String, JPanel> views = new LinkedHashMap<>();
-    views.put(MENUS[0], inventoryPanel());
-    views.put(MENUS[1], orderCreatePanel());
-    views.put(MENUS[2], orderStatusPanel());
-    views.put(MENUS[3], unifiedReceiptPanel());
-    views.put(MENUS[4], receiptHistoryPanel());
-    views.put(MENUS[5], salePanel());
+  public Map<String, Supplier<JPanel>> views() {
+    Map<String, Supplier<JPanel>> views = new LinkedHashMap<>();
+    views.put(MENUS[0], this::inventoryPanel);
+    views.put(MENUS[1], this::orderCreatePanel);
+    views.put(MENUS[2], this::orderStatusPanel);
+    views.put(MENUS[3], this::unifiedReceiptPanel);
+    views.put(MENUS[4], this::receiptHistoryPanel);
+    views.put(MENUS[5], this::salePanel);
     return views;
   }
 
