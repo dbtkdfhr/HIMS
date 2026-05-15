@@ -231,6 +231,10 @@ public class UiServiceStore {
     employeeService.disableEmployee(employeeId);
   }
 
+  public void resetEmployeePassword(long employeeId, String newPassword) throws SQLException {
+    employeeService.resetPassword(employeeId, newPassword);
+  }
+
   public void createStore(StoreDTO storeDTO) throws SQLException {
     storeService.registerStore(storeDTO);
   }

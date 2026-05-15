@@ -84,12 +84,12 @@ public class DashboardPanel extends JPanel {
     RoleType role = RoleType.fromRoleId(user.getRoleId());
     if (role == RoleType.SYSTEM_MANAGER) {
       addSectionLabel(buttons, "직원 관리");
-      for (int i = 0; i <= 4; i++) {
+      for (int i = 0; i <= 5; i++) {
         addMenuButton(buttons, SystemManagerPanel.MENUS[i]);
       }
 
       addSectionLabel(buttons, "재고 관리");
-      for (int i = 5; i < SystemManagerPanel.MENUS.length; i++) {
+      for (int i = 6; i < SystemManagerPanel.MENUS.length; i++) {
         addMenuButton(buttons, SystemManagerPanel.MENUS[i]);
       }
       return;

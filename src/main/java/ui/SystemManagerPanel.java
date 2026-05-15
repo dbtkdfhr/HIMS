@@ -28,6 +28,7 @@ import ui.common.UiTableFactory;
 import ui.data.UiServiceStore;
 
 public class SystemManagerPanel {
+  private static final String RESET_PASSWORD = "changeme";
 
   public static final String[] MENUS = {
       "직원 계정 목록",
@@ -35,6 +36,7 @@ public class SystemManagerPanel {
       "직원 권한 변경 폼",
       "매장담당자 부서변경",
       "직원 계정 정지 처리",
+      "직원 비밀번호 초기화",
       "전체 재고 현황 조회",
   };
 
@@ -53,7 +55,8 @@ public class SystemManagerPanel {
     views.put(MENUS[2], roleChangePanel());
     views.put(MENUS[3], storeManagerTransferPanel());
     views.put(MENUS[4], deactivatePanel());
-    views.put(MENUS[5], inventoryPanel("전체 재고 현황 조회", "전체"));
+    views.put(MENUS[5], passwordResetPanel());
+    views.put(MENUS[6], inventoryPanel("전체 재고 현황 조회", "전체"));
     return views;
   }
 
@@ -155,6 +158,31 @@ public class SystemManagerPanel {
         store.deactivateEmployee(employeeId);
         fillEmployees(model);
         logger.accept("직원 계정 정지 완료: " + employeeId);
+    }));
+    refresh.addActionListener(event -> UiExceptionHandler.run(logger, () -> fillEmployees(model)));
+
+    panel.add(controls, BorderLayout.NORTH);
+    panel.add(UiTableFactory.scroll(table), BorderLayout.CENTER);
+    UiExceptionHandler.run(logger, () -> fillEmployees(model));
+    return panel;
+  }
+
+  private JPanel passwordResetPanel() {
+    JPanel panel = page("직원 비밀번호 초기화");
+    DefaultTableModel model = employeeModel();
+    JTable table = UiTableFactory.table(model);
+    JButton reset = new JButton("비밀번호 초기화");
+    JButton refresh = new JButton("새로고침");
+    JPanel controls = new JPanel(new FlowLayout(FlowLayout.LEFT));
+    controls.add(new JLabel("초기 비밀번호: " + RESET_PASSWORD));
+    controls.add(reset);
+    controls.add(refresh);
+
+    reset.addActionListener(event -> UiExceptionHandler.run(logger, () -> {
+      long employeeId = selectedEmployeeId(table);
+      store.resetEmployeePassword(employeeId, RESET_PASSWORD);
+      fillEmployees(model);
+      logger.accept("직원 비밀번호 초기화 완료: " + employeeId);
     }));
     refresh.addActionListener(event -> UiExceptionHandler.run(logger, () -> fillEmployees(model)));
 
