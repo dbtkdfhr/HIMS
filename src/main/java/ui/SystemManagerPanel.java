@@ -12,6 +12,7 @@ import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Consumer;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.JButton;
@@ -24,6 +25,7 @@ import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.table.DefaultTableModel;
 import store.StoreDTO;
+import ui.common.CategorySelector;
 import ui.common.UiConstants;
 import ui.common.UiExceptionHandler;
 import ui.common.UiTableFactory;
@@ -292,19 +294,36 @@ public class SystemManagerPanel {
     JTable table = UiTableFactory.table(model);
     JComboBox<String> filterBox = inventoryFilterBox(defaultFilterType);
     JTextField keywordField = new JTextField(16);
+    JLabel keywordLabel = new JLabel("검색어");
+    JPanel categoryPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+    CategorySelector categorySelector = new CategorySelector(categoryPanel);
     JButton search = new JButton("조회");
     JPanel controls = new JPanel(new FlowLayout(FlowLayout.LEFT));
     controls.add(new JLabel("필터"));
     controls.add(filterBox);
-    controls.add(new JLabel("검색어"));
+    controls.add(keywordLabel);
     controls.add(keywordField);
+    controls.add(categoryPanel);
     controls.add(search);
+    filterBox.addActionListener(event -> UiExceptionHandler.run(logger,
+        () -> updateInventoryFilterControls(filterBox, keywordLabel, keywordField, categoryPanel,
+            categorySelector)));
     search.addActionListener(event -> UiExceptionHandler.run(logger,
-        () -> fillInventory(model, String.valueOf(filterBox.getSelectedItem()),
-            keywordField.getText())));
+        () -> {
+          String filterType = String.valueOf(filterBox.getSelectedItem());
+          if ("카테고리".equals(filterType)) {
+            fillInventory(model, filterType, null, categorySelector.selectedCategoryIds());
+            return;
+          }
+          fillInventory(model, filterType, keywordField.getText(), null);
+        }));
     panel.add(controls, BorderLayout.NORTH);
     panel.add(UiTableFactory.scroll(table), BorderLayout.CENTER);
-    UiExceptionHandler.run(logger, () -> fillInventory(model, defaultFilterType, ""));
+    UiExceptionHandler.run(logger, () -> {
+      updateInventoryFilterControls(filterBox, keywordLabel, keywordField, categoryPanel,
+          categorySelector);
+      fillInventory(model, defaultFilterType, "", null);
+    });
     return panel;
   }
 
@@ -352,12 +371,12 @@ public class SystemManagerPanel {
     });
   }
 
-  private void fillInventory(DefaultTableModel model, String filterType, String keyword)
-      throws Exception {
+  private void fillInventory(DefaultTableModel model, String filterType, String keyword,
+      Set<Long> categoryIds) throws Exception {
     model.setRowCount(0);
     String normalized = keyword == null ? "" : keyword.trim();
     for (InventoryDTO inventory : store.inventories()) {
-      if (!matches(inventory, filterType, normalized)) {
+      if (!matches(inventory, filterType, normalized, categoryIds)) {
         continue;
       }
       model.addRow(new Object[]{
@@ -373,8 +392,13 @@ public class SystemManagerPanel {
     }
   }
 
-  private boolean matches(InventoryDTO inventory, String filterType, String keyword)
+  private boolean matches(InventoryDTO inventory, String filterType, String keyword,
+      Set<Long> categoryIds)
       throws Exception {
+    if ("카테고리".equals(filterType)) {
+      return categoryIds == null || categoryIds.isEmpty()
+          || inventory.getCategoryId() != null && categoryIds.contains(inventory.getCategoryId());
+    }
     if (keyword.isEmpty() || "전체".equals(filterType)) {
       return true;
     }
@@ -386,9 +410,6 @@ public class SystemManagerPanel {
     }
     if ("브랜드".equals(filterType)) {
       return contains(inventory.getBrandName(), keyword);
-    }
-    if ("카테고리".equals(filterType)) {
-      return contains(inventory.getCategoryName(), keyword);
     }
     if ("상품".equals(filterType)) {
       return contains(inventory.getProductName(), keyword);
@@ -411,6 +432,20 @@ public class SystemManagerPanel {
     });
     filterBox.setSelectedItem(defaultFilterType);
     return filterBox;
+  }
+
+  private void updateInventoryFilterControls(JComboBox<String> filterBox, JLabel keywordLabel,
+      JTextField keywordField, JPanel categoryPanel, CategorySelector categorySelector)
+      throws Exception {
+    boolean categoryFilter = "카테고리".equals(String.valueOf(filterBox.getSelectedItem()));
+    keywordLabel.setVisible(!categoryFilter);
+    keywordField.setVisible(!categoryFilter);
+    categoryPanel.setVisible(categoryFilter);
+    if (categoryFilter && categoryPanel.getComponentCount() == 0) {
+      categorySelector.load(store.categories());
+    }
+    categoryPanel.revalidate();
+    categoryPanel.repaint();
   }
 
   private JComboBox<RoleType> roleBox() {
