@@ -20,7 +20,9 @@ public final class UiExceptionHandler {
   }
 
   public static void log(Consumer<String> logger, Exception exception) {
-    logger.accept("오류: " + messageFor(exception));
+    String message = messageFor(exception);
+    logger.accept("오류: " + message);
+    javax.swing.JOptionPane.showMessageDialog(null, message, "오류", javax.swing.JOptionPane.ERROR_MESSAGE);
   }
 
   public static String messageFor(Throwable throwable) {
