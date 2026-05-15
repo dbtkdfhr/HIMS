@@ -95,11 +95,9 @@ public class StoreManagerPanel {
     JButton create = new JButton("발주 요청 생성");
     JPanel form = formPanel();
 
-    UiExceptionHandler.run(logger, () -> {
-      for (InventoryDTO inventory : store.findInventoriesByStore(storeId())) {
-        productBox.addItem(inventory);
-      }
-    });
+    JButton refresh = new JButton("새로고침");
+    fillSaleProducts(productBox);
+    refresh.addActionListener(e -> fillSaleProducts(productBox));
     productBox.setRenderer((list, value, index, isSelected, cellHasFocus) -> {
       JLabel label = new JLabel(value == null ? ""
           : value.getProductName() + " | 현재 " + value.getCurrentQuantity() + " | 안전 "
@@ -116,8 +114,13 @@ public class StoreManagerPanel {
     form.add(quantityField);
     form.add(new JLabel("요청사유"));
     form.add(new JScrollPane(reasonArea));
+    JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+    buttonPanel.setOpaque(false);
+    buttonPanel.add(create);
+    buttonPanel.add(refresh);
+    
     form.add(new JLabel());
-    form.add(create);
+    form.add(buttonPanel);
 
     create.addActionListener(event -> UiExceptionHandler.run(logger, () -> {
       InventoryDTO selected = (InventoryDTO) productBox.getSelectedItem();
@@ -226,7 +229,7 @@ public class StoreManagerPanel {
   private JPanel receiptHistoryPanel() {
     JPanel panel = page("입고 이력 조회");
     DefaultTableModel model =
-        UiTableFactory.model("입고ID", "발주ID", "상품", "입고수량", "차이수량", "상태", "사유");
+        UiTableFactory.model("입고ID", "발주ID", "상품", "발주수량", "입고수량", "차이수량", "상태", "사유");
     JTable table = UiTableFactory.table(model);
     table.setAutoCreateRowSorter(true);
     applyTableStyle(table);
@@ -245,7 +248,9 @@ public class StoreManagerPanel {
     JButton process = new JButton("판매 처리");
     JPanel form = formPanel();
 
+    JButton refresh = new JButton("새로고침");
     fillSaleProducts(productBox);
+    refresh.addActionListener(e -> fillSaleProducts(productBox));
 
     productBox.setRenderer((list, value, index, isSelected, cellHasFocus) -> {
       JLabel label = new JLabel(
@@ -260,8 +265,13 @@ public class StoreManagerPanel {
     form.add(productBox);
     form.add(new JLabel("판매수량"));
     form.add(quantityField);
+    JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+    buttonPanel.setOpaque(false);
+    buttonPanel.add(process);
+    buttonPanel.add(refresh);
+    
     form.add(new JLabel());
-    form.add(process);
+    form.add(buttonPanel);
 
     process.addActionListener(event -> UiExceptionHandler.run(logger, () -> {
       InventoryDTO selected = (InventoryDTO) productBox.getSelectedItem();
@@ -354,7 +364,8 @@ public class StoreManagerPanel {
       OrderRequestDTO order = store.findOrder(receipt.getOrderRequestId());
       model.addRow(new Object[] {receipt.getStoreReceiptId(), receipt.getOrderRequestId(),
           order == null ? "-" : store.findProductName(order.getProductId()),
-          receipt.getReceivedQuantity(), receipt.getDifferenceQuantity(),
+          order == null ? "-" : order.getOrderQuantity(),
+          receipt.getReceivedQuantity(), Math.abs(receipt.getDifferenceQuantity()),
           ReceiptStatus.valueOf(receipt.getReceiptStatus()).getDisplayName(),
           nullToBlank(receipt.getDifferenceReason())});
     }
