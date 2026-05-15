@@ -62,7 +62,7 @@ public class StoreManagerPanel {
     JTable table = UiTableFactory.table(model);
     table.setAutoCreateRowSorter(true);
 
-    UiTableFactory.applyRowHighlight(table, row -> "부족".equals(model.getValueAt(row, 8)));
+    applyTableStyle(table);
     JButton refresh = new JButton("새로고침");
     refresh.addActionListener(
         event -> UiExceptionHandler.run(logger, () -> fillInventory(model, lowOnly)));
@@ -131,6 +131,7 @@ public class StoreManagerPanel {
     DefaultTableModel model = orderModel();
     JTable table = UiTableFactory.table(model);
     table.setAutoCreateRowSorter(true);
+    applyTableStyle(table);
     JButton refresh = new JButton("새로고침");
     refresh.addActionListener(event -> UiExceptionHandler.run(logger, () -> fillAllOrders(model)));
     panel.add(searchToolbar(refresh, table), BorderLayout.NORTH);
@@ -144,6 +145,7 @@ public class StoreManagerPanel {
     DefaultTableModel model = orderModel();
     JTable table = UiTableFactory.table(model);
     table.setAutoCreateRowSorter(true);
+    applyTableStyle(table);
 
     JButton confirmBtn = new JButton("정상 입고");
     JButton diffBtn = new JButton("수량 차이");
@@ -211,6 +213,7 @@ public class StoreManagerPanel {
         UiTableFactory.model("입고ID", "발주ID", "상품", "입고수량", "차이수량", "상태", "사유");
     JTable table = UiTableFactory.table(model);
     table.setAutoCreateRowSorter(true);
+    applyTableStyle(table);
     JButton refresh = new JButton("새로고침");
     refresh.addActionListener(event -> UiExceptionHandler.run(logger, () -> fillReceipts(model)));
     panel.add(toolbar(refresh), BorderLayout.NORTH);
@@ -272,7 +275,7 @@ public class StoreManagerPanel {
   }
 
   private DefaultTableModel orderModel() {
-    return UiTableFactory.model("발주ID", "매장", "상품", "요청수량", "승인수량", "상태", "외부상태", "요청사유", "반려사유");
+    return UiTableFactory.model("발주ID", "매장", "상품", "요청수량", "승인수량", "상태", "외부상태", "요청일시", "요청사유", "반려사유");
   }
 
   private void fillInventory(DefaultTableModel model, boolean lowOnly) throws Exception {
@@ -296,6 +299,7 @@ public class StoreManagerPanel {
           order.getApprovedQuantity() == null ? "-" : order.getApprovedQuantity(),
           OrderStatus.valueOf(order.getOrderStatus()).getDisplayName(),
           store.findExternalOrderStatus(order.getOrderRequestId()),
+          order.getRequestedAt() == null ? "-" : order.getRequestedAt().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")),
           nullToBlank(order.getRequestReason()), nullToBlank(order.getRejectReason())});
     }
   }
@@ -320,6 +324,7 @@ public class StoreManagerPanel {
           order.getApprovedQuantity() == null ? "-" : order.getApprovedQuantity(),
           OrderStatus.valueOf(order.getOrderStatus()).getDisplayName(),
           store.findExternalOrderStatus(order.getOrderRequestId()),
+          order.getRequestedAt() == null ? "-" : order.getRequestedAt().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")),
           nullToBlank(order.getRequestReason()), nullToBlank(order.getRejectReason())});
     }
   }
@@ -422,4 +427,81 @@ public class StoreManagerPanel {
     return value == null ? "" : value;
   }
 
+  private void applyTableStyle(JTable table) {
+    javax.swing.table.TableColumnModel columnModel = table.getColumnModel();
+    for (int i = 0; i < columnModel.getColumnCount(); i++) {
+      String colName = table.getColumnName(i);
+      javax.swing.table.TableColumn col = columnModel.getColumn(i);
+      
+      if (colName.contains("ID") || colName.contains("수량")) {
+        col.setPreferredWidth(60);
+      } else if (colName.equals("매장")) {
+        col.setPreferredWidth(100);
+      } else if (colName.equals("상품") || colName.equals("상품명")) {
+        col.setPreferredWidth(180);
+      } else if (colName.equals("요청일시")) {
+        col.setPreferredWidth(130);
+      } else if (colName.equals("상태") || colName.equals("외부상태")) {
+        col.setPreferredWidth(90);
+      }
+    }
+
+    javax.swing.table.DefaultTableCellRenderer renderer = new javax.swing.table.DefaultTableCellRenderer() {
+      @Override
+      public java.awt.Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
+          boolean hasFocus, int row, int column) {
+        
+        super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+        setHorizontalAlignment(javax.swing.JLabel.CENTER);
+
+        if (value instanceof Boolean) {
+          setText("");
+        }
+
+        int modelRow = table.convertRowIndexToModel(row);
+        boolean isLowStock = false;
+        
+        int lowStockCol = -1;
+        for (int i = 0; i < table.getColumnCount(); i++) {
+            if (table.getColumnName(i).equals("부족여부")) {
+                lowStockCol = i;
+                break;
+            }
+        }
+        
+        if (lowStockCol != -1 && "부족".equals(table.getModel().getValueAt(modelRow, lowStockCol))) {
+            isLowStock = true;
+        }
+
+        if (!isSelected) {
+            setBackground(isLowStock ? UiConstants.LOW_STOCK : UiConstants.PANEL_BACKGROUND);
+            setForeground(java.awt.Color.BLACK);
+            setFont(UiConstants.DEFAULT_FONT);
+            
+            String colName = table.getColumnName(column);
+            if ((colName.equals("상태") || colName.equals("외부상태")) && value != null) {
+                String status = value.toString();
+                if (status.contains("승인") || status.contains("완료") || status.contains("정상")) {
+                    setForeground(new java.awt.Color(34, 139, 34)); // Forest Green
+                    setFont(getFont().deriveFont(java.awt.Font.BOLD));
+                } else if (status.contains("반려") || status.contains("취소")) {
+                    setForeground(new java.awt.Color(220, 20, 60)); // Crimson Red
+                    setFont(getFont().deriveFont(java.awt.Font.BOLD));
+                } else if (status.contains("대기") || status.contains("요청")) {
+                    setForeground(java.awt.Color.GRAY);
+                }
+            }
+        }
+        return this;
+      }
+    };
+
+    table.setDefaultRenderer(Object.class, renderer);
+    table.setDefaultRenderer(Number.class, renderer);
+    table.setDefaultRenderer(Boolean.class, renderer);
+    
+    // 헤더(제목)도 가운데 정렬
+    ((javax.swing.table.DefaultTableCellRenderer)table.getTableHeader().getDefaultRenderer())
+        .setHorizontalAlignment(javax.swing.JLabel.CENTER);
+  }
 }
