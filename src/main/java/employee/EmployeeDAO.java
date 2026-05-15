@@ -2,6 +2,7 @@ package employee;
 
 import static common.GetNullableVariable.getNullableLocalDateTime;
 import static common.GetNullableVariable.getNullableLong;
+import static common.ResultSetUtils.hasColumn;
 import static common.SetNullableVariable.setNullableLong;
 
 import auth.LoginEmployeeDTO;
@@ -142,6 +143,7 @@ public class EmployeeDAO {
             "E.store_id, " +
             "S.store_name, " +
             "E.branch_id, " +
+            "B.branch_name, " +
             "E.login_id, " +
             "E.employee_name, " +
             "E.phone_number, " +
@@ -151,12 +153,15 @@ public class EmployeeDAO {
             "FROM EMPLOYEE E " +
             "LEFT JOIN STORE S " +
             "ON E.store_id = S.store_id " +
+            "LEFT JOIN BRANCH B " +
+            "ON E.branch_id = B.branch_id " +
             "GROUP BY " +
             "E.role_id, " +
             "E.employee_id, " +
             "E.store_id, " +
             "S.store_name, " +
             "E.branch_id, " +
+            "B.branch_name, " +
             "E.login_id, " +
             "E.employee_name, " +
             "E.phone_number, " +
@@ -457,6 +462,9 @@ public class EmployeeDAO {
 
     employeeDTO.setStoreId(getNullableLong(rs, "STORE_ID"));
     employeeDTO.setBranchId(getNullableLong(rs, "BRANCH_ID"));
+    if (hasColumn(rs, "BRANCH_NAME")) {
+      employeeDTO.setBranchName(rs.getString("BRANCH_NAME"));
+    }
 
     employeeDTO.setLoginId(rs.getString("LOGIN_ID"));
     employeeDTO.setEmployeeName(rs.getString("EMPLOYEE_NAME"));

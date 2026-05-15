@@ -254,7 +254,7 @@ public class SystemManagerPanel {
   }
 
   private DefaultTableModel employeeModel() {
-    return UiTableFactory.model("직원ID", "로그인ID", "직원명", "권한", "매장ID", "매장명", "사용여부");
+    return UiTableFactory.model("직원ID", "로그인ID", "직원명", "권한", "지점명", "매장명", "사용여부");
   }
 
   private void fillEmployees(DefaultTableModel model) throws Exception {
@@ -279,7 +279,7 @@ public class SystemManagerPanel {
         employee.getLoginId(),
         employee.getEmployeeName(),
         store.findRoleName(employee.getRoleId()),
-        employee.getStoreId() == null ? "-" : employee.getStoreId(),
+        employee.getBranchName() == null ? "-" : employee.getBranchName(),
         employee.getStoreId() == null ? "-" : store.findStoreName(employee.getStoreId()),
         employee.getIsActive()
     });
