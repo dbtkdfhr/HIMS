@@ -137,18 +137,21 @@ public class EmployeeDAO {
 
     String sql =
         "SELECT " +
-            "employee_id, " +
-            "role_id, " +
-            "store_id, " +
-            "branch_id, " +
-            "login_id, " +
-            "employee_name, " +
-            "phone_number, " +
-            "is_active, " +
-            "created_at, " +
-            "updated_at " +
-            "FROM EMPLOYEE " +
-            "ORDER BY employee_id ";
+            "E.employee_id, " +
+            "E.role_id, " +
+            "E.store_id, " +
+            "S.store_name, " +
+            "E.branch_id, " +
+            "E.login_id, " +
+            "E.employee_name, " +
+            "E.phone_number, " +
+            "E.is_active, " +
+            "E.created_at, " +
+            "E.updated_at " +
+            "FROM EMPLOYEE E " +
+            "LEFT JOIN STORE S " +
+            "ON E.store_id = S.store_id " +
+            "ORDER BY E.employee_id ";
 
     try (
         Connection conn = DBConnection.getConnection(DBType.ORACLE);
@@ -332,12 +335,12 @@ public class EmployeeDAO {
 
   // 권한 수정 및 소속 매장
   public int updateRoleAndStore(EmployeeDTO employee) throws SQLException {
-    StringBuilder sql = new StringBuilder("UPDATE EMPLOYEE SET role_id = ?, ");
+    StringBuilder sql = new StringBuilder("UPDATE EMPLOYEE SET role_id = ?");
     boolean updateStore = employee.getStoreId() != null;
     if (updateStore) {
-      sql.append("store_id = ?, ");
+      sql.append(", store_id = ?");
     }
-    sql.append("WHERE employee_id = ?");
+    sql.append(" WHERE employee_id = ?");
 
     try (
         Connection conn = DBConnection.getConnection(DBType.ORACLE);
