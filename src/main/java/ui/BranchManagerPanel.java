@@ -165,7 +165,9 @@ public class BranchManagerPanel {
     JPanel panel = page("상품 등록 폼");
     JTextField nameField = new JTextField(18);
     JComboBox<SelectOption> brandBox = new JComboBox<>();
-    JComboBox<SelectOption> categoryBox = new JComboBox<>();
+    JPanel categoryPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+    categoryPanel.setOpaque(false);
+    CategorySelector categorySelector = new CategorySelector(categoryPanel);
     JTextField priceField = new JTextField(8);
     JComboBox<String> seasonBox = new JComboBox<>(new String[]{"봄/여름", "가을/겨울", "상시"});
     JComboBox<String> statusBox = new JComboBox<>(
@@ -180,7 +182,7 @@ public class BranchManagerPanel {
     form.add(new JLabel("브랜드"));
     form.add(brandBox);
     form.add(new JLabel("카테고리"));
-    form.add(categoryBox);
+    form.add(categoryPanel);
     form.add(new JLabel("판매가"));
     form.add(priceField);
     form.add(new JLabel("시즌구분"));
@@ -192,14 +194,14 @@ public class BranchManagerPanel {
 
     UiExceptionHandler.run(logger, () -> {
       fillOptionBox(brandBox, "브랜드");
-      fillOptionBox(categoryBox, "카테고리");
+      categorySelector.load(store.categories());
     });
 
     create.addActionListener(event -> UiExceptionHandler.run(logger, () -> {
       ProductDTO dto = new ProductDTO();
       dto.setProductName(required(nameField.getText(), "상품명"));
       dto.setBrandId(selectedRequired(brandBox, "브랜드").getId());
-      dto.setCategoryId(selectedRequired(categoryBox, "카테고리").getId());
+      dto.setCategoryId(categorySelector.selectedLeafCategoryId("카테고리"));
       dto.setPrice((int) parseLong(priceField.getText(), "판매가"));
       dto.setSeasonType(String.valueOf(seasonBox.getSelectedItem()));
       dto.setProductStatus(String.valueOf(statusBox.getSelectedItem()));
