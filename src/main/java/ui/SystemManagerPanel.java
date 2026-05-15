@@ -17,6 +17,7 @@ import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JList;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTable;
 import javax.swing.JTextField;
@@ -28,6 +29,7 @@ import ui.common.UiTableFactory;
 import ui.data.UiServiceStore;
 
 public class SystemManagerPanel {
+  private static final String INITIAL_PASSWORD = "pass1234";
   private static final String RESET_PASSWORD = "changeme";
 
   public static final String[] MENUS = {
@@ -98,6 +100,7 @@ public class SystemManagerPanel {
             : parseLong(storeIdField.getText(), "매장ID");
         EmployeeDTO employee = store.createEmployee(required(loginIdField.getText(), "로그인ID"),
             required(nameField.getText(), "직원명"), role, storeId);
+        showCreatedEmployeeDialog(panel, employee);
         logger.accept("직원 계정 생성 완료: " + employee.getEmployeeName());
     }));
 
@@ -408,6 +411,17 @@ public class SystemManagerPanel {
     panel.setOpaque(false);
     panel.add(button);
     return panel;
+  }
+
+  private void showCreatedEmployeeDialog(JPanel parent, EmployeeDTO employee) {
+    JOptionPane.showMessageDialog(
+        parent,
+        "직원 계정이 생성되었습니다.\n"
+            + "로그인 ID: " + employee.getLoginId() + "\n"
+            + "초기 비밀번호: " + INITIAL_PASSWORD,
+        "직원 계정 생성 완료",
+        JOptionPane.INFORMATION_MESSAGE
+    );
   }
 
   private JPanel formPanel() {
