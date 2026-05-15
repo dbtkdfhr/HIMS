@@ -3,6 +3,8 @@ package ui.data;
 import auth.AuthService;
 import auth.LoginRequestDTO;
 import auth.LoginResponseDTO;
+import branch.BranchDAO;
+import branch.BranchDTO;
 import brand.BrandDTO;
 import brand.BrandService;
 import category.CategoryDTO;
@@ -45,6 +47,7 @@ public class UiServiceStore {
   private final EmployeeService employeeService = new EmployeeService();
   private final BrandService brandService = new BrandService();
   private final CategoryService categoryService = new CategoryService();
+  private final BranchDAO branchDAO = new BranchDAO();
 
   public EmployeeDTO authenticate(String loginId, String password) throws SQLException {
     LoginRequestDTO requestDTO = new LoginRequestDTO();
@@ -87,6 +90,10 @@ public class UiServiceStore {
 
   public List<ProductDTO> products() throws SQLException {
     return productService.findAllProducts();
+  }
+
+  public List<BranchDTO> branches() throws SQLException {
+    return branchDAO.getBranches();
   }
 
   public List<InventoryDTO> inventories() throws SQLException {
@@ -204,8 +211,8 @@ public class UiServiceStore {
     storeReceiptService.processSale(storeId, productId, quantity);
   }
 
-  public EmployeeDTO createEmployee(String loginId, String name, RoleType roleType, Long storeId)
-      throws SQLException {
+  public EmployeeDTO createEmployee(String loginId, String name, RoleType roleType, Long branchId,
+      Long storeId) throws SQLException {
     EmployeeDTO employeeDTO = new EmployeeDTO();
     employeeDTO.setLoginId(loginId);
     employeeDTO.setPassword("pass1234");
@@ -213,7 +220,7 @@ public class UiServiceStore {
     employeeDTO.setPhoneNumber("010-0000-0000");
     employeeDTO.setRoleId(roleType.getRoleId());
     employeeDTO.setStoreId(storeId);
-    employeeDTO.setBranchId(findBranchIdByStoreId(storeId));
+    employeeDTO.setBranchId(branchId);
     employeeDTO.setIsActive("Y");
     employeeDTO.setCreatedAt(LocalDateTime.now());
     employeeDTO.setUpdatedAt(LocalDateTime.now());
@@ -222,10 +229,13 @@ public class UiServiceStore {
     return employeeDTO;
   }
 
-  public void changeEmployeeRole(long employeeId, RoleType roleType) throws SQLException {
+  public void changeEmployeeRole(long employeeId, RoleType roleType, Long branchId, Long storeId)
+      throws SQLException {
     EmployeeDTO employeeDTO = new EmployeeDTO();
     employeeDTO.setEmployeeId(employeeId);
     employeeDTO.setRoleId(roleType.getRoleId());
+    employeeDTO.setBranchId(branchId);
+    employeeDTO.setStoreId(storeId);
     employeeService.updateRoleAndStore(employeeDTO);
   }
 
@@ -234,6 +244,7 @@ public class UiServiceStore {
     employeeDTO.setEmployeeId(employeeId);
     employeeDTO.setRoleId(RoleType.STORE_MANAGER.getRoleId());
     employeeDTO.setStoreId(storeId);
+    employeeDTO.setBranchId(findBranchIdByStoreId(storeId));
     employeeService.updateRoleAndStore(employeeDTO);
   }
 
