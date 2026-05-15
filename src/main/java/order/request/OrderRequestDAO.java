@@ -7,6 +7,7 @@ import static common.GetNullableVariable.getNullableLong;
 import common.DBConnection;
 import common.type.DBType;
 import common.type.OrderStatus;
+import exception.NotFoundException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -305,6 +306,6 @@ public class OrderRequestDAO {
         }
       }
     }
-    return "알 수 없는 매장";
+    throw new NotFoundException("해당 ID의 매장을 찾을 수 없습니다: " + storeId);
   }
 }
