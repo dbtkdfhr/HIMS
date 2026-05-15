@@ -52,6 +52,8 @@ public class VendorManagerPanel {
     JPanel panel = page("발주 요청 목록 조회");
     DefaultTableModel model = orderModel();
     JTable table = UiTableFactory.table(model);
+    table.setAutoCreateRowSorter(true);
+    applyTableStyle(table);
     JLabel detail = new JLabel("발주 요청을 선택하면 상세 정보가 표시됩니다.");
     JComboBox<String> statusBox = new JComboBox<>(orderStatusOptions());
     statusBox.setSelectedItem(status == null ? "전체" : status);
@@ -73,7 +75,7 @@ public class VendorManagerPanel {
           if (order != null) {
             detail.setText("발주ID " + orderId + " | 매장 " + store.findStoreName(order.getStoreId())
                 + " | 상품 " + store.findProductName(order.getProductId()) + " | 상태 "
-                + order.getOrderStatus());
+                + OrderStatus.valueOf(order.getOrderStatus()).getDisplayName());
           }
         });
       }
@@ -94,6 +96,8 @@ public class VendorManagerPanel {
     JPanel panel = page("발주 승인");
     DefaultTableModel model = orderModel();
     JTable table = UiTableFactory.table(model);
+    table.setAutoCreateRowSorter(true);
+    applyTableStyle(table);
     JTextField quantityField = new JTextField(8);
     JButton approve = new JButton("승인");
     JButton refresh = new JButton("대기 목록");
@@ -123,6 +127,8 @@ public class VendorManagerPanel {
     JPanel panel = page("발주 반려");
     DefaultTableModel model = orderModel();
     JTable table = UiTableFactory.table(model);
+    table.setAutoCreateRowSorter(true);
+    applyTableStyle(table);
     JTextField reasonField = new JTextField(24);
     JButton reject = new JButton("반려");
     JButton refresh = new JButton("대기 목록");
@@ -165,7 +171,7 @@ public class VendorManagerPanel {
         store.findProductName(order.getProductId()),
         order.getOrderQuantity(),
         order.getApprovedQuantity() == null ? "-" : order.getApprovedQuantity(),
-        order.getOrderStatus(),
+        OrderStatus.valueOf(order.getOrderStatus()).getDisplayName(),
         nullToBlank(order.getRequestReason()),
         nullToBlank(order.getRejectReason())
     };
@@ -196,15 +202,20 @@ public class VendorManagerPanel {
 
   private String[] orderStatusOptions() {
     return new String[]{
-        "전체", OrderStatus.REQUESTED.name(), OrderStatus.APPROVED.name(),
-        OrderStatus.REJECTED.name(), OrderStatus.RECEIVED.name(), OrderStatus.CANCELED.name(),
-        OrderStatus.DONE.name()
+        "전체", OrderStatus.REQUESTED.getDisplayName(), OrderStatus.APPROVED.getDisplayName(),
+        OrderStatus.REJECTED.getDisplayName(), OrderStatus.RECEIVED.getDisplayName(), OrderStatus.CANCELED.getDisplayName(),
+        OrderStatus.DONE.getDisplayName()
     };
   }
 
   private String selectedStatus(JComboBox<String> statusBox) {
     Object selected = statusBox.getSelectedItem();
-    return "전체".equals(selected) ? null : String.valueOf(selected);
+    if ("전체".equals(selected) || selected == null) return null;
+    String display = String.valueOf(selected);
+    for (OrderStatus os : OrderStatus.values()) {
+        if (os.getDisplayName().equals(display)) return os.name();
+    }
+    return null;
   }
 
   private long selectedOrderId(JTable table) {
@@ -237,6 +248,85 @@ public class VendorManagerPanel {
 
   private String nullToBlank(String value) {
     return value == null ? "" : value;
+  }
+
+  private void applyTableStyle(JTable table) {
+    javax.swing.table.TableColumnModel columnModel = table.getColumnModel();
+    for (int i = 0; i < columnModel.getColumnCount(); i++) {
+      String colName = table.getColumnName(i);
+      javax.swing.table.TableColumn col = columnModel.getColumn(i);
+
+      if (colName.contains("ID") || colName.contains("수량")) {
+        col.setPreferredWidth(60);
+      } else if (colName.equals("매장")) {
+        col.setPreferredWidth(100);
+      } else if (colName.equals("상품") || colName.equals("상품명")) {
+        col.setPreferredWidth(180);
+      } else if (colName.equals("요청일시")) {
+        col.setPreferredWidth(130);
+      } else if (colName.equals("상태") || colName.equals("외부상태")) {
+        col.setPreferredWidth(90);
+      }
+    }
+
+    javax.swing.table.DefaultTableCellRenderer renderer =
+        new javax.swing.table.DefaultTableCellRenderer() {
+          @Override
+          public java.awt.Component getTableCellRendererComponent(JTable table, Object value,
+              boolean isSelected, boolean hasFocus, int row, int column) {
+
+            super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+            setHorizontalAlignment(javax.swing.JLabel.CENTER);
+
+            if (value instanceof Boolean) {
+              setText("");
+            }
+
+            int modelRow = table.convertRowIndexToModel(row);
+            boolean isLowStock = false;
+
+            int lowStockCol = -1;
+            for (int i = 0; i < table.getColumnCount(); i++) {
+              if (table.getColumnName(i).equals("부족여부")) {
+                lowStockCol = i;
+                break;
+              }
+            }
+
+            if (lowStockCol != -1
+                && "부족".equals(table.getModel().getValueAt(modelRow, lowStockCol))) {
+              isLowStock = true;
+            }
+
+            if (!isSelected) {
+              setBackground(isLowStock ? UiConstants.LOW_STOCK : UiConstants.PANEL_BACKGROUND);
+              setForeground(java.awt.Color.BLACK);
+              setFont(UiConstants.DEFAULT_FONT);
+
+              String colName = table.getColumnName(column);
+              if ((colName.equals("상태") || colName.equals("외부상태")) && value != null) {
+                String status = value.toString();
+                if (status.contains("승인") || status.contains("완료") || status.contains("정상")) {
+                  setForeground(new java.awt.Color(34, 139, 34)); // Forest Green
+                  setFont(getFont().deriveFont(java.awt.Font.BOLD));
+                } else if (status.contains("반려") || status.contains("취소")) {
+                  setForeground(new java.awt.Color(220, 20, 60)); // Crimson Red
+                  setFont(getFont().deriveFont(java.awt.Font.BOLD));
+                } else if (status.contains("대기") || status.contains("요청")) {
+                  setForeground(java.awt.Color.GRAY);
+                }
+              }
+            }
+            return this;
+          }
+        };
+
+    table.setDefaultRenderer(Object.class, renderer);
+    table.setDefaultRenderer(Number.class, renderer);
+    table.setDefaultRenderer(Boolean.class, renderer);
+
+    ((javax.swing.table.DefaultTableCellRenderer) table.getTableHeader().getDefaultRenderer())
+        .setHorizontalAlignment(javax.swing.JLabel.CENTER);
   }
 
 }
