@@ -18,6 +18,17 @@ public final class UiTableFactory {
       public boolean isCellEditable(int row, int column) {
         return false;
       }
+
+      @Override
+      public Class<?> getColumnClass(int columnIndex) {
+        if (getRowCount() > 0) {
+          Object value = getValueAt(0, columnIndex);
+          if (value != null) {
+            return value.getClass();
+          }
+        }
+        return Object.class;
+      }
     };
   }
 
@@ -35,12 +46,17 @@ public final class UiTableFactory {
   }
 
   public static void applyRowHighlight(JTable table, IntPredicate predicate) {
-    table.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
+    DefaultTableCellRenderer renderer = new DefaultTableCellRenderer() {
       @Override
       public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
           boolean hasFocus, int row, int column) {
         Component component = super.getTableCellRendererComponent(table, value, isSelected,
             hasFocus, row, column);
+
+        if (value instanceof Boolean) {
+          setText("");
+        }
+
         if (!isSelected) {
           int modelRow = table.convertRowIndexToModel(row);
           component.setBackground(predicate.test(modelRow) ? UiConstants.LOW_STOCK
@@ -48,6 +64,10 @@ public final class UiTableFactory {
         }
         return component;
       }
-    });
+    };
+
+    table.setDefaultRenderer(Object.class, renderer);
+    table.setDefaultRenderer(Number.class, renderer);
+    table.setDefaultRenderer(Boolean.class, renderer);
   }
 }

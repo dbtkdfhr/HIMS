@@ -1,6 +1,7 @@
 package ui;
 
 import common.type.OrderStatus;
+import common.type.ReceiptStatus;
 import employee.EmployeeDTO;
 import exception.InputException;
 import inventory.InventoryDTO;
@@ -59,7 +60,9 @@ public class StoreManagerPanel {
     JPanel panel = page(lowOnly ? "안전재고 부족 상품 조회" : "내 매장 재고 조회");
     DefaultTableModel model = inventoryModel();
     JTable table = UiTableFactory.table(model);
-    UiTableFactory.applyRowHighlight(table, row -> Boolean.TRUE.equals(model.getValueAt(row, 8)));
+    table.setAutoCreateRowSorter(true);
+
+    UiTableFactory.applyRowHighlight(table, row -> "부족".equals(model.getValueAt(row, 8)));
     JButton refresh = new JButton("새로고침");
     refresh.addActionListener(
         event -> UiExceptionHandler.run(logger, () -> fillInventory(model, lowOnly)));
@@ -121,6 +124,7 @@ public class StoreManagerPanel {
     JPanel panel = page("내 발주 요청 현황");
     DefaultTableModel model = orderModel();
     JTable table = UiTableFactory.table(model);
+    table.setAutoCreateRowSorter(true);
     JButton refresh = new JButton("새로고침");
     refresh.addActionListener(event -> UiExceptionHandler.run(logger, () -> fillAllOrders(model)));
     panel.add(toolbar(refresh), BorderLayout.NORTH);
@@ -133,6 +137,7 @@ public class StoreManagerPanel {
     JPanel panel = page("입고 검수 및 처리");
     DefaultTableModel model = orderModel();
     JTable table = UiTableFactory.table(model);
+    table.setAutoCreateRowSorter(true);
 
     JButton confirmBtn = new JButton("정상 입고");
     JButton diffBtn = new JButton("수량 차이");
@@ -199,6 +204,7 @@ public class StoreManagerPanel {
     DefaultTableModel model =
         UiTableFactory.model("입고ID", "발주ID", "상품", "입고수량", "차이수량", "상태", "사유");
     JTable table = UiTableFactory.table(model);
+    table.setAutoCreateRowSorter(true);
     JButton refresh = new JButton("새로고침");
     refresh.addActionListener(event -> UiExceptionHandler.run(logger, () -> fillReceipts(model)));
     panel.add(toolbar(refresh), BorderLayout.NORTH);
@@ -267,7 +273,7 @@ public class StoreManagerPanel {
           inventory.getProductId(), inventory.getProductName(), inventory.getBrandName(),
           inventory.getCategoryName(), inventory.getCurrentQuantity(),
           inventory.getSafetyQuantity(), inventory.getProductStatus().getDisplayName(),
-          inventory.getCurrentQuantity() <= inventory.getSafetyQuantity()});
+          inventory.getCurrentQuantity() <= inventory.getSafetyQuantity() ? "부족" : "정상"});
     }
   }
 
@@ -277,7 +283,8 @@ public class StoreManagerPanel {
       model.addRow(new Object[] {order.getOrderRequestId(), store.findStoreName(order.getStoreId()),
           store.findProductName(order.getProductId()), order.getOrderQuantity(),
           order.getApprovedQuantity() == null ? "-" : order.getApprovedQuantity(),
-          order.getOrderStatus(), store.findExternalOrderStatus(order.getOrderRequestId()),
+          OrderStatus.valueOf(order.getOrderStatus()).getDisplayName(),
+          store.findExternalOrderStatus(order.getOrderRequestId()),
           nullToBlank(order.getRequestReason()), nullToBlank(order.getRejectReason())});
     }
   }
@@ -300,7 +307,8 @@ public class StoreManagerPanel {
       model.addRow(new Object[] {order.getOrderRequestId(), store.findStoreName(order.getStoreId()),
           store.findProductName(order.getProductId()), order.getOrderQuantity(),
           order.getApprovedQuantity() == null ? "-" : order.getApprovedQuantity(),
-          order.getOrderStatus(), store.findExternalOrderStatus(order.getOrderRequestId()),
+          OrderStatus.valueOf(order.getOrderStatus()).getDisplayName(),
+          store.findExternalOrderStatus(order.getOrderRequestId()),
           nullToBlank(order.getRequestReason()), nullToBlank(order.getRejectReason())});
     }
   }
@@ -312,7 +320,8 @@ public class StoreManagerPanel {
       model.addRow(new Object[] {receipt.getStoreReceiptId(), receipt.getOrderRequestId(),
           order == null ? "-" : store.findProductName(order.getProductId()),
           receipt.getReceivedQuantity(), receipt.getDifferenceQuantity(),
-          receipt.getReceiptStatus(), nullToBlank(receipt.getDifferenceReason())});
+          ReceiptStatus.valueOf(receipt.getReceiptStatus()).getDisplayName(),
+          nullToBlank(receipt.getDifferenceReason())});
     }
   }
 

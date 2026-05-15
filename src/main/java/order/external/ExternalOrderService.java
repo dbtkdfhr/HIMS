@@ -43,7 +43,7 @@ public class ExternalOrderService {
       return "-";
     }
 
-    return receipt.getReceiptStatus();
+    return External_OrderStatus.valueOf(receipt.getReceiptStatus()).getDisplayName();
   }
 
   // 발주 목록 보기 (+ 재고 조회)
