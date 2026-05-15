@@ -1,75 +1,73 @@
 /* =========================================================
    외부 발주처 DB 더미 데이터 - MariaDB 기준
-   기준: 기존 02_supplier_seed.sql
-   대상 DDL: 02_supplier_schema_mariadb.sql
-   주요 변경:
-   - Oracle DATE literal: DATE 'YYYY-MM-DD' -> 'YYYY-MM-DD'
-   - EXTERNAL_ORDER_RECEIPT: RECEIVED_AT/PROCESSED_AT -> CREATED_AT/UPDATED_AT
-   - EXTERNAL_SHIPMENT: SHIPPED_AT -> CREATED_AT
-   - MariaDB AUTO_INCREMENT PK에 명시 ID 입력 허용
+   - mainDML_order_flow.sql의 ORDER_REQUEST_ID 1~28과 INTERNAL_ORDER_REQUEST_ID를 맞춤
+   - REJECTED 접수건은 CK_EXTERNAL_ORDER_RECEIPT_STATUS_QTY 때문에 APPROVED_QUANTITY = NULL
+   - SHIPPED 접수건만 EXTERNAL_SHIPMENT 존재
 ========================================================= */
 
 /* 1. SUPPLIER - 발주처 */
-INSERT INTO SUPPLIER (SUPPLIER_ID, SUPPLIER_NAME, SUPPLIER_TYPE, ADDRESS, PHONE_NUMBER,
-                      OPERATION_STATUS)
+INSERT INTO SUPPLIER (SUPPLIER_ID, SUPPLIER_NAME, SUPPLIER_TYPE, ADDRESS, PHONE_NUMBER, OPERATION_STATUS)
 VALUES (601, 'TIME 한섬 본사 발주팀', '본사발주처', '서울특별시 강남구 도산대로 523', '02-3416-3100', 'ACTIVE'),
        (602, 'SYSTEM 한섬 본사 발주팀', '본사발주처', '서울특별시 강남구 도산대로 523', '02-3416-3200', 'ACTIVE'),
        (603, 'MINE 한섬 본사 발주팀', '본사발주처', '서울특별시 강남구 도산대로 523', '02-3416-3300', 'ACTIVE'),
        (604, 'THE CASHMERE 한섬 본사 발주팀', '본사발주처', '서울특별시 강남구 도산대로 523', '02-3416-3400', 'ACTIVE');
 
-
 /* 2. SUPPLIER_PRODUCT - 발주처상품 */
-/* 엑셀에 별도 외부상품ID/공급가 시트가 없어 PRODUCT.상품ID를 SUPPLIER_PRODUCT_ID로 사용하고,
-   판매가의 70%를 공급가 더미값으로 산정한다. */
-INSERT INTO SUPPLIER_PRODUCT (SUPPLIER_PRODUCT_ID, SUPPLIER_ID, EXTERNAL_PRODUCT_ID, PRODUCT_NAME,
-                              SUPPLY_PRICE, PRODUCT_STATUS)
+INSERT INTO SUPPLIER_PRODUCT (SUPPLIER_PRODUCT_ID, SUPPLIER_ID, EXTERNAL_PRODUCT_ID, PRODUCT_NAME, SUPPLY_PRICE, PRODUCT_STATUS)
 VALUES (501, 601, 'EXT-PROD-501', 'TIME 울 블렌드 재킷', 278600, 'ACTIVE'),
        (502, 601, 'EXT-PROD-502', 'TIME 썸머 린넨 원피스', 187600, 'ACTIVE'),
        (503, 602, 'EXT-PROD-503', 'SYSTEM 캐시미어 니트', 229600, 'ACTIVE'),
        (504, 603, 'EXT-PROD-504', 'MINE 트렌치 코트', 369600, 'ACTIVE'),
        (505, 604, 'EXT-PROD-505', 'THE CASHMERE 홀가먼트 니트', 320600, 'ACTIVE');
 
-
 /* 3. SUPPLIER_INVENTORY - 발주처재고 */
 INSERT INTO SUPPLIER_INVENTORY (SUPPLIER_ID, SUPPLIER_PRODUCT_ID, CURRENT_QUANTITY, UPDATED_AT)
 VALUES (601, 501, 100, '2026-05-06 00:00:00'),
-       (601, 502, 20, '2026-05-06 00:00:00'),
+       (601, 502, 80, '2026-05-06 00:00:00'),
        (602, 503, 75, '2026-05-06 00:00:00'),
        (603, 504, 40, '2026-05-06 00:00:00'),
        (604, 505, 60, '2026-05-06 00:00:00');
 
+/* 4. EXTERNAL_ORDER_RECEIPT - 외부발주접수 */
+INSERT INTO EXTERNAL_ORDER_RECEIPT (EXTERNAL_ORDER_RECEIPT_ID, SUPPLIER_ID, SUPPLIER_PRODUCT_ID, INTERNAL_ORDER_REQUEST_ID,
+                                    REQUEST_STORE_NAME, REQUEST_QUANTITY, APPROVED_QUANTITY, RECEIPT_STATUS, CREATED_AT, UPDATED_AT)
+VALUES
+    (1005, 601, 501, '5', 'TIME 판교점', 20, 20, 'RECEIVED', '2026-05-02 15:05:00', '2026-05-02 15:05:00'),
+    (1006, 601, 502, '6', 'TIME 판교점', 15, 12, 'RECEIVED', '2026-05-02 13:18:00', '2026-05-02 13:18:00'),
+    (1007, 602, 503, '7', 'SYSTEM 무역센터점', 18, 18, 'RECEIVED', '2026-05-02 14:31:00', '2026-05-02 14:31:00'),
+    (1008, 604, 505, '8', 'THE CASHMERE 더현대서울점', 12, 10, 'RECEIVED', '2026-05-02 15:44:00', '2026-05-02 15:44:00'),
+    (1013, 601, 501, '13', 'TIME 판교점', 10, 10, 'SHIPPED', '2026-05-04 14:49:00', '2026-05-04 15:07:00'),
+    (1014, 601, 502, '14', 'TIME 판교점', 11, 9, 'SHIPPED', '2026-05-04 15:02:00', '2026-05-04 16:26:00'),
+    (1015, 602, 503, '15', 'SYSTEM 무역센터점', 7, 7, 'SHIPPED', '2026-05-04 13:15:00', '2026-05-04 14:45:00'),
+    (1016, 603, 504, '16', 'MINE 더현대서울점', 5, 5, 'SHIPPED', '2026-05-04 14:28:00', '2026-05-04 15:04:00'),
+    (1017, 601, 502, '17', 'TIME 판교점', 13, NULL, 'REJECTED', '2026-05-05 15:41:00', '2026-05-05 16:23:00'),
+    (1018, 602, 503, '18', 'SYSTEM 무역센터점', 9, NULL, 'REJECTED', '2026-05-05 13:54:00', '2026-05-05 14:42:00'),
+    (1019, 603, 504, '19', 'MINE 더현대서울점', 8, NULL, 'REJECTED', '2026-05-05 14:07:00', '2026-05-05 15:01:00'),
+    (1020, 601, 501, '20', 'TIME 판교점', 16, 16, 'SHIPPED', '2026-05-05 15:20:00', '2026-05-05 16:20:00'),
+    (1021, 602, 503, '21', 'SYSTEM 무역센터점', 10, 10, 'SHIPPED', '2026-05-06 13:33:00', '2026-05-06 14:39:00'),
+    (1022, 604, 505, '22', 'THE CASHMERE 더현대서울점', 6, 6, 'SHIPPED', '2026-05-06 14:46:00', '2026-05-06 15:58:00'),
+    (1023, 601, 502, '23', 'TIME 판교점', 12, 12, 'SHIPPED', '2026-05-06 15:59:00', '2026-05-06 16:17:00'),
+    (1024, 602, 503, '24', 'SYSTEM 무역센터점', 15, 15, 'SHIPPED', '2026-05-06 13:12:00', '2026-05-06 14:36:00'),
+    (1025, 603, 504, '25', 'MINE 더현대서울점', 9, 9, 'SHIPPED', '2026-05-07 14:25:00', '2026-05-07 15:55:00'),
+    (1026, 601, 501, '26', 'TIME 판교점', 5, 5, 'SHIPPED', '2026-05-07 15:38:00', '2026-05-07 16:14:00'),
+    (1027, 603, 504, '27', 'MINE 더현대서울점', 4, 4, 'SHIPPED', '2026-05-07 13:51:00', '2026-05-07 14:33:00'),
+    (1028, 604, 505, '28', 'THE CASHMERE 더현대서울점', 7, 7, 'SHIPPED', '2026-05-07 14:04:00', '2026-05-07 15:52:00');
 
-/* 4. EXTERNAL_ORDER_RECEIPT - 외부발주접수
-   MariaDB DDL 기준 컬럼명:
-   - CREATED_AT: 접수일자 역할
-   - UPDATED_AT: 처리일자 역할
-*/
-INSERT INTO EXTERNAL_ORDER_RECEIPT (EXTERNAL_ORDER_RECEIPT_ID,
-                                    SUPPLIER_ID,
-                                    SUPPLIER_PRODUCT_ID,
-                                    INTERNAL_ORDER_REQUEST_ID,
-                                    REQUEST_STORE_NAME,
-                                    REQUEST_QUANTITY,
-                                    APPROVED_QUANTITY,
-                                    RECEIPT_STATUS,
-                                    CREATED_AT,
-                                    UPDATED_AT)
-VALUES (1001, 601, 501, '1', 'TIME 판교점', 20, 20, 'RECEIVED', '2026-05-01 00:00:00',
-        '2026-05-01 00:00:00'),
-       (1002, 601, 502, '2', 'TIME 판교점', 15, 10, 'SHIPPED', '2026-05-02 11:00:00', '2026-05-02 12:00:00'),
-       (1003, 602, 503, '3', 'SYSTEM 무역센터점', 10, 0, 'REJECTED', '2026-05-03 09:00:00', '2026-05-03 09:30:00'),
-       (1004, 603, 504, '4', 'MINE 더현대서울점', 12, 12, 'SHIPPED', '2026-05-04 14:00:00', '2026-05-04 15:00:00');
-
-
-/* 5. EXTERNAL_SHIPMENT - 외부출고처리
-   MariaDB DDL 기준 컬럼명:
-   - CREATED_AT: 출고일자 역할
-*/
-INSERT INTO EXTERNAL_SHIPMENT (EXTERNAL_SHIPMENT_ID,
-                               EXTERNAL_ORDER_RECEIPT_ID,
-                               SHIPMENT_QUANTITY,
-                               SHIPMENT_STATUS,
-                               CREATED_AT)
-VALUES (2001, 1001, 20, 'SHIPPED', '2026-05-03 00:00:00');
+/* 5. EXTERNAL_SHIPMENT - 외부출고처리: SHIPPED 건만 생성 */
+INSERT INTO EXTERNAL_SHIPMENT (EXTERNAL_SHIPMENT_ID, EXTERNAL_ORDER_RECEIPT_ID, SHIPMENT_QUANTITY, SHIPMENT_STATUS, CREATED_AT)
+VALUES
+    (2013, 1013, 10, 'SHIPPED', '2026-05-04 15:07:00'),
+    (2014, 1014, 9, 'SHIPPED', '2026-05-04 16:26:00'),
+    (2015, 1015, 7, 'SHIPPED', '2026-05-04 14:45:00'),
+    (2016, 1016, 5, 'SHIPPED', '2026-05-04 15:04:00'),
+    (2020, 1020, 16, 'SHIPPED', '2026-05-05 16:20:00'),
+    (2021, 1021, 10, 'SHIPPED', '2026-05-06 14:39:00'),
+    (2022, 1022, 6, 'SHIPPED', '2026-05-06 15:58:00'),
+    (2023, 1023, 12, 'SHIPPED', '2026-05-06 16:17:00'),
+    (2024, 1024, 15, 'SHIPPED', '2026-05-06 14:36:00'),
+    (2025, 1025, 9, 'SHIPPED', '2026-05-07 15:55:00'),
+    (2026, 1026, 5, 'SHIPPED', '2026-05-07 16:14:00'),
+    (2027, 1027, 4, 'SHIPPED', '2026-05-07 14:33:00'),
+    (2028, 1028, 7, 'SHIPPED', '2026-05-07 15:52:00');
 
 COMMIT;
