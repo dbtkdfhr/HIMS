@@ -25,8 +25,8 @@ public class InventoryDAO {
     StringBuilder sql = new StringBuilder("SELECT br.branch_id, br.branch_name, "
         + "si.store_id, s.store_name, s.floor_info, s.store_location, si.product_id, "
         + "si.current_quantity, si.safety_quantity, si.updated_at, si.is_low_stock, "
-        + "p.product_name, p.price, p.season_type, p.product_status, b.brand_name, "
-        + "c.category_name " + "FROM STORE_INVENTORY si "
+        + "p.product_name, p.price, p.season_type, p.product_status, b.brand_id, b.brand_name, "
+        + "c.category_id, c.category_name " + "FROM STORE_INVENTORY si "
         + "JOIN STORE s ON si.store_id = s.store_id "
         + "JOIN BRANCH br ON s.branch_id = br.branch_id "
         + "JOIN PRODUCT p ON si.product_id = p.product_id "
@@ -137,7 +137,9 @@ public class InventoryDAO {
     dto.setPrice(rs.getInt("price"));
     dto.setSeasonType(rs.getString("season_type"));
     dto.setProductStatus(ProductStatus.valueOf(rs.getString("product_status")));
+    dto.setBrandId(GetNullableVariable.getNullableLong(rs, "brand_id"));
     dto.setBrandName(rs.getString("brand_name"));
+    dto.setCategoryId(GetNullableVariable.getNullableLong(rs, "category_id"));
     dto.setCategoryName(rs.getString("category_name"));
     dto.setLowStock("Y".equals(rs.getString("is_low_stock")));
 

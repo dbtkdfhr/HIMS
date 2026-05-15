@@ -1,7 +1,7 @@
 package inventory;
 
-import java.time.LocalDateTime;
 import common.type.ProductStatus;
+import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class InventoryDTO {
+
   private Long branchId; // 지점 ID
   private String branchName; // 지점명
   private Long storeId; // 매장 ID
@@ -26,8 +27,10 @@ public class InventoryDTO {
   private String seasonType; // 시즌 구분
   private ProductStatus productStatus; // 상품 상태
 
+  private Long brandId; // 브랜드 ID
   private String brandName; // 브랜드명
 
+  private Long categoryId; // 카테고리 ID
   private String categoryName; // 카테고리명
 
   private boolean isLowStock; // 안전재고 이하 여부

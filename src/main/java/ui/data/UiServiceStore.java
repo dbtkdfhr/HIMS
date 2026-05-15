@@ -3,6 +3,10 @@ package ui.data;
 import auth.AuthService;
 import auth.LoginRequestDTO;
 import auth.LoginResponseDTO;
+import brand.BrandDTO;
+import brand.BrandService;
+import category.CategoryDTO;
+import category.CategoryService;
 import common.type.OrderStatus;
 import common.type.RoleType;
 import employee.EmployeeDTO;
@@ -39,6 +43,8 @@ public class UiServiceStore {
   private final StoreService storeService = new StoreService();
   private final ProductService productService = new ProductService();
   private final EmployeeService employeeService = new EmployeeService();
+  private final BrandService brandService = new BrandService();
+  private final CategoryService categoryService = new CategoryService();
 
   public EmployeeDTO authenticate(String loginId, String password) throws SQLException {
     LoginRequestDTO requestDTO = new LoginRequestDTO();
@@ -85,6 +91,10 @@ public class UiServiceStore {
 
   public List<InventoryDTO> inventories() throws SQLException {
     return inventoryService.getInventoryList(systemUser());
+  }
+
+  public List<InventoryDTO> findInventoriesByBranch(long branchId) throws SQLException {
+    return inventoryService.getInventoryList(branchUser(branchId));
   }
 
   public List<InventoryDTO> findInventoriesByStore(long storeId) throws SQLException {
@@ -231,6 +241,14 @@ public class UiServiceStore {
     productService.registerProduct(productDTO);
   }
 
+  public List<BrandDTO> brands() throws SQLException {
+    return brandService.findAllBrands();
+  }
+
+  public List<CategoryDTO> categories() throws SQLException {
+    return categoryService.getAllCategories();
+  }
+
   public Map<String, List<String[]>> masterRecords() throws SQLException {
     Map<String, List<String[]>> records = new LinkedHashMap<>();
     List<String[]> storeRows = new ArrayList<>();
@@ -295,6 +313,14 @@ public class UiServiceStore {
     user.setEmployeeId(0);
     user.setRoleId(RoleType.STORE_MANAGER.getRoleId());
     user.setStoreId(storeId);
+    return user;
+  }
+
+  private EmployeeDTO branchUser(long branchId) {
+    EmployeeDTO user = new EmployeeDTO();
+    user.setEmployeeId(0);
+    user.setRoleId(RoleType.BRANCH_MANAGER.getRoleId());
+    user.setBranchId(branchId);
     return user;
   }
 
