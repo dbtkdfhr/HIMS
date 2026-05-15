@@ -4,6 +4,7 @@ import exception.InputException;
 import employee.EmployeeDTO;
 import inventory.InventoryDTO;
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.util.LinkedHashMap;
@@ -13,11 +14,14 @@ import java.util.Set;
 import java.util.function.Consumer;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.DefaultListCellRenderer;
 import javax.swing.JLabel;
+import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
+import common.type.OperationStatus;
 import product.ProductDTO;
 import store.StoreDTO;
 import ui.common.CategorySelector;
@@ -109,11 +113,10 @@ public class BranchManagerPanel {
   private JPanel storeCreatePanel() {
     JPanel panel = page("입점매장 등록 폼");
     JTextField nameField = new JTextField(18);
-    JTextField branchField = new JTextField(8);
     JComboBox<SelectOption> brandBox = new JComboBox<>();
     JTextField floorField = new JTextField(8);
     JTextField locationField = new JTextField(18);
-    JComboBox<String> statusBox = new JComboBox<>(new String[]{"운영중", "운영중지"});
+    JComboBox<OperationStatus> statusBox = operationStatusBox();
     JButton create = new JButton("입점매장 등록");
     JPanel form = formPanel();
     DefaultTableModel masterModel = UiTableFactory.model("값1", "값2", "값3", "값4");
@@ -121,8 +124,6 @@ public class BranchManagerPanel {
 
     form.add(new JLabel("매장명"));
     form.add(nameField);
-    form.add(new JLabel("지점ID"));
-    form.add(branchField);
     form.add(new JLabel("브랜드"));
     form.add(brandBox);
     form.add(new JLabel("층 정보"));
@@ -138,7 +139,7 @@ public class BranchManagerPanel {
 
     create.addActionListener(event -> UiExceptionHandler.run(logger, () -> {
         String name = required(nameField.getText(), "매장명");
-        long branchId = parseLong(branchField.getText(), "지점ID");
+        long branchId = branchId();
         long brandId = selectedRequired(brandBox, "브랜드").getId();
         String floor = required(floorField.getText(), "층 정보");
         String location = required(locationField.getText(), "매장 위치");
@@ -148,7 +149,7 @@ public class BranchManagerPanel {
         dto.setStoreName(name);
         dto.setFloorInfo(floor);
         dto.setStoreLocation(location);
-        dto.setOperationStatus(String.valueOf(statusBox.getSelectedItem()));
+        dto.setOperationStatus(((OperationStatus) statusBox.getSelectedItem()).name());
         store.createStore(dto);
         fillMaster(masterModel, "입점매장");
         logger.accept("입점매장 등록 완료: " + name);
@@ -250,10 +251,30 @@ public class BranchManagerPanel {
   }
 
   private List<InventoryDTO> branchInventories() throws Exception {
+    return store.findInventoriesByBranch(branchId());
+  }
+
+  private long branchId() {
     if (user.getBranchId() == null || user.getBranchId() <= 0) {
       throw new InputException("로그인한 지점관리자의 지점 정보가 올바르지 않습니다.");
     }
-    return store.findInventoriesByBranch(user.getBranchId());
+    return user.getBranchId();
+  }
+
+  private JComboBox<OperationStatus> operationStatusBox() {
+    JComboBox<OperationStatus> box = new JComboBox<>(OperationStatus.values());
+    box.setRenderer(new DefaultListCellRenderer() {
+      @Override
+      public Component getListCellRendererComponent(JList<?> list, Object value, int index,
+          boolean isSelected, boolean cellHasFocus) {
+        super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+        if (value instanceof OperationStatus status) {
+          setText(status.getDisplayName());
+        }
+        return this;
+      }
+    });
+    return box;
   }
 
   private void fillOptionBox(JComboBox<SelectOption> box, String type) throws Exception {
