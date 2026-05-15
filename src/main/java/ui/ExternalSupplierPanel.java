@@ -50,6 +50,8 @@ public class ExternalSupplierPanel {
     JPanel panel = page("외부 발주처 접수 목록");
     DefaultTableModel model = orderModel();
     JTable table = UiTableFactory.table(model);
+    table.setAutoCreateRowSorter(true);
+    applyTableStyle(table);
     JButton refresh = new JButton("새로고침");
     refresh.addActionListener(event -> UiExceptionHandler.run(logger, () -> fillExternalOrders(model, false)));
     panel.add(toolbar(refresh), BorderLayout.NORTH);
@@ -62,6 +64,8 @@ public class ExternalSupplierPanel {
     JPanel panel = page("외부 발주처 승인/거절");
     DefaultTableModel model = orderModel();
     JTable table = UiTableFactory.table(model);
+    table.setAutoCreateRowSorter(true);
+    applyTableStyle(table);
     JTextField reasonField = new JTextField(24);
     JButton approve = new JButton("승인");
     JButton reject = new JButton("거절");
@@ -152,6 +156,16 @@ public class ExternalSupplierPanel {
       productName = String.valueOf(receipt.getSupplierProductId());
     }
 
+    String externalStatusEng = store.findExternalOrderStatus(receipt.getInternalOrderRequestId());
+    String externalStatus = "-";
+    if (externalStatusEng != null && !externalStatusEng.isEmpty()) {
+        try {
+            externalStatus = common.type.External_OrderStatus.valueOf(externalStatusEng).getDisplayName();
+        } catch(Exception e) {
+            externalStatus = externalStatusEng;
+        }
+    }
+
     return new Object[]{
         receipt.getInternalOrderRequestId(), // 0. 발주ID
         storeName,                           // 1. 매장
@@ -159,7 +173,7 @@ public class ExternalSupplierPanel {
         receipt.getRequestQuantity(),        // 3. 요청수량
         approvedQuantity == null ? "-" : approvedQuantity, // 4. 승인수량
         receipt.getExternalOrderReceiptId(), // 5. 외부접수ID
-        store.findExternalOrderStatus(receipt.getInternalOrderRequestId()) // 6. 외부상태
+        externalStatus                       // 6. 상태
     };
   }
 
@@ -191,5 +205,84 @@ public class ExternalSupplierPanel {
       throw new InputException(label + "을 입력해 주세요.");
     }
     return text;
+  }
+
+  private void applyTableStyle(JTable table) {
+    javax.swing.table.TableColumnModel columnModel = table.getColumnModel();
+    for (int i = 0; i < columnModel.getColumnCount(); i++) {
+      String colName = table.getColumnName(i);
+      javax.swing.table.TableColumn col = columnModel.getColumn(i);
+
+      if (colName.contains("ID") || colName.contains("수량")) {
+        col.setPreferredWidth(60);
+      } else if (colName.equals("매장")) {
+        col.setPreferredWidth(100);
+      } else if (colName.equals("상품") || colName.equals("상품명")) {
+        col.setPreferredWidth(180);
+      } else if (colName.equals("요청일시")) {
+        col.setPreferredWidth(130);
+      } else if (colName.equals("상태") || colName.equals("외부상태")) {
+        col.setPreferredWidth(90);
+      }
+    }
+
+    javax.swing.table.DefaultTableCellRenderer renderer =
+        new javax.swing.table.DefaultTableCellRenderer() {
+          @Override
+          public java.awt.Component getTableCellRendererComponent(JTable table, Object value,
+              boolean isSelected, boolean hasFocus, int row, int column) {
+
+            super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+            setHorizontalAlignment(javax.swing.JLabel.CENTER);
+
+            if (value instanceof Boolean) {
+              setText("");
+            }
+
+            int modelRow = table.convertRowIndexToModel(row);
+            boolean isLowStock = false;
+
+            int lowStockCol = -1;
+            for (int i = 0; i < table.getColumnCount(); i++) {
+              if (table.getColumnName(i).equals("부족여부")) {
+                lowStockCol = i;
+                break;
+              }
+            }
+
+            if (lowStockCol != -1
+                && "부족".equals(table.getModel().getValueAt(modelRow, lowStockCol))) {
+              isLowStock = true;
+            }
+
+            if (!isSelected) {
+              setBackground(isLowStock ? UiConstants.LOW_STOCK : UiConstants.PANEL_BACKGROUND);
+              setForeground(java.awt.Color.BLACK);
+              setFont(UiConstants.DEFAULT_FONT);
+
+              String colName = table.getColumnName(column);
+              if ((colName.equals("상태") || colName.equals("외부상태")) && value != null) {
+                String status = value.toString();
+                if (status.contains("승인") || status.contains("완료") || status.contains("정상")) {
+                  setForeground(new java.awt.Color(34, 139, 34)); // Forest Green
+                  setFont(getFont().deriveFont(java.awt.Font.BOLD));
+                } else if (status.contains("반려") || status.contains("취소") || status.contains("거절")) {
+                  setForeground(new java.awt.Color(220, 20, 60)); // Crimson Red
+                  setFont(getFont().deriveFont(java.awt.Font.BOLD));
+                } else if (status.contains("대기") || status.contains("요청") || status.contains("접수")) {
+                  setForeground(java.awt.Color.GRAY);
+                }
+              }
+            }
+            return this;
+          }
+        };
+
+    table.setDefaultRenderer(Object.class, renderer);
+    table.setDefaultRenderer(Number.class, renderer);
+    table.setDefaultRenderer(Boolean.class, renderer);
+
+    ((javax.swing.table.DefaultTableCellRenderer) table.getTableHeader().getDefaultRenderer())
+        .setHorizontalAlignment(javax.swing.JLabel.CENTER);
   }
 }
