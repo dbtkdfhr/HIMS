@@ -25,7 +25,7 @@ public class DashboardPanel extends JPanel {
   private final Runnable onLogout;
   private final CardLayout cardLayout = new CardLayout();
   private final JPanel contentPanel = new JPanel(cardLayout);
-  private final JTextArea logArea = new JTextArea(5, 20);
+  private final javax.swing.JTextPane logArea = new javax.swing.JTextPane();
   private final Map<String, JPanel> views = new LinkedHashMap<>();
 
   public DashboardPanel(UiServiceStore store, EmployeeDTO user, Runnable onLogout) {
@@ -42,8 +42,19 @@ public class DashboardPanel extends JPanel {
   }
 
   public void writeLog(String text) {
-    logArea.append(text + "\n");
-    logArea.setCaretPosition(logArea.getDocument().getLength());
+    try {
+      javax.swing.text.Document doc = logArea.getDocument();
+      javax.swing.text.SimpleAttributeSet attributes = new javax.swing.text.SimpleAttributeSet();
+      if (text.startsWith("오류:")) {
+        javax.swing.text.StyleConstants.setForeground(attributes, Color.RED);
+      } else {
+        javax.swing.text.StyleConstants.setForeground(attributes, Color.BLACK);
+      }
+      doc.insertString(doc.getLength(), text + "\n", attributes);
+      logArea.setCaretPosition(doc.getLength());
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
   }
 
   private JPanel header() {
@@ -117,7 +128,9 @@ public class DashboardPanel extends JPanel {
   private JScrollPane log() {
     logArea.setEditable(false);
     logArea.setFont(UiConstants.DEFAULT_FONT);
-    return new JScrollPane(logArea);
+    JScrollPane scroll = new JScrollPane(logArea);
+    scroll.setPreferredSize(new Dimension(0, 100));
+    return scroll;
   }
 
   private void installViews() {
