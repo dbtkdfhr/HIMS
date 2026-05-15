@@ -25,9 +25,9 @@ public class ExternalSupplierPanel {
       "외부 발주처 승인/거절"
   };
 
-  private static final String RECEIVED_STATUS = "RECEIVED";
-  private static final String SHIPPED_STATUS = "SHIPPED";
-  private static final String REJECTED_STATUS = "REJECTED";
+  private static final String RECEIVED_STATUS = "접수 완료";
+  private static final String SHIPPED_STATUS = "출고 완료";
+  private static final String REJECTED_STATUS = "출고 반려";
 
   private final UiServiceStore store;
   private final Consumer<String> logger;
