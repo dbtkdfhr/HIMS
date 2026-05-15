@@ -92,7 +92,7 @@ public class DashboardPanel extends JPanel {
 
   private void installViews() {
     RoleType role = RoleType.fromRoleId(user.getRoleId());
-    if (role == RoleType.STORE_MANAGER || role == RoleType.STAFF) {
+    if (role == RoleType.STORE_MANAGER) {
       StoreManagerPanel panel = new StoreManagerPanel(store, user, this::writeLog);
       views.putAll(panel.views());
     } else if (role == RoleType.SUPPLIER_MANAGER) {
@@ -123,7 +123,7 @@ public class DashboardPanel extends JPanel {
 
   private String[] menuNames() {
     RoleType role = RoleType.fromRoleId(user.getRoleId());
-    if (role == RoleType.STORE_MANAGER || role == RoleType.STAFF) {
+    if (role == RoleType.STORE_MANAGER) {
       return StoreManagerPanel.MENUS;
     }
     if (role == RoleType.SUPPLIER_MANAGER) {

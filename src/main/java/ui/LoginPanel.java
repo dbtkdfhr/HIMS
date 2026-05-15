@@ -1,5 +1,6 @@
 package ui;
 
+import common.type.RoleType;
 import employee.EmployeeDTO;
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
@@ -84,6 +85,10 @@ public class LoginPanel extends JPanel {
     }
     try {
       EmployeeDTO user = store.authenticate(loginId, password);
+      if (RoleType.fromRoleId(user.getRoleId()) == RoleType.STAFF) {
+        JOptionPane.showMessageDialog(this, "권한이 없습니다 시스템 관리자에게 문의해 주세요");
+        return;
+      }
       onLogin.accept(user);
     } catch (Exception e) {
       JOptionPane.showMessageDialog(this, UiExceptionHandler.messageFor(e));
