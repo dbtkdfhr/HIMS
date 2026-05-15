@@ -198,7 +198,7 @@ public class UiServiceStore {
       throws SQLException {
     EmployeeDTO employeeDTO = new EmployeeDTO();
     employeeDTO.setLoginId(loginId);
-    employeeDTO.setPassword("1234");
+    employeeDTO.setPassword("pass1234");
     employeeDTO.setEmployeeName(name);
     employeeDTO.setPhoneNumber("010-0000-0000");
     employeeDTO.setRoleId(roleType.getRoleId());
@@ -216,6 +216,14 @@ public class UiServiceStore {
     EmployeeDTO employeeDTO = new EmployeeDTO();
     employeeDTO.setEmployeeId(employeeId);
     employeeDTO.setRoleId(roleType.getRoleId());
+    employeeService.updateRoleAndStore(employeeDTO);
+  }
+
+  public void changeStoreManagerStore(long employeeId, long storeId) throws SQLException {
+    EmployeeDTO employeeDTO = new EmployeeDTO();
+    employeeDTO.setEmployeeId(employeeId);
+    employeeDTO.setRoleId(RoleType.STORE_MANAGER.getRoleId());
+    employeeDTO.setStoreId(storeId);
     employeeService.updateRoleAndStore(employeeDTO);
   }
 

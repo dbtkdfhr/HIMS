@@ -6,18 +6,22 @@ import exception.InputException;
 import exception.NotFoundException;
 import inventory.InventoryDTO;
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Consumer;
+import javax.swing.DefaultListCellRenderer;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
+import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.table.DefaultTableModel;
+import store.StoreDTO;
 import ui.common.UiConstants;
 import ui.common.UiExceptionHandler;
 import ui.common.UiTableFactory;
@@ -29,9 +33,9 @@ public class SystemManagerPanel {
       "직원 계정 목록",
       "직원 계정 생성 폼",
       "직원 권한 변경 폼",
+      "매장담당자 부서변경",
       "직원 계정 정지 처리",
       "전체 재고 현황 조회",
-      "지점별 재고 조회"
   };
 
   private final UiServiceStore store;
@@ -47,9 +51,9 @@ public class SystemManagerPanel {
     views.put(MENUS[0], employeeListPanel());
     views.put(MENUS[1], employeeCreatePanel());
     views.put(MENUS[2], roleChangePanel());
-    views.put(MENUS[3], deactivatePanel());
-    views.put(MENUS[4], inventoryPanel("전체 재고 현황 조회", "전체"));
-    views.put(MENUS[5], inventoryPanel("지점별 재고 조회", "지점"));
+    views.put(MENUS[3], storeManagerTransferPanel());
+    views.put(MENUS[4], deactivatePanel());
+    views.put(MENUS[5], inventoryPanel("전체 재고 현황 조회", "전체"));
     return views;
   }
 
@@ -160,22 +164,61 @@ public class SystemManagerPanel {
     return panel;
   }
 
-  private JPanel inventoryPanel(String title, String filterType) {
+  private JPanel storeManagerTransferPanel() {
+    JPanel panel = page("매장담당자 부서변경");
+    DefaultTableModel model = employeeModel();
+    JTable table = UiTableFactory.table(model);
+    JComboBox<StoreDTO> storeBox = storeBox();
+    JButton change = new JButton("소속 매장 변경");
+    JButton refresh = new JButton("새로고침");
+    JPanel controls = new JPanel(new FlowLayout(FlowLayout.LEFT));
+    controls.add(new JLabel("변경 매장"));
+    controls.add(storeBox);
+    controls.add(change);
+    controls.add(refresh);
+
+    change.addActionListener(event -> UiExceptionHandler.run(logger, () -> {
+      long employeeId = selectedEmployeeId(table);
+      StoreDTO selectedStore = (StoreDTO) storeBox.getSelectedItem();
+      if (selectedStore == null) {
+        throw new InputException("변경할 매장을 선택해 주세요.");
+      }
+      store.changeStoreManagerStore(employeeId, selectedStore.getStoreId());
+      fillStoreManagers(model);
+      logger.accept("매장담당자 소속 매장 변경 완료: " + employeeId + " -> "
+          + selectedStore.getStoreName());
+    }));
+    refresh.addActionListener(event -> UiExceptionHandler.run(logger, () -> {
+      fillStoreOptions(storeBox);
+      fillStoreManagers(model);
+    }));
+
+    panel.add(controls, BorderLayout.NORTH);
+    panel.add(UiTableFactory.scroll(table), BorderLayout.CENTER);
+    UiExceptionHandler.run(logger, () -> fillStoreManagers(model));
+    return panel;
+  }
+
+  private JPanel inventoryPanel(String title, String defaultFilterType) {
     JPanel panel = page(title);
     DefaultTableModel model = UiTableFactory.model("매장", "상품ID", "상품명", "브랜드", "카테고리",
         "현재수량", "안전재고", "부족여부");
     JTable table = UiTableFactory.table(model);
+    JComboBox<String> filterBox = inventoryFilterBox(defaultFilterType);
     JTextField keywordField = new JTextField(16);
     JButton search = new JButton("조회");
     JPanel controls = new JPanel(new FlowLayout(FlowLayout.LEFT));
-    controls.add(new JLabel(filterType + " 조건"));
+    controls.add(new JLabel("필터"));
+    controls.add(filterBox);
+    controls.add(new JLabel("검색어"));
     controls.add(keywordField);
     controls.add(search);
     search.addActionListener(event -> UiExceptionHandler.run(logger,
-        () -> fillInventory(model, filterType, keywordField.getText())));
+        () -> fillInventory(model, String.valueOf(filterBox.getSelectedItem()),
+            keywordField.getText())));
     panel.add(controls, BorderLayout.NORTH);
     panel.add(UiTableFactory.scroll(table), BorderLayout.CENTER);
-    UiExceptionHandler.run(logger, () -> fillInventory(model, filterType, ""));
+    UiExceptionHandler.run(logger, () -> fillInventory(model, defaultFilterType, ""));
     return panel;
   }
 
@@ -186,16 +229,29 @@ public class SystemManagerPanel {
   private void fillEmployees(DefaultTableModel model) throws Exception {
     model.setRowCount(0);
     for (EmployeeDTO employee : store.employees()) {
-      model.addRow(new Object[]{
-          employee.getEmployeeId(),
-          employee.getLoginId(),
-          employee.getEmployeeName(),
-          store.findRoleName(employee.getRoleId()),
-          employee.getStoreId() == null ? "-" : employee.getStoreId(),
-          employee.getStoreId() == null ? "-" : store.findStoreName(employee.getStoreId()),
-          employee.getIsActive()
-      });
+      addEmployeeRow(model, employee);
     }
+  }
+
+  private void fillStoreManagers(DefaultTableModel model) throws Exception {
+    model.setRowCount(0);
+    for (EmployeeDTO employee : store.employees()) {
+      if (employee.getRoleId() == RoleType.STORE_MANAGER.getRoleId()) {
+        addEmployeeRow(model, employee);
+      }
+    }
+  }
+
+  private void addEmployeeRow(DefaultTableModel model, EmployeeDTO employee) throws Exception {
+    model.addRow(new Object[]{
+        employee.getEmployeeId(),
+        employee.getLoginId(),
+        employee.getEmployeeName(),
+        store.findRoleName(employee.getRoleId()),
+        employee.getStoreId() == null ? "-" : employee.getStoreId(),
+        employee.getStoreId() == null ? "-" : store.findStoreName(employee.getStoreId()),
+        employee.getIsActive()
+    });
   }
 
   private void fillInventory(DefaultTableModel model, String filterType, String keyword)
@@ -225,19 +281,91 @@ public class SystemManagerPanel {
       return true;
     }
     if ("지점".equals(filterType)) {
-      return store.findStoreName(inventory.getStoreId()).contains(keyword);
+      return contains(inventory.getBranchName(), keyword);
+    }
+    if ("매장".equals(filterType)) {
+      return contains(store.findStoreName(inventory.getStoreId()), keyword);
+    }
+    if ("브랜드".equals(filterType)) {
+      return contains(inventory.getBrandName(), keyword);
+    }
+    if ("카테고리".equals(filterType)) {
+      return contains(inventory.getCategoryName(), keyword);
+    }
+    if ("상품".equals(filterType)) {
+      return contains(inventory.getProductName(), keyword);
     }
     return true;
   }
 
+  private boolean contains(String value, String keyword) {
+    return value != null && value.contains(keyword);
+  }
+
+  private JComboBox<String> inventoryFilterBox(String defaultFilterType) {
+    JComboBox<String> filterBox = new JComboBox<String>(new String[]{
+        "전체",
+        "지점",
+        "매장",
+        "브랜드",
+        "카테고리",
+        "상품"
+    });
+    filterBox.setSelectedItem(defaultFilterType);
+    return filterBox;
+  }
+
   private JComboBox<RoleType> roleBox() {
-    return new JComboBox<>(new RoleType[]{
+    JComboBox<RoleType> roleBox = new JComboBox<RoleType>(new RoleType[]{
         RoleType.BRANCH_MANAGER,
         RoleType.SUPPLIER_MANAGER,
         RoleType.STORE_MANAGER,
         RoleType.SYSTEM_MANAGER,
         RoleType.STAFF
     });
+    roleBox.setRenderer(new DefaultListCellRenderer() {
+      @Override
+      public Component getListCellRendererComponent(JList<?> list, Object value, int index,
+          boolean isSelected, boolean cellHasFocus) {
+        super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+        if (value instanceof RoleType) {
+          RoleType roleType = (RoleType) value;
+          setText(roleType.getRoleName());
+        }
+        return this;
+      }
+    });
+    return roleBox;
+  }
+
+  private JComboBox<StoreDTO> storeBox() {
+    final JComboBox<StoreDTO> storeBox = new JComboBox<StoreDTO>();
+    storeBox.setRenderer(new DefaultListCellRenderer() {
+      @Override
+      public Component getListCellRendererComponent(JList<?> list, Object value, int index,
+          boolean isSelected, boolean cellHasFocus) {
+        super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+        if (value instanceof StoreDTO) {
+          StoreDTO storeDTO = (StoreDTO) value;
+          setText(storeDTO.getStoreId() + ". " + storeDTO.getStoreName());
+        }
+        return this;
+      }
+    });
+    UiExceptionHandler.run(logger, new UiExceptionHandler.UiAction() {
+      @Override
+      public void run() throws Exception {
+        fillStoreOptions(storeBox);
+      }
+    });
+    return storeBox;
+  }
+
+  private void fillStoreOptions(JComboBox<StoreDTO> storeBox) throws Exception {
+    storeBox.removeAllItems();
+    for (StoreDTO storeDTO : store.stores()) {
+      storeBox.addItem(storeDTO);
+    }
   }
 
   private JPanel page(String title) {
