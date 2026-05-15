@@ -289,4 +289,22 @@ public class OrderRequestDAO {
       return pstmt.executeUpdate();
     }
   }
+
+  public String findStoreNameByStoreId(long storeId) throws SQLException {
+    // STORE ID로 STORE_NAME을 가져오는 쿼리
+    String sql = "SELECT STORE_NAME FROM STORE WHERE STORE_ID = ?";
+
+    try (Connection conn = DBConnection.getConnection(DBType.ORACLE);
+        PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+      pstmt.setLong(1, storeId);
+
+      try (ResultSet rs = pstmt.executeQuery()) {
+        if (rs.next()) {
+          return rs.getString("STORE_NAME");
+        }
+      }
+    }
+    return "알 수 없는 매장";
+  }
 }

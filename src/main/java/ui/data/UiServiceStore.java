@@ -178,6 +178,10 @@ public class UiServiceStore {
     return externalOrderService.findExternalOrderStatus(orderId);
   }
 
+  public List<ExternalOrderReceiptDTO> externalOrderReceipts() throws SQLException {
+    return externalOrderService.getExternalOrderReceipts();
+  }
+
   public String findExternalRejectReason(long orderId) throws SQLException {
     OrderRequestDTO order = orderRequestService.getOrderRequest(orderId);
     return order.getRejectReason() == null ? "" : order.getRejectReason();
