@@ -85,7 +85,16 @@ public class ExternalOrderReceiptDAO {
 
   // 접수증 상태 업데이트
   public int updateStatus(Connection mariaConn, long internalRequestId, External_OrderStatus status) throws SQLException {
-    String sql = "UPDATE EXTERNAL_ORDER_RECEIPT SET receipt_status = ? WHERE internal_order_request_id  = ? AND receipt_status = ?";
+    String sql;
+    if (status == External_OrderStatus.REJECTED) {
+      sql = "UPDATE EXTERNAL_ORDER_RECEIPT " +
+          "SET receipt_status = ?, approved_quantity = NULL " +
+          "WHERE internal_order_request_id = ? AND receipt_status = ?";
+    } else {
+      sql = "UPDATE EXTERNAL_ORDER_RECEIPT " +
+          "SET receipt_status = ? " +
+          "WHERE internal_order_request_id = ? AND receipt_status = ?";
+    }
     try (PreparedStatement pstmt = mariaConn.prepareStatement(sql)) {
       pstmt.setString(1, status.name());
       pstmt.setLong(2, internalRequestId);
