@@ -14,6 +14,7 @@ import java.util.function.Consumer;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
@@ -33,10 +34,8 @@ public class StoreManagerPanel {
       "내 매장 재고 조회",
       "안전재고 부족 상품 조회",
       "발주 요청 생성",
-      "입고 검수 대상 조회",
-      "정상 입고 처리",
-      "입고 수량 차이 처리",
-      "입고 반려 처리",
+      "내 발주 요청 현황",
+      "입고 검수 및 처리",
       "입고 이력 조회",
       "판매 처리"
   };
@@ -56,12 +55,10 @@ public class StoreManagerPanel {
     views.put(MENUS[0], inventoryPanel(false));
     views.put(MENUS[1], inventoryPanel(true));
     views.put(MENUS[2], orderCreatePanel());
-    views.put(MENUS[3], receiptTargetPanel());
-    views.put(MENUS[4], receiptActionPanel("정상 입고 처리"));
-    views.put(MENUS[5], receiptActionPanel("입고 수량 차이 처리"));
-    views.put(MENUS[6], receiptActionPanel("입고 반려 처리"));
-    views.put(MENUS[7], receiptHistoryPanel());
-    views.put(MENUS[8], salePanel());
+    views.put(MENUS[3], orderStatusPanel());
+    views.put(MENUS[4], unifiedReceiptPanel());
+    views.put(MENUS[5], receiptHistoryPanel());
+    views.put(MENUS[6], salePanel());
     return views;
   }
 
@@ -125,57 +122,68 @@ public class StoreManagerPanel {
     return panel;
   }
 
-  private JPanel receiptTargetPanel() {
-    JPanel panel = page("입고 검수 대상 조회");
+  private JPanel orderStatusPanel() {
+    JPanel panel = page("내 발주 요청 현황");
     DefaultTableModel model = orderModel();
     JTable table = UiTableFactory.table(model);
     JButton refresh = new JButton("새로고침");
-    refresh.addActionListener(event -> UiExceptionHandler.run(logger,
-        () -> fillOrders(model, OrderStatus.RECEIVED.name())));
+    refresh.addActionListener(event -> UiExceptionHandler.run(logger, () -> fillAllOrders(model)));
     panel.add(toolbar(refresh), BorderLayout.NORTH);
     panel.add(UiTableFactory.scroll(table), BorderLayout.CENTER);
-    UiExceptionHandler.run(logger, () -> fillOrders(model, OrderStatus.RECEIVED.name()));
+    UiExceptionHandler.run(logger, () -> fillAllOrders(model));
     return panel;
   }
 
-  private JPanel receiptActionPanel(String title) {
-    JPanel panel = page(title);
+  private JPanel unifiedReceiptPanel() {
+    JPanel panel = page("입고 검수 및 처리");
     DefaultTableModel model = orderModel();
     JTable table = UiTableFactory.table(model);
-    JTextField quantityField = new JTextField(8);
-    JTextField reasonField = new JTextField(24);
-    JButton process = new JButton(title);
-    JButton refresh = new JButton("대상 조회");
+
+    JButton confirmBtn = new JButton("정상 입고");
+    JButton diffBtn = new JButton("수량 차이");
+    JButton rejectBtn = new JButton("입고 반려");
+    JButton refreshBtn = new JButton("새로고침");
+
     JPanel controls = new JPanel(new FlowLayout(FlowLayout.LEFT));
+    controls.add(confirmBtn);
+    controls.add(diffBtn);
+    controls.add(rejectBtn);
+    controls.add(new JLabel(" | "));
+    controls.add(refreshBtn);
 
-    if ("입고 수량 차이 처리".equals(title)) {
-      controls.add(new JLabel("실제 입고수량"));
-      controls.add(quantityField);
-      controls.add(new JLabel("차이사유"));
-      controls.add(reasonField);
-    } else if ("입고 반려 처리".equals(title)) {
-      controls.add(new JLabel("반려사유"));
-      controls.add(reasonField);
-    }
-    controls.add(process);
-    controls.add(refresh);
-
-    process.addActionListener(event -> UiExceptionHandler.run(logger, () -> {
-        long orderId = selectedOrderId(table);
-        if ("정상 입고 처리".equals(title)) {
-          store.confirmReceipt(orderId, user.getEmployeeId());
-        } else if ("입고 수량 차이 처리".equals(title)) {
-          int quantity = parsePositive(quantityField.getText(), "실제 입고수량");
-          store.markReceiptDifference(orderId, user.getEmployeeId(), quantity,
-              required(reasonField.getText(), "차이사유"));
-        } else {
-          store.rejectReceipt(orderId, user.getEmployeeId(), required(reasonField.getText(), "반려사유"));
-        }
+    confirmBtn.addActionListener(event -> UiExceptionHandler.run(logger, () -> {
+      long orderId = selectedOrderId(table);
+      if (JOptionPane.showConfirmDialog(panel, "정상 입고 처리하시겠습니까?", "입고 확인", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
+        store.confirmReceipt(orderId, user.getEmployeeId());
         fillOrders(model, OrderStatus.RECEIVED.name());
-        logger.accept(title + " 완료: 발주요청 " + orderId);
+        logger.accept("정상 입고 완료: 발주번호 " + orderId);
+      }
     }));
-    refresh.addActionListener(event -> UiExceptionHandler.run(logger,
-        () -> fillOrders(model, OrderStatus.RECEIVED.name())));
+
+    diffBtn.addActionListener(event -> UiExceptionHandler.run(logger, () -> {
+      long orderId = selectedOrderId(table);
+      String qtyStr = JOptionPane.showInputDialog(panel, "실제 입고 수량을 입력하세요:", "수량 차이 처리", JOptionPane.QUESTION_MESSAGE);
+      if (qtyStr == null) return;
+      int quantity = parsePositive(qtyStr, "실제 입고수량");
+      String reason = JOptionPane.showInputDialog(panel, "차이 사유를 입력하세요:", "수량 차이 처리", JOptionPane.QUESTION_MESSAGE);
+      if (reason == null || reason.trim().isEmpty()) return;
+
+      store.markReceiptDifference(orderId, user.getEmployeeId(), quantity, reason.trim());
+      fillOrders(model, OrderStatus.RECEIVED.name());
+      logger.accept("수량 차이 입고 완료: 발주번호 " + orderId);
+    }));
+
+    rejectBtn.addActionListener(event -> UiExceptionHandler.run(logger, () -> {
+      long orderId = selectedOrderId(table);
+      String reason = JOptionPane.showInputDialog(panel, "반려 사유를 입력하세요:", "입고 반려 처리", JOptionPane.WARNING_MESSAGE);
+      if (reason == null || reason.trim().isEmpty()) return;
+
+      store.rejectReceipt(orderId, user.getEmployeeId(), reason.trim());
+      fillOrders(model, OrderStatus.RECEIVED.name());
+      logger.accept("입고 반려 완료: 발주번호 " + orderId);
+    }));
+
+    refreshBtn.addActionListener(event -> UiExceptionHandler.run(logger, () -> fillOrders(model, OrderStatus.RECEIVED.name())));
 
     panel.add(controls, BorderLayout.NORTH);
     panel.add(UiTableFactory.scroll(table), BorderLayout.CENTER);
@@ -264,6 +272,23 @@ public class StoreManagerPanel {
           inventory.getSafetyQuantity(),
           inventory.getProductStatus().getDisplayName(),
           inventory.getCurrentQuantity() <= inventory.getSafetyQuantity()
+      });
+    }
+  }
+
+  private void fillAllOrders(DefaultTableModel model) throws Exception {
+    model.setRowCount(0);
+    for (OrderRequestDTO order : store.findOrdersByStore(storeId())) {
+      model.addRow(new Object[]{
+          order.getOrderRequestId(),
+          store.findStoreName(order.getStoreId()),
+          store.findProductName(order.getProductId()),
+          order.getOrderQuantity(),
+          order.getApprovedQuantity() == null ? "-" : order.getApprovedQuantity(),
+          order.getOrderStatus(),
+          store.findExternalOrderStatus(order.getOrderRequestId()),
+          nullToBlank(order.getRequestReason()),
+          nullToBlank(order.getRejectReason())
       });
     }
   }
