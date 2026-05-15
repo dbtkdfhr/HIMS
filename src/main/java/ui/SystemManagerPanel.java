@@ -4,6 +4,7 @@ import common.type.RoleType;
 import employee.EmployeeDTO;
 import exception.InputException;
 import exception.NotFoundException;
+import inventory.InventoryDTO;
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
@@ -28,7 +29,9 @@ public class SystemManagerPanel {
       "직원 계정 목록",
       "직원 계정 생성 폼",
       "직원 권한 변경 폼",
-      "직원 계정 정지 처리"
+      "직원 계정 정지 처리",
+      "전체 재고 현황 조회",
+      "지점별 재고 조회"
   };
 
   private final UiServiceStore store;
@@ -45,6 +48,8 @@ public class SystemManagerPanel {
     views.put(MENUS[1], employeeCreatePanel());
     views.put(MENUS[2], roleChangePanel());
     views.put(MENUS[3], deactivatePanel());
+    views.put(MENUS[4], inventoryPanel("전체 재고 현황 조회", "전체"));
+    views.put(MENUS[5], inventoryPanel("지점별 재고 조회", "지점"));
     return views;
   }
 
@@ -155,8 +160,27 @@ public class SystemManagerPanel {
     return panel;
   }
 
+  private JPanel inventoryPanel(String title, String filterType) {
+    JPanel panel = page(title);
+    DefaultTableModel model = UiTableFactory.model("매장", "상품ID", "상품명", "브랜드", "카테고리",
+        "현재수량", "안전재고", "부족여부");
+    JTable table = UiTableFactory.table(model);
+    JTextField keywordField = new JTextField(16);
+    JButton search = new JButton("조회");
+    JPanel controls = new JPanel(new FlowLayout(FlowLayout.LEFT));
+    controls.add(new JLabel(filterType + " 조건"));
+    controls.add(keywordField);
+    controls.add(search);
+    search.addActionListener(event -> UiExceptionHandler.run(logger,
+        () -> fillInventory(model, filterType, keywordField.getText())));
+    panel.add(controls, BorderLayout.NORTH);
+    panel.add(UiTableFactory.scroll(table), BorderLayout.CENTER);
+    UiExceptionHandler.run(logger, () -> fillInventory(model, filterType, ""));
+    return panel;
+  }
+
   private DefaultTableModel employeeModel() {
-    return UiTableFactory.model("직원ID", "로그인ID", "직원명", "권한", "매장ID", "사용여부");
+    return UiTableFactory.model("직원ID", "로그인ID", "직원명", "권한", "매장ID", "매장명", "사용여부");
   }
 
   private void fillEmployees(DefaultTableModel model) throws Exception {
@@ -168,9 +192,42 @@ public class SystemManagerPanel {
           employee.getEmployeeName(),
           store.findRoleName(employee.getRoleId()),
           employee.getStoreId() == null ? "-" : employee.getStoreId(),
+          employee.getStoreId() == null ? "-" : store.findStoreName(employee.getStoreId()),
           employee.getIsActive()
       });
     }
+  }
+
+  private void fillInventory(DefaultTableModel model, String filterType, String keyword)
+      throws Exception {
+    model.setRowCount(0);
+    String normalized = keyword == null ? "" : keyword.trim();
+    for (InventoryDTO inventory : store.inventories()) {
+      if (!matches(inventory, filterType, normalized)) {
+        continue;
+      }
+      model.addRow(new Object[]{
+          store.findStoreName(inventory.getStoreId()),
+          inventory.getProductId(),
+          inventory.getProductName(),
+          inventory.getBrandName(),
+          inventory.getCategoryName(),
+          inventory.getCurrentQuantity(),
+          inventory.getSafetyQuantity(),
+          inventory.getCurrentQuantity() <= inventory.getSafetyQuantity()
+      });
+    }
+  }
+
+  private boolean matches(InventoryDTO inventory, String filterType, String keyword)
+      throws Exception {
+    if (keyword.isEmpty() || "전체".equals(filterType)) {
+      return true;
+    }
+    if ("지점".equals(filterType)) {
+      return store.findStoreName(inventory.getStoreId()).contains(keyword);
+    }
+    return true;
   }
 
   private JComboBox<RoleType> roleBox() {
