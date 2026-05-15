@@ -70,11 +70,7 @@ public class DashboardPanel extends JPanel {
 
     JPanel buttons = new JPanel(new GridLayout(0, 1, 0, 8));
     buttons.setOpaque(false);
-    for (String name : menuNames()) {
-      JButton button = new JButton(name);
-      button.addActionListener(event -> show(name));
-      buttons.add(button);
-    }
+    addMenuButtons(buttons);
 
     JButton logout = new JButton("로그아웃");
     logout.addActionListener(event -> onLogout.run());
@@ -82,6 +78,40 @@ public class DashboardPanel extends JPanel {
     panel.add(buttons, BorderLayout.NORTH);
     panel.add(logout, BorderLayout.SOUTH);
     return panel;
+  }
+
+  private void addMenuButtons(JPanel buttons) {
+    RoleType role = RoleType.fromRoleId(user.getRoleId());
+    if (role == RoleType.SYSTEM_MANAGER) {
+      addSectionLabel(buttons, "직원 관리");
+      for (int i = 0; i <= 4; i++) {
+        addMenuButton(buttons, SystemManagerPanel.MENUS[i]);
+      }
+
+      addSectionLabel(buttons, "재고 관리");
+      for (int i = 5; i < SystemManagerPanel.MENUS.length; i++) {
+        addMenuButton(buttons, SystemManagerPanel.MENUS[i]);
+      }
+      return;
+    }
+
+    for (String name : menuNames()) {
+      addMenuButton(buttons, name);
+    }
+  }
+
+  private void addSectionLabel(JPanel buttons, String title) {
+    JLabel label = new JLabel(title);
+    label.setFont(UiConstants.HEADER_FONT);
+    label.setForeground(Color.DARK_GRAY);
+    label.setBorder(BorderFactory.createEmptyBorder(10, 4, 0, 4));
+    buttons.add(label);
+  }
+
+  private void addMenuButton(JPanel buttons, String name) {
+    JButton button = new JButton(name);
+    button.addActionListener(event -> show(name));
+    buttons.add(button);
   }
 
   private JScrollPane log() {
