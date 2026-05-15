@@ -1,6 +1,7 @@
 package ui.common;
 
 import category.CategoryDTO;
+import exception.InputException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -13,15 +14,31 @@ import javax.swing.JPanel;
 
 public class CategorySelector {
 
+  private static final long PLACEHOLDER_ID = -1;
+  private static final long ALL_ID = 0;
+
   private final JPanel controls;
   private final JButton search;
+  private final boolean includeAllInChildBoxes;
+  private final int fixedComponentCount;
   private final Map<Long, List<CategoryDTO>> childrenByParent = new LinkedHashMap<>();
   private final List<JComboBox<SelectOption>> boxes = new ArrayList<>();
   private boolean adjusting;
 
   public CategorySelector(JPanel controls, JButton search) {
+    this(controls, search, true, 1);
+  }
+
+  public CategorySelector(JPanel controls) {
+    this(controls, null, false, 0);
+  }
+
+  private CategorySelector(JPanel controls, JButton search, boolean includeAllInChildBoxes,
+      int fixedComponentCount) {
     this.controls = controls;
     this.search = search;
+    this.includeAllInChildBoxes = includeAllInChildBoxes;
+    this.fixedComponentCount = fixedComponentCount;
   }
 
   public void load(List<CategoryDTO> categories) {
@@ -47,6 +64,17 @@ public class CategorySelector {
     return ids;
   }
 
+  public long selectedLeafCategoryId(String label) {
+    Long selectedId = selectedCategoryId();
+    if (selectedId == null) {
+      throw new InputException(label + "를 선택해 주세요.");
+    }
+    if (hasChildren(selectedId)) {
+      throw new InputException("최하단 카테고리까지 선택해 주세요.");
+    }
+    return selectedId;
+  }
+
   private void addBox(Long parentId, boolean includeAll) {
     List<CategoryDTO> children = childrenByParent.getOrDefault(parentId,
         java.util.Collections.emptyList());
@@ -56,8 +84,9 @@ public class CategorySelector {
     }
 
     JComboBox<SelectOption> box = new JComboBox<>();
+    box.addItem(new SelectOption(PLACEHOLDER_ID, "선택"));
     if (includeAll) {
-      box.addItem(new SelectOption(0, "전체"));
+      box.addItem(new SelectOption(ALL_ID, "전체"));
     }
     for (CategoryDTO category : children) {
       box.addItem(new SelectOption(category.getCategoryId(), category.getCategoryName()));
@@ -85,7 +114,7 @@ public class CategorySelector {
 
       SelectOption selected = (SelectOption) changedBox.getSelectedItem();
       if (selected != null && selected.getId() > 0 && hasChildren(selected.getId())) {
-        addBox(selected.getId(), true);
+        addBox(selected.getId(), includeAllInChildBoxes);
       } else {
         refreshControls();
       }
@@ -104,6 +133,8 @@ public class CategorySelector {
       SelectOption option = (SelectOption) box.getSelectedItem();
       if (option != null && option.getId() > 0) {
         selectedId = option.getId();
+      } else if (option == null || option.getId() == PLACEHOLDER_ID) {
+        break;
       }
     }
     return selectedId;
@@ -118,13 +149,15 @@ public class CategorySelector {
   }
 
   private void refreshControls() {
-    while (controls.getComponentCount() > 1) {
-      controls.remove(1);
+    while (controls.getComponentCount() > fixedComponentCount) {
+      controls.remove(fixedComponentCount);
     }
     for (JComboBox<SelectOption> box : boxes) {
       controls.add(box);
     }
-    controls.add(search);
+    if (search != null) {
+      controls.add(search);
+    }
     controls.revalidate();
     controls.repaint();
   }
