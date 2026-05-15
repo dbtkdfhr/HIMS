@@ -11,6 +11,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTable;
 import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableModel;
 import order.request.OrderRequestDTO;
 import ui.common.UiConstants;
@@ -63,30 +64,53 @@ public class ExternalSupplierPanel {
     JTextField reasonField = new JTextField(24);
     JButton approve = new JButton("승인");
     JButton reject = new JButton("거절");
-    JButton refresh = new JButton("접수 요청 조회");
+    JButton refresh = new JButton("새로고침");
     JPanel controls = new JPanel(new FlowLayout(FlowLayout.LEFT));
+    controls.setOpaque(false);
     controls.add(approve);
-    controls.add(new JLabel("거절사유"));
-    controls.add(reasonField);
     controls.add(reject);
     controls.add(refresh);
 
+    JPanel rejectReasonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+    rejectReasonPanel.setOpaque(false);
+    rejectReasonPanel.add(new JLabel("거절 사유"));
+    rejectReasonPanel.add(reasonField);
+    JButton rejectConfirm = new JButton("거절 확정");
+    JButton cancelReject = new JButton("취소");
+    rejectReasonPanel.add(rejectConfirm);
+    rejectReasonPanel.add(cancelReject);
+    rejectReasonPanel.setVisible(false);
+
+    JPanel north = new JPanel(new BorderLayout());
+    north.setOpaque(false);
+    north.add(controls, BorderLayout.NORTH);
+    north.add(rejectReasonPanel, BorderLayout.CENTER);
+
     approve.addActionListener(event -> UiExceptionHandler.run(logger, () -> {
-        long orderId = selectedOrderId(table);
-        store.approveExternalOrder(orderId);
-        fillExternalOrders(model, true);
-        logger.accept("외부 발주처 승인 완료: " + orderId);
+      long orderId = selectedOrderId(table);
+      store.approveExternalOrder(orderId);
+      fillExternalOrders(model, true);
+      logger.accept("외부 발주처 승인 완료 : "  + orderId);
     }));
-    reject.addActionListener(event -> UiExceptionHandler.run(logger, () -> {
-        long orderId = selectedOrderId(table);
-        store.rejectExternalOrder(orderId, required(reasonField.getText(), "거절사유"));
-        reasonField.setText("");
-        fillExternalOrders(model, true);
-        logger.accept("외부 발주처 거절 완료: " + orderId);
+    reject.addActionListener(event -> {
+      rejectReasonPanel.setVisible(true);
+      SwingUtilities.invokeLater(reasonField::requestFocusInWindow);
+    });
+    rejectConfirm.addActionListener(event -> UiExceptionHandler.run(logger, () -> {
+      long orderId = selectedOrderId(table);
+      store.rejectExternalOrder(orderId, required(reasonField.getText(), "거절사유"));
+      reasonField.setText("");
+      rejectReasonPanel.setVisible(false);
+      fillExternalOrders(model, true);
+      logger.accept("외부 발주처 거절 완료 : " + orderId);
     }));
+    cancelReject.addActionListener(event -> {
+      reasonField.setText("");
+      rejectReasonPanel.setVisible(false);
+    });
     refresh.addActionListener(event -> UiExceptionHandler.run(logger, () -> fillExternalOrders(model, true)));
 
-    panel.add(controls, BorderLayout.NORTH);
+    panel.add(north, BorderLayout.NORTH);
     panel.add(UiTableFactory.scroll(table), BorderLayout.CENTER);
     UiExceptionHandler.run(logger, () -> fillExternalOrders(model, true));
     return panel;
@@ -159,5 +183,4 @@ public class ExternalSupplierPanel {
     }
     return text;
   }
-
 }
