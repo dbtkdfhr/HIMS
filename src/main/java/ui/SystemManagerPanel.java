@@ -134,7 +134,7 @@ public class SystemManagerPanel {
     JPanel panel = page("직원 권한 변경 폼");
     DefaultTableModel model = employeeModel();
     JTable table = UiTableFactory.table(model);
-    JComboBox<RoleType> roleBox = createRoleBox();
+    JComboBox<RoleType> roleBox = changeRoleBox();
     JComboBox<BranchDTO> branchBox = branchBox();
     JComboBox<StoreDTO> storeBox = emptyStoreBox();
     JLabel storeLabel = new JLabel("매장");
@@ -477,6 +477,27 @@ public class SystemManagerPanel {
         RoleType.SUPPLIER_MANAGER,
         RoleType.STORE_MANAGER,
         RoleType.STAFF
+    });
+    roleBox.setRenderer(new DefaultListCellRenderer() {
+      @Override
+      public Component getListCellRendererComponent(JList<?> list, Object value, int index,
+          boolean isSelected, boolean cellHasFocus) {
+        super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+        if (value instanceof RoleType) {
+          RoleType roleType = (RoleType) value;
+          setText(roleType.getRoleName());
+        }
+        return this;
+      }
+    });
+    return roleBox;
+  }
+
+  private JComboBox<RoleType> changeRoleBox() {
+    JComboBox<RoleType> roleBox = new JComboBox<RoleType>(new RoleType[]{
+        RoleType.BRANCH_MANAGER,
+        RoleType.SUPPLIER_MANAGER,
+        RoleType.STORE_MANAGER
     });
     roleBox.setRenderer(new DefaultListCellRenderer() {
       @Override
