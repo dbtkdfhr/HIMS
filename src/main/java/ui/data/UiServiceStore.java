@@ -88,6 +88,10 @@ public class UiServiceStore {
     return storeService.findAllStores();
   }
 
+  public List<StoreDTO> findStoresByBranch(long branchId) throws SQLException {
+    return storeService.findStoresByBranchId(branchId);
+  }
+
   public List<ProductDTO> products() throws SQLException {
     return productService.findAllProducts();
   }

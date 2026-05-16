@@ -316,7 +316,7 @@ public class BranchManagerPanel {
 
   private void fillStores(DefaultTableModel model) throws Exception {
     model.setRowCount(0);
-    for (StoreDTO dto : store.stores()) {
+    for (StoreDTO dto : store.findStoresByBranch(branchId())) {
       model.addRow(new Object[]{
           dto.getStoreId(),
           dto.getBranchId(),
@@ -331,6 +331,18 @@ public class BranchManagerPanel {
 
   private void fillMaster(DefaultTableModel model, String type) throws Exception {
     model.setRowCount(0);
+    if ("입점매장".equals(type)) {
+      for (StoreDTO dto : store.findStoresByBranch(branchId())) {
+        model.addRow(new Object[]{
+            dto.getStoreId(),
+            dto.getStoreName(),
+            dto.getStoreLocation(),
+            dto.getOperationStatus()
+        });
+      }
+      return;
+    }
+
     for (String[] row : store.masterRecords()
         .getOrDefault(type, java.util.Collections.emptyList())) {
       model.addRow(row);

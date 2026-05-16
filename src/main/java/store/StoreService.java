@@ -10,6 +10,14 @@ public class StoreService {
     return storeDAO.findAll();
   }
 
+  public List<StoreDTO> findStoresByBranchId(long branchId) throws SQLException {
+    if (branchId <= 0) {
+      throw new IllegalArgumentException("지점 ID는 필수입니다.");
+    }
+
+    return storeDAO.getStoresByBranchId(branchId);
+  }
+
   public List<String> findAllStoreSummaries() throws SQLException {
     return storeDAO.findAllStoreSummaries();
   }
